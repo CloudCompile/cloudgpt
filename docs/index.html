@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CloudGPT - Unified AI API Documentation</title>
+  <style>
+    :root {
+      --primary: #0070f3;
+      --primary-dark: #0051a8;
+      --bg: #ffffff;
+      --text: #171717;
+      --text-light: #666666;
+      --border: #eaeaea;
+      --code-bg: #f5f5f5;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #3291ff;
+        --primary-dark: #0070f3;
+        --bg: #0a0a0a;
+        --text: #ededed;
+        --text-light: #888888;
+        --border: #333333;
+        --code-bg: #1a1a1a;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    header {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    nav a {
+      color: var(--text);
+      text-decoration: none;
+      margin-left: 20px;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    .hero {
+      padding: 80px 0;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--primary), #7928ca);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-light);
+      max-width: 600px;
+      margin: 0 auto 40px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      border: 2px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    section {
+      padding: 60px 0;
+    }
+
+    section h2 {
+      font-size: 2rem;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .endpoint-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 20px;
+    }
+
+    .endpoint-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 24px;
+      border-radius: 12px;
+    }
+
+    .endpoint-card h3 {
+      margin-bottom: 12px;
+    }
+
+    .endpoint-card p {
+      color: var(--text-light);
+      margin-bottom: 16px;
+    }
+
+    .method {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    .method-post {
+      background: #22c55e;
+      color: white;
+    }
+
+    .method-get {
+      background: #3b82f6;
+      color: white;
+    }
+
+    code {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.9rem;
+    }
+
+    pre {
+      background: var(--code-bg);
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    .example {
+      margin-top: 40px;
+    }
+
+    .example h3 {
+      margin-bottom: 16px;
+    }
+
+    .models-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .models-table th,
+    .models-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .models-table th {
+      background: var(--code-bg);
+    }
+
+    footer {
+      padding: 40px 0;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-light);
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .endpoint-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="/" class="logo">☁️ CloudGPT</a>
+      <nav>
+        <a href="#endpoints">API</a>
+        <a href="#models">Models</a>
+        <a href="https://github.com/CloudCompile/cloudgpt" target="_blank">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1>Unified AI API Gateway</h1>
+      <p>Access multiple AI providers through a single, unified API. Generate text, images, and videos with ease.</p>
+      <div class="buttons">
+        <a href="https://vercel.com/new/clone?repository-url=https://github.com/CloudCompile/cloudgpt&env=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,POLLINATIONS_API_KEY" class="btn btn-primary" target="_blank">
+          Deploy to Vercel
+        </a>
+        <a href="https://github.com/CloudCompile/cloudgpt" class="btn btn-secondary" target="_blank">
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="endpoints">
+    <div class="container">
+      <h2>API Endpoints</h2>
+      <div class="endpoint-grid">
+        <div class="endpoint-card">
+          <h3><span class="method method-post">POST</span> /api/chat</h3>
+          <p>Generate chat completions using various LLMs like GPT-4, Claude, Gemini, and more.</p>
+          <pre><code>{
+  "model": "openai",
+  "messages": [
+    {"role": "user", "content": "Hello!"}
+  ]
+}</code></pre>
+        </div>
+
+        <div class="endpoint-card">
+          <h3><span class="method method-post">POST</span> /api/image</h3>
+          <p>Generate images from text prompts using Flux, DALL-E, and other image models.</p>
+          <pre><code>{
+  "prompt": "A sunset over mountains",
+  "model": "flux",
+  "width": 1024,
+  "height": 1024
+}</code></pre>
+        </div>
+
+        <div class="endpoint-card">
+          <h3><span class="method method-post">POST</span> /api/video</h3>
+          <p>Generate videos from text prompts using Veo, Seedance, and other video models.</p>
+          <pre><code>{
+  "prompt": "A cat playing",
+  "model": "veo",
+  "duration": 4
+}</code></pre>
+        </div>
+
+        <div class="endpoint-card">
+          <h3><span class="method method-get">GET</span> /api/models/chat</h3>
+          <p>List all available chat models with their capabilities and descriptions.</p>
+          <pre><code>curl https://your-app.vercel.app/api/models/chat</code></pre>
+        </div>
+
+        <div class="endpoint-card">
+          <h3><span class="method method-get">GET</span> /api/models/image</h3>
+          <p>List all available image generation models.</p>
+          <pre><code>curl https://your-app.vercel.app/api/models/image</code></pre>
+        </div>
+
+        <div class="endpoint-card">
+          <h3><span class="method method-get">GET</span> /api/models/video</h3>
+          <p>List all available video generation models.</p>
+          <pre><code>curl https://your-app.vercel.app/api/models/video</code></pre>
+        </div>
+      </div>
+
+      <div class="example">
+        <h3>Authentication</h3>
+        <p>Include your API key in the Authorization header:</p>
+        <pre><code>curl -X POST https://your-app.vercel.app/api/chat \
+  -H "Authorization: Bearer cgpt_your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="models" style="background: var(--code-bg);">
+    <div class="container">
+      <h2>Available Models</h2>
+      
+      <h3 style="margin-top: 30px; margin-bottom: 10px;">Chat Models</h3>
+      <table class="models-table">
+        <thead>
+          <tr>
+            <th>Model ID</th>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>openai</code></td><td>OpenAI GPT-4o</td><td>OpenAI's flagship model</td></tr>
+          <tr><td><code>openai-fast</code></td><td>GPT-4o Mini</td><td>Faster, more economical</td></tr>
+          <tr><td><code>claude</code></td><td>Claude 3.5 Sonnet</td><td>Anthropic's balanced model</td></tr>
+          <tr><td><code>gemini</code></td><td>Gemini 2.0 Flash</td><td>Google's fast model</td></tr>
+          <tr><td><code>deepseek</code></td><td>DeepSeek V3</td><td>DeepSeek's latest model</td></tr>
+          <tr><td><code>grok</code></td><td>Grok 3</td><td>xAI's model</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin-top: 30px; margin-bottom: 10px;">Image Models</h3>
+      <table class="models-table">
+        <thead>
+          <tr>
+            <th>Model ID</th>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>flux</code></td><td>Flux</td><td>High-quality image generation</td></tr>
+          <tr><td><code>turbo</code></td><td>Turbo</td><td>Fast image generation</td></tr>
+          <tr><td><code>gptimage</code></td><td>GPT Image</td><td>OpenAI DALL-E</td></tr>
+          <tr><td><code>kontext</code></td><td>Kontext</td><td>Context-aware generation</td></tr>
+          <tr><td><code>seedream</code></td><td>Seedream</td><td>Creative styles</td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin-top: 30px; margin-bottom: 10px;">Video Models</h3>
+      <table class="models-table">
+        <thead>
+          <tr>
+            <th>Model ID</th>
+            <th>Name</th>
+            <th>Max Duration</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>veo</code></td><td>Google Veo</td><td>8 seconds</td></tr>
+          <tr><td><code>seedance</code></td><td>Seedance</td><td>10 seconds</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <h2>Features</h2>
+      <div class="endpoint-grid">
+        <div class="endpoint-card" style="text-align: center;">
+          <h3>⚡ Edge Runtime</h3>
+          <p>Fast responses with Vercel Edge Functions for low latency worldwide.</p>
+        </div>
+        <div class="endpoint-card" style="text-align: center;">
+          <h3>🔐 Authentication</h3>
+          <p>Secure user accounts with Clerk. Sign up and manage your API keys.</p>
+        </div>
+        <div class="endpoint-card" style="text-align: center;">
+          <h3>🔑 API Keys</h3>
+          <p>Generate and manage your API keys from the dashboard.</p>
+        </div>
+        <div class="endpoint-card" style="text-align: center;">
+          <h3>🌐 Multi-Provider</h3>
+          <p>Access multiple AI providers through a single unified API.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>
+        Built with Next.js and deployed on Vercel •
+        <a href="https://github.com/CloudCompile/cloudgpt" target="_blank">GitHub</a> •
+        <a href="https://github.com/CloudCompile/cloudgpt/blob/main/KEYS_SETUP.md" target="_blank">Setup Guide</a>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
