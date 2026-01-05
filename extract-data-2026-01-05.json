@@ -1,0 +1,1778 @@
+{
+  "mapleai_api_endpoints": [
+    {
+      "http_method": "GET",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/system/health-check",
+      "full_url_path": "https://api.mapleai.de/",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/system/health-check",
+      "request_parameters": [],
+      "request_body_schema": {},
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/system/health-check",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "nullable": true
+              },
+              "service": {
+                "type": "string",
+                "nullable": true
+              },
+              "time": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "endpoints": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true
+              },
+              "environment": {
+                "type": "string",
+                "nullable": true
+              },
+              "requests": {
+                "type": "integer",
+                "nullable": true
+              },
+              "total_tokens_used": {
+                "type": "integer",
+                "nullable": true
+              }
+            }
+          },
+          "description": "System status",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/system/health-check"
+        }
+      ],
+      "usage_instructions": "Get system status and basic statistics. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/system/health-check",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/system/health-check",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/system/health-check"
+        }
+      ]
+    },
+    {
+      "http_method": "GET",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/system/list-models",
+      "full_url_path": "https://api.mapleai.de/v1/models",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/system/list-models",
+      "request_parameters": [],
+      "request_body_schema": {},
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/system/list-models",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "object": {
+                "type": "string",
+                "nullable": true
+              },
+              "data": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "object": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "owned_by": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "type": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "description": "List of models",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/system/list-models"
+        }
+      ],
+      "usage_instructions": "Get list of all available models. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/system/list-models",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/system/list-models",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/system/list-models"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+      "full_url_path": "https://api.mapleai.de/v1/chat/completions",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+      "request_parameters": [
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        },
+        {
+          "name": "messages",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "type": "array",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "description": "List of messages in the conversation",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        },
+        {
+          "name": "temperature",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "type": "double",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "description": "Sampling temperature (0-2)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        },
+        {
+          "name": "max_tokens",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "type": "integer",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "description": "Maximum tokens to generate",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        },
+        {
+          "name": "max_completion_tokens",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "type": "integer",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "description": "Alternative to max_tokens",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        },
+        {
+          "name": "stream",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "type": "boolean",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "description": "Enable streaming responses (defaults to false)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        },
+        {
+          "name": "tools",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "type": "array",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "description": "Function calling tools",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        }
+      ],
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "required": true,
+            "description": "Model ID to use"
+          },
+          "messages": {
+            "type": "array",
+            "required": true,
+            "description": "List of messages",
+            "items": {
+              "type": "object",
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "system",
+                    "user",
+                    "assistant",
+                    "tool",
+                    "function"
+                  ]
+                },
+                "content": {
+                  "type": "string or array"
+                }
+              }
+            }
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "max_tokens": {
+            "type": "integer"
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false
+          },
+          "tools": {
+            "type": "array"
+          }
+        }
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": true
+              },
+              "object": {
+                "type": "string",
+                "nullable": true
+              },
+              "created": {
+                "type": "integer",
+                "nullable": true
+              },
+              "model": {
+                "type": "string",
+                "nullable": true
+              },
+              "provider": {
+                "type": "string",
+                "nullable": true
+              },
+              "choices": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "index": {
+                      "type": "integer"
+                    },
+                    "message": {
+                      "type": "object",
+                      "properties": {
+                        "role": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "finish_reason": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "usage": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "prompt_tokens": {
+                    "type": "integer"
+                  },
+                  "completion_tokens": {
+                    "type": "integer"
+                  },
+                  "total_tokens": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          },
+          "description": "Chat completion response",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        },
+        {
+          "status_code": 400,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "schema": {},
+          "description": "Bad Request Error",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        },
+        {
+          "status_code": 401,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "schema": {},
+          "description": "Unauthorized Error",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        },
+        {
+          "status_code": 429,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "schema": {},
+          "description": "Too Many Requests Error",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        }
+      ],
+      "usage_instructions": "Generate chat completions using various AI models. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/chat/create-chat-completion"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+      "full_url_path": "https://api.mapleai.de/v1/images/generations",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+      "request_parameters": [
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        },
+        {
+          "name": "prompt",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "description": "Text prompt for image generation",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        },
+        {
+          "name": "n",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "type": "integer",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "description": "Number of images to generate (1-10, defaults to 1)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        },
+        {
+          "name": "size",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "description": "Image size",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        },
+        {
+          "name": "quality",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "description": "Image quality (standard or hd)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        },
+        {
+          "name": "response_format",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "description": "Response format (url or b64_json)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        }
+      ],
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "required": true
+          },
+          "prompt": {
+            "type": "string",
+            "required": true
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 1
+          },
+          "size": {
+            "type": "string"
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "hd"
+            ]
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "url",
+              "b64_json"
+            ]
+          }
+        }
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "created": {
+                "type": "integer",
+                "nullable": true
+              },
+              "data": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "description": "Images generated successfully",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        },
+        {
+          "status_code": 400,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "schema": {},
+          "description": "Bad Request Error",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        },
+        {
+          "status_code": 401,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "schema": {},
+          "description": "Unauthorized Error",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        },
+        {
+          "status_code": 402,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "schema": {},
+          "description": "Payment Required Error",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        }
+      ],
+      "usage_instructions": "Create images from text prompts. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/images/generate-images",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/images/generate-images"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+      "full_url_path": "https://api.mapleai.de/v1/images/edits",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+      "request_parameters": [
+        {
+          "name": "image",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "type": "file",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "description": "Image to edit (PNG, JPEG, WEBP)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images"
+        },
+        {
+          "name": "mask",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "type": "file",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "description": "Mask image (optional)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images"
+        },
+        {
+          "name": "prompt",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "description": "Edit description",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images"
+        },
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images"
+        },
+        {
+          "name": "n",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "type": "integer",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "description": "Number of images (defaults to 1)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images"
+        },
+        {
+          "name": "size",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "description": "Image size (defaults to 1024x1024)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images"
+        }
+      ],
+      "request_body_schema": {
+        "type": "multipart/form-data",
+        "description": "This endpoint expects a multipart form with multiple files"
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "created": {
+                "type": "integer",
+                "nullable": true
+              },
+              "data": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "description": "Edited images",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images"
+        },
+        {
+          "status_code": 400,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "schema": {},
+          "description": "Bad Request Error",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images"
+        }
+      ],
+      "usage_instructions": "Edit images using prompts and optional masks. Requires Bearer authentication. Expects multipart form data.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/images/edit-images",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/images/edit-images"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+      "full_url_path": "https://api.mapleai.de/v1/audio/speech",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+      "request_parameters": [
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech"
+        },
+        {
+          "name": "voice",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "description": "Voice to use (enum with 6 values)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech"
+        },
+        {
+          "name": "input",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "description": "Text to convert to speech",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech"
+        },
+        {
+          "name": "response_format",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "description": "Audio format (mp3, opus, aac, flac; defaults to mp3)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech"
+        }
+      ],
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "required": true
+          },
+          "voice": {
+            "type": "string",
+            "required": true,
+            "enum": []
+          },
+          "input": {
+            "type": "string",
+            "required": true
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "mp3",
+              "opus",
+              "aac",
+              "flac"
+            ],
+            "default": "mp3"
+          }
+        }
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "schema": {
+            "type": "binary"
+          },
+          "description": "Audio file",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech"
+        },
+        {
+          "status_code": 400,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "schema": {},
+          "description": "Bad Request Error",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech"
+        }
+      ],
+      "usage_instructions": "Convert text to speech. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/audio/text-to-speech"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+      "full_url_path": "https://api.mapleai.de/v1/audio/transcriptions",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+      "request_parameters": [
+        {
+          "name": "file",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+          "type": "file",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+          "description": "Audio file",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio"
+        },
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio"
+        }
+      ],
+      "request_body_schema": {
+        "type": "multipart/form-data",
+        "description": "This endpoint expects a multipart form containing a file"
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "nullable": true,
+                "description": "Transcription result"
+              }
+            }
+          },
+          "description": "Transcription result",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio"
+        },
+        {
+          "status_code": 400,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+          "schema": {},
+          "description": "Bad Request Error",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio"
+        }
+      ],
+      "usage_instructions": "Transcribe audio files to text. Requires Bearer authentication. Expects multipart form data.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/audio/transcribe-audio"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio",
+      "full_url_path": "https://api.mapleai.de/v1/audio/translations",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio",
+      "request_parameters": [
+        {
+          "name": "file",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio",
+          "type": "file",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio",
+          "description": "Audio file",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio"
+        },
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio"
+        }
+      ],
+      "request_body_schema": {
+        "type": "multipart/form-data",
+        "description": "This endpoint expects a multipart form containing a file"
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "nullable": true,
+                "description": "Translation result"
+              }
+            }
+          },
+          "description": "Translation result",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio"
+        }
+      ],
+      "usage_instructions": "Translate audio files to English text. Requires Bearer authentication. Expects multipart form data.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/audio/translate-audio"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+      "full_url_path": "https://api.mapleai.de/v1/video/generations",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+      "request_parameters": [
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video"
+        },
+        {
+          "name": "prompt",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "description": "Text prompt for video generation",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video"
+        },
+        {
+          "name": "seconds",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "description": "Video duration (defaults to 4)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video"
+        },
+        {
+          "name": "size",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "description": "Video size (defaults to 720x1280)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video"
+        }
+      ],
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "required": true
+          },
+          "prompt": {
+            "type": "string",
+            "required": true
+          },
+          "seconds": {
+            "type": "string",
+            "default": "4"
+          },
+          "size": {
+            "type": "string",
+            "default": "720x1280"
+          }
+        }
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": true
+              },
+              "object": {
+                "type": "string",
+                "nullable": true
+              },
+              "model": {
+                "type": "string",
+                "nullable": true
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "processing",
+                  "completed",
+                  "cancelled",
+                  "failed"
+                ],
+                "nullable": true
+              },
+              "progress": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "nullable": true
+              },
+              "created_at": {
+                "type": "integer",
+                "nullable": true
+              },
+              "size": {
+                "type": "string",
+                "nullable": true
+              },
+              "seconds": {
+                "type": "string",
+                "nullable": true
+              },
+              "quality": {
+                "type": "string",
+                "nullable": true
+              },
+              "provider": {
+                "type": "string",
+                "nullable": true
+              },
+              "video_url": {
+                "type": "string",
+                "format": "uri",
+                "nullable": true
+              },
+              "download_url": {
+                "type": "string",
+                "format": "uri",
+                "nullable": true
+              }
+            }
+          },
+          "description": "Video generation initiated",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video"
+        }
+      ],
+      "usage_instructions": "Create videos from text prompts or reference images. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/video/generate-video",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/video/generate-video"
+        }
+      ]
+    },
+    {
+      "http_method": "GET",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/video/get-video-status",
+      "full_url_path": "https://api.mapleai.de/v1/video/generations/{id}",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/video/get-video-status",
+      "request_parameters": [
+        {
+          "name": "id",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/video/get-video-status",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/video/get-video-status",
+          "description": "Video ID or operation name",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/get-video-status"
+        }
+      ],
+      "request_body_schema": {},
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/video/get-video-status",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": true
+              },
+              "object": {
+                "type": "string",
+                "nullable": true
+              },
+              "model": {
+                "type": "string",
+                "nullable": true
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "processing",
+                  "completed",
+                  "cancelled",
+                  "failed"
+                ],
+                "nullable": true
+              },
+              "progress": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "nullable": true
+              },
+              "created_at": {
+                "type": "integer",
+                "nullable": true
+              },
+              "size": {
+                "type": "string",
+                "nullable": true
+              },
+              "seconds": {
+                "type": "string",
+                "nullable": true
+              },
+              "quality": {
+                "type": "string",
+                "nullable": true
+              },
+              "provider": {
+                "type": "string",
+                "nullable": true
+              },
+              "video_url": {
+                "type": "string",
+                "format": "uri",
+                "nullable": true
+              },
+              "download_url": {
+                "type": "string",
+                "format": "uri",
+                "nullable": true
+              }
+            }
+          },
+          "description": "Video status retrieved",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/get-video-status"
+        }
+      ],
+      "usage_instructions": "Retrieve video generation status. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/video/get-video-status",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/video/get-video-status",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/video/get-video-status"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/video/cancel-video",
+      "full_url_path": "https://api.mapleai.de/v1/video/generations/{id}/cancel",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/video/cancel-video",
+      "request_parameters": [
+        {
+          "name": "id",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/video/cancel-video",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/video/cancel-video",
+          "description": "Video ID or operation name",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/cancel-video"
+        }
+      ],
+      "request_body_schema": {},
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/video/cancel-video",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": true
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "processing",
+                  "completed",
+                  "cancelled",
+                  "failed"
+                ],
+                "nullable": true
+              }
+            }
+          },
+          "description": "Video cancelled",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/cancel-video"
+        }
+      ],
+      "usage_instructions": "Cancel a video generation request. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/video/cancel-video",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/video/cancel-video",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/video/cancel-video"
+        }
+      ]
+    },
+    {
+      "http_method": "GET",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/video/download-video",
+      "full_url_path": "https://api.mapleai.de/v1/video/generations/{id}/download",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/video/download-video",
+      "request_parameters": [
+        {
+          "name": "id",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/video/download-video",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/video/download-video",
+          "description": "Video ID or operation name",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/download-video"
+        }
+      ],
+      "request_body_schema": {},
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/video/download-video",
+          "schema": {
+            "type": "binary"
+          },
+          "description": "Video file",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/download-video"
+        }
+      ],
+      "usage_instructions": "Download completed video file. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/video/download-video",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/video/download-video",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/video/download-video"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video",
+      "full_url_path": "https://api.mapleai.de/v1/video/generations/{id}/remix",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video",
+      "request_parameters": [
+        {
+          "name": "id",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video",
+          "description": "Video ID or operation name",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video"
+        },
+        {
+          "name": "prompt",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video",
+          "description": "Remix instructions",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video"
+        }
+      ],
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "required": true,
+            "description": "Remix instructions"
+          }
+        }
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": true
+              },
+              "object": {
+                "type": "string",
+                "nullable": true
+              },
+              "model": {
+                "type": "string",
+                "nullable": true
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "processing",
+                  "completed",
+                  "cancelled",
+                  "failed"
+                ],
+                "nullable": true
+              },
+              "progress": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "nullable": true
+              }
+            }
+          },
+          "description": "Remix initiated",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video"
+        }
+      ],
+      "usage_instructions": "Create a variation of an existing video. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/video/remix-video",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/video/remix-video"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+      "full_url_path": "https://api.mapleai.de/v1/embeddings",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+      "request_parameters": [
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings"
+        },
+        {
+          "name": "input",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+          "type": "string or array",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+          "description": "Input text or array of texts",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings"
+        },
+        {
+          "name": "encoding_format",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+          "description": "Encoding format (float or base64, defaults to float)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings"
+        }
+      ],
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "required": true
+          },
+          "input": {
+            "type": [
+              "string",
+              "array"
+            ],
+            "required": true
+          },
+          "encoding_format": {
+            "type": "string",
+            "enum": [
+              "float",
+              "base64"
+            ],
+            "default": "float"
+          }
+        }
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "object": {
+                "type": "string",
+                "nullable": true
+              },
+              "data": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "object"
+                }
+              },
+              "model": {
+                "type": "string",
+                "nullable": true
+              },
+              "usage": {
+                "type": "object",
+                "nullable": true
+              }
+            }
+          },
+          "description": "Embeddings generated",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings"
+        }
+      ],
+      "usage_instructions": "Generate text embeddings. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/embeddings/create-embeddings"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content",
+      "full_url_path": "https://api.mapleai.de/v1/moderations",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content",
+      "request_parameters": [
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content"
+        },
+        {
+          "name": "input",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content",
+          "type": "string or array",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content",
+          "description": "Content to moderate",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content"
+        }
+      ],
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "required": true
+          },
+          "input": {
+            "type": [
+              "string",
+              "array"
+            ],
+            "required": true
+          }
+        }
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": true
+              },
+              "model": {
+                "type": "string",
+                "nullable": true
+              },
+              "results": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "description": "Moderation result",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content"
+        }
+      ],
+      "usage_instructions": "Moderate content for policy violations. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/moderation/moderate-content"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+      "full_url_path": "https://api.mapleai.de/v1/responses",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+      "request_parameters": [
+        {
+          "name": "model",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "type": "string",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "description": "Model ID to use",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response"
+        },
+        {
+          "name": "messages",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "type": "array",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "description": "List of messages",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response"
+        },
+        {
+          "name": "temperature",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "type": "double",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "description": "Sampling temperature (0-2)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response"
+        },
+        {
+          "name": "max_tokens",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "type": "integer",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "description": "Maximum tokens to generate",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response"
+        },
+        {
+          "name": "max_completion_tokens",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "type": "integer",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "description": "Alternative to max_tokens",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response"
+        },
+        {
+          "name": "stream",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "type": "boolean",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "description": "Enable streaming responses (defaults to false)",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response"
+        },
+        {
+          "name": "tools",
+          "name_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "type": "array",
+          "type_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "description": "Function calling tools",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response"
+        }
+      ],
+      "request_body_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "required": true,
+            "description": "Model ID to use"
+          },
+          "messages": {
+            "type": "array",
+            "required": true,
+            "description": "List of messages"
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "max_tokens": {
+            "type": "integer"
+          },
+          "max_completion_tokens": {
+            "type": "integer"
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false
+          },
+          "tools": {
+            "type": "array"
+          }
+        }
+      },
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "nullable": true
+              },
+              "object": {
+                "type": "string",
+                "nullable": true
+              },
+              "created": {
+                "type": "integer",
+                "nullable": true
+              },
+              "model": {
+                "type": "string",
+                "nullable": true
+              },
+              "provider": {
+                "type": "string",
+                "nullable": true
+              },
+              "service_tier": {
+                "type": "string",
+                "nullable": true
+              },
+              "choices": {
+                "type": "array",
+                "nullable": true,
+                "items": {
+                  "type": "object"
+                }
+              },
+              "usage": {
+                "type": "object",
+                "nullable": true
+              }
+            }
+          },
+          "description": "Response created",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response"
+        }
+      ],
+      "usage_instructions": "OpenAI Responses API for reasoning models (o1, o3, etc.). Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/responses/create-response",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/responses/create-response"
+        }
+      ]
+    },
+    {
+      "http_method": "GET",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info",
+      "full_url_path": "https://api.mapleai.de/v1/key",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info",
+      "request_parameters": [],
+      "request_body_schema": {},
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "nullable": true
+              },
+              "rpm": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "nullable": true
+              },
+              "rpm_used": {
+                "type": "integer",
+                "nullable": true
+              },
+              "rpd": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "nullable": true
+              },
+              "rpd_used": {
+                "type": "integer",
+                "nullable": true
+              },
+              "total_usage": {
+                "type": "integer",
+                "nullable": true
+              },
+              "banned": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "ban_reason": {
+                "type": "string",
+                "nullable": true
+              },
+              "ban_expires": {
+                "type": "integer",
+                "nullable": true
+              },
+              "plan": {
+                "type": "string",
+                "nullable": true
+              },
+              "admin": {
+                "type": "boolean",
+                "nullable": true
+              }
+            }
+          },
+          "description": "Key information",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info"
+        }
+      ],
+      "usage_instructions": "Retrieve API key information. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info-post",
+      "full_url_path": "https://api.mapleai.de/v1/key",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info-post",
+      "request_parameters": [],
+      "request_body_schema": {},
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info-post",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "nullable": true
+              },
+              "rpm": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "nullable": true
+              },
+              "rpm_used": {
+                "type": "integer",
+                "nullable": true
+              },
+              "rpd": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "nullable": true
+              },
+              "rpd_used": {
+                "type": "integer",
+                "nullable": true
+              },
+              "total_usage": {
+                "type": "integer",
+                "nullable": true
+              },
+              "banned": {
+                "type": "boolean",
+                "nullable": true
+              },
+              "ban_reason": {
+                "type": "string",
+                "nullable": true
+              },
+              "ban_expires": {
+                "type": "integer",
+                "nullable": true
+              },
+              "plan": {
+                "type": "string",
+                "nullable": true
+              },
+              "admin": {
+                "type": "boolean",
+                "nullable": true
+              }
+            }
+          },
+          "description": "Key information",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info-post"
+        }
+      ],
+      "usage_instructions": "Alternative POST method for getting key info. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info-post",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info-post",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-key-info-post"
+        }
+      ]
+    },
+    {
+      "http_method": "GET",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history",
+      "full_url_path": "https://api.mapleai.de/v1/usage",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history",
+      "request_parameters": [],
+      "request_body_schema": {},
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true,
+                "description": "Dates for the last 7 days"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "nullable": true,
+                "description": "Request counts for each day"
+              }
+            }
+          },
+          "description": "Usage history",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history"
+        }
+      ],
+      "usage_instructions": "Retrieve usage history for the last 7 days. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history"
+        }
+      ]
+    },
+    {
+      "http_method": "POST",
+      "http_method_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history-post",
+      "full_url_path": "https://api.mapleai.de/v1/usage",
+      "full_url_path_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history-post",
+      "request_parameters": [],
+      "request_body_schema": {},
+      "response_structures": [
+        {
+          "status_code": 200,
+          "status_code_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history-post",
+          "schema": {
+            "type": "object",
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true,
+                "description": "Dates for the last 7 days"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "nullable": true,
+                "description": "Request counts for each day"
+              }
+            }
+          },
+          "description": "Usage history",
+          "description_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history-post"
+        }
+      ],
+      "usage_instructions": "Alternative POST method for getting usage history. Requires Bearer authentication.",
+      "usage_instructions_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history-post",
+      "documentation_references": [
+        {
+          "value": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history-post",
+          "value_citation": "https://docs.mapleai.de/docs/api-reference/utility/get-usage-history-post"
+        }
+      ]
+    }
+  ]
+}
