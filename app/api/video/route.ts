@@ -66,6 +66,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Build Pollinations URL with query params
+    // Note: Pollinations uses the same /image/ endpoint for video generation
+    // The model parameter (veo, seedance) determines the output type
     const params = new URLSearchParams();
     params.set('model', modelId);
     if (body.duration) params.set('duration', String(body.duration));

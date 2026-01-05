@@ -2,8 +2,21 @@ import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateApiKey } from '@/lib/api-keys';
 
-// In-memory storage for demo purposes
-// In production, use a database or KV store
+/**
+ * API Key Management Endpoint
+ * 
+ * IMPORTANT: This uses in-memory storage for demonstration purposes.
+ * For production, replace userApiKeys Map with a database:
+ * - Vercel Postgres
+ * - PlanetScale
+ * - MongoDB Atlas
+ * - Supabase
+ * 
+ * Keys stored in memory will be lost on:
+ * - Cold starts
+ * - Deployments
+ * - Multiple function instances
+ */
 const userApiKeys = new Map<string, Array<{ id: string; key: string; name: string; createdAt: string }>>();
 
 export async function GET() {

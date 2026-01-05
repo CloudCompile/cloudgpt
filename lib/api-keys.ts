@@ -1,7 +1,18 @@
 import { v4 as uuidv4 } from 'uuid';
 
-// Simple in-memory API key storage (in production, use a database)
-// This is designed for demonstration - in production use KV store or database
+/**
+ * API Key Management Utilities
+ * 
+ * IMPORTANT: This implementation uses in-memory storage for demonstration purposes.
+ * For production deployments, replace with:
+ * - Vercel KV or Redis for rate limiting
+ * - A database (Postgres, MongoDB, etc.) for API key storage
+ * 
+ * The in-memory storage will not persist across:
+ * - Serverless function cold starts
+ * - Multiple function instances
+ * - Deployments
+ */
 
 export interface ApiKey {
   id: string;
@@ -14,28 +25,31 @@ export interface ApiKey {
   usageCount: number;
 }
 
-// Generate a new API key
+// Generate a new API key with the cgpt_ prefix
 export function generateApiKey(): string {
   const prefix = 'cgpt_';
   const key = uuidv4().replace(/-/g, '');
   return `${prefix}${key}`;
 }
 
-// Validate API key format
-export function isValidApiKeyFormat(key: string): boolean {
-  return /^cgpt_[a-f0-9]{32}$/.test(key);
-}
-
-// Extract API key from request headers
+// Extract API key from request headers (Bearer token)
 export function extractApiKey(headers: Headers): string | null {
   const authHeader = headers.get('authorization');
   if (authHeader?.startsWith('Bearer ')) {
-    return authHeader.substring(7);
+    const key = authHeader.substring(7);
+    // Validate key format before returning
+    if (key.startsWith('cgpt_') && key.length === 37) {
+      return key;
+    }
   }
   return null;
 }
 
-// Rate limiting check (simple implementation)
+/**
+ * In-memory rate limiting
+ * NOTE: This will not work correctly across multiple serverless instances.
+ * For production, use Redis or Vercel KV.
+ */
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 export function checkRateLimit(apiKey: string, limit: number = 60): boolean {
