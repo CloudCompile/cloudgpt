@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractApiKey, validateApiKey, checkRateLimit } from '@/lib/api-keys';
-import { getProvider, forwardRequest } from '@/lib/providers';
+import { routeChat, getDynamicRateLimit } from '@/lib/providers';
 
 export const runtime = 'edge';
 
@@ -27,7 +27,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allowed = await checkRateLimit(apiKey, 60);
+    const body = await request.json();
+    const userModel = (body as any)?.model;
+
+    // Get dynamic rate limit based on model
+    const limit = await getDynamicRateLimit(userModel);
+
+    const allowed = await checkRateLimit(apiKey, limit);
     if (!allowed) {
       return NextResponse.json(
         { error: 'Rate limit exceeded' },
@@ -35,15 +41,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const provider = getProvider();
+    // Check if streaming is requested
+    const streaming = (body as any)?.stream || false;
 
-    const response = await forwardRequest(
-      provider,
-      '/chat/completions',
-      'POST',
-      body
-    );
+    const response = await routeChat(body, { streaming, autoFallback: true });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -53,12 +54,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle streaming
+    if (streaming && response.body) {
+      return new NextResponse(response.body, {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+      });
+    }
+
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     );
   }

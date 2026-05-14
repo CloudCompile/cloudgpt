@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractApiKey, validateApiKey, checkRateLimit } from '@/lib/api-keys';
-import { getProvider, forwardRequest } from '@/lib/providers';
+import { routeVideo, getDynamicRateLimit } from '@/lib/providers';
 
 export const runtime = 'edge';
 
@@ -27,7 +27,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allowed = await checkRateLimit(apiKey, 60);
+    const body = await request.json();
+
+    if (!body.prompt) {
+      return NextResponse.json(
+        { error: 'prompt is required' },
+        { status: 400 }
+      );
+    }
+
+    const userModel = body.model || 'pollinations/text-to-video';
+    const limit = await getDynamicRateLimit(userModel);
+
+    const allowed = await checkRateLimit(apiKey, limit);
     if (!allowed) {
       return NextResponse.json(
         { error: 'Rate limit exceeded' },
@@ -35,15 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const provider = getProvider();
-
-    const response = await forwardRequest(
-      provider,
-      '/videos/generations',
-      'POST',
-      body
-    );
+    const response = await routeVideo(body);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -53,12 +57,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check content type
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('video/')) {
+      // Return raw video
+      const videoBuffer = await response.arrayBuffer();
+      return new NextResponse(videoBuffer, {
+        headers: { 'Content-Type': 'video/mp4' },
+      });
+    }
+
+    // Return JSON response
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error('Videos API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     );
   }

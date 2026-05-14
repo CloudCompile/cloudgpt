@@ -1,28 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getProvider, forwardRequest } from '@/lib/providers';
+import { routeModels } from '@/lib/providers';
 
 export const runtime = 'edge';
 
 export async function GET() {
   try {
-    const provider = getProvider();
-
-    const response = await forwardRequest(provider, '/models', 'GET');
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return NextResponse.json(
-        { error: 'Provider error', details: errorText },
-        { status: response.status }
-      );
-    }
-
-    const data = await response.json();
-    return NextResponse.json(data);
+    const models = await routeModels();
+    return NextResponse.json(models);
   } catch (error) {
     console.error('Models API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     );
   }
