@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractApiKey, validateApiKey, checkRateLimit } from '@/lib/api-keys';
 import { routeEmbeddings, getDynamicRateLimit } from '@/lib/providers';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 200 });

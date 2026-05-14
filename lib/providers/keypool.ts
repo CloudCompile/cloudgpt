@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { redis } from '../redis';
 
 /**
  * Dynamic key pool system that automatically scales rate limits
@@ -34,10 +34,11 @@ export async function getNextKey(providerName: string): Promise<string | null> {
   }
 
   const indexKey = `pool:${providerName.toLowerCase()}:index`;
-  const currentIndex = (await kv.get<number>(indexKey)) || 0;
+  const indexStr = await redis.get(indexKey);
+  const currentIndex = indexStr ? parseInt(indexStr) : 0;
   const nextIndex = (currentIndex + 1) % keys.length;
 
-  await kv.set(indexKey, nextIndex);
+  await redis.set(indexKey, nextIndex.toString());
 
   return keys[currentIndex];
 }
