@@ -2,7 +2,7 @@
 
 Free AI API gateway. Simple, fast, open.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CloudCompile/cloudgpt&env=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,KV_REST_API_URL,KV_REST_API_TOKEN&project-name=openrelay&repository-name=openrelay)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CloudCompile/cloudgpt&env=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,KV_REST_API_URL,KV_REST_API_TOKEN,AIHUBMIX_API_KEY&project-name=openrelay&repository-name=openrelay)
 
 ## Features
 
@@ -24,13 +24,14 @@ Free AI API gateway. Simple, fast, open.
 
 The easiest way to deploy:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CloudCompile/cloudgpt&env=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,KV_REST_API_URL,KV_REST_API_TOKEN&project-name=openrelay&repository-name=openrelay)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CloudCompile/cloudgpt&env=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,KV_REST_API_URL,KV_REST_API_TOKEN,AIHUBMIX_API_KEY&project-name=openrelay&repository-name=openrelay)
 
 You'll need to set these environment variables:
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` - From Clerk
 - `CLERK_SECRET_KEY` - From Clerk  
 - `KV_REST_API_URL` - From Vercel KV
 - `KV_REST_API_TOKEN` - From Vercel KV
+- `AIHUBMIX_API_KEY` - From [AIHubMix](https://aihubmix.com)
 
 ### Local Development
 
@@ -69,13 +70,16 @@ API keys have format: `or_[32 random hex chars]`
 
 ### Endpoints
 
-- `POST /v1/chat/completions` - Chat completions
+All endpoints are proxied through [AIHubMix](https://aihubmix.com), which provides access to 27+ free models:
+
+- `POST /v1/chat/completions` - Chat completions (GPT-4o, Claude, Gemini, etc.)
 - `GET /v1/models` - List available models
 - `POST /v1/images/generations` - Generate images
+- `POST /v1/videos/generations` - Generate videos
 - `POST /v1/audio/speech` - Text-to-speech
 - `POST /v1/embeddings` - Generate embeddings
 
-**Note:** All endpoints currently return 501 "No providers configured yet." Providers will be added in a future session.
+See [AIHubMix Models](https://aihubmix.com/models) for available models and their IDs.
 
 ## Dashboard
 
@@ -96,11 +100,12 @@ API keys have format: `or_[32 random hex chars]`
 ├── app/
 │   ├── api/
 │   │   ├── v1/                    # OpenAI-compatible API
-│   │   │   ├── chat/completions/
-│   │   │   ├── models/
-│   │   │   ├── images/generations/
-│   │   │   ├── audio/speech/
-│   │   │   └── embeddings/
+│   │   │   ├── chat/completions/  # Chat completions (AIHubMix)
+│   │   │   ├── models/            # List models (AIHubMix)
+│   │   │   ├── images/generations/ # Image generation (AIHubMix)
+│   │   │   ├── videos/generations/ # Video generation (AIHubMix)
+│   │   │   ├── audio/speech/      # Text-to-speech (AIHubMix)
+│   │   │   └── embeddings/        # Embeddings (AIHubMix)
 │   │   └── dashboard/keys/        # API key management
 │   ├── dashboard/                 # User dashboard
 │   ├── models/                    # Models page
@@ -108,7 +113,8 @@ API keys have format: `or_[32 random hex chars]`
 │   ├── page.tsx                   # Home page
 │   └── globals.css
 ├── lib/
-│   └── api-keys.ts                # Key utilities + Vercel KV
+│   ├── api-keys.ts                # Key utilities + Vercel KV
+│   └── providers.ts               # Provider integration (AIHubMix)
 ├── tsconfig.json
 ├── package.json
 └── README.md
@@ -139,9 +145,16 @@ npm run build
 npm start
 ```
 
-## Future Sessions
+## Provider
 
-Providers and live model routing will be added in a future session. The API routes are intentionally stubbed to return 501 "Not Implemented" as a placeholder.
+OpenRelay is currently powered by [AIHubMix](https://aihubmix.com), a unified API gateway providing access to 27+ free AI models including:
+- **Text:** GPT-4o, Claude 3.5, Gemini 2.0, DeepSeek, Qwen, and more
+- **Images:** DALL-E, Flux, and others
+- **Video:** Text-to-video generation
+- **Audio:** Text-to-speech
+- **Embeddings:** Text embeddings
+
+Future versions may support additional providers.
 
 ## Contributing
 
