@@ -1,84 +1,115 @@
-import { v4 as uuidv4 } from 'uuid';
+import { kv } from '@vercel/kv';
 
-/**
- * API Key Management Utilities
- * 
- * IMPORTANT: This implementation uses in-memory storage for demonstration purposes.
- * For production deployments, replace with:
- * - Vercel KV or Redis for rate limiting
- * - A database (Postgres, MongoDB, etc.) for API key storage
- * 
- * The in-memory storage will not persist across:
- * - Serverless function cold starts
- * - Multiple function instances
- * - Deployments
- */
-
-export interface ApiKey {
-  id: string;
-  key: string;
+export interface ApiKeyData {
   userId: string;
   name: string;
-  createdAt: Date;
-  lastUsedAt?: Date;
-  rateLimit: number; // requests per minute
-  usageCount: number;
+  createdAt: number;
 }
 
-// Generate a new API key with the cgpt_ prefix
+function randomHex(length: number): string {
+  const chars = '0123456789abcdef';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 export function generateApiKey(): string {
-  const prefix = 'cgpt_';
-  const key = uuidv4().replace(/-/g, '');
-  return `${prefix}${key}`;
+  return `or_${randomHex(32)}`;
 }
 
-// Extract API key from request headers (Bearer token)
 export function extractApiKey(headers: Headers): string | null {
   const authHeader = headers.get('authorization');
   if (authHeader?.startsWith('Bearer ')) {
     const key = authHeader.substring(7);
-    // Validate key format before returning
-    if (key.startsWith('cgpt_') && key.length === 37) {
+    if (key.startsWith('or_') && key.length === 35) {
       return key;
     }
   }
   return null;
 }
 
-/**
- * In-memory rate limiting
- * NOTE: This will not work correctly across multiple serverless instances.
- * For production, use Redis or Vercel KV.
- */
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+export async function validateApiKey(key: string): Promise<ApiKeyData | null> {
+  const data = await kv.get<ApiKeyData>(`key:${key}`);
+  return data || null;
+}
 
-export function checkRateLimit(apiKey: string, limit: number = 60): boolean {
+export async function storeApiKey(
+  key: string,
+  userId: string,
+  name: string
+): Promise<void> {
   const now = Date.now();
-  const windowMs = 60 * 1000; // 1 minute window
-  
-  const current = rateLimitMap.get(apiKey);
-  
+  await kv.set(`key:${key}`, {
+    userId,
+    name,
+    createdAt: now,
+  } as ApiKeyData);
+
+  const userKeysKey = `user:${userId}:keys`;
+  const existingKeys = (await kv.get<string[]>(userKeysKey)) || [];
+  existingKeys.push(key);
+  await kv.set(userKeysKey, existingKeys);
+}
+
+export async function getUserKeys(userId: string): Promise<string[]> {
+  const keys = await kv.get<string[]>(`user:${userId}:keys`);
+  return keys || [];
+}
+
+export async function deleteApiKey(key: string, userId: string): Promise<void> {
+  const data = await kv.get<ApiKeyData>(`key:${key}`);
+  if (!data || data.userId !== userId) {
+    throw new Error('Key not found or does not belong to user');
+  }
+
+  await kv.del(`key:${key}`);
+
+  const userKeysKey = `user:${userId}:keys`;
+  const existingKeys = (await kv.get<string[]>(userKeysKey)) || [];
+  const filteredKeys = existingKeys.filter((k) => k !== key);
+  await kv.set(userKeysKey, filteredKeys);
+}
+
+export async function checkRateLimit(
+  key: string,
+  limit: number = 60
+): Promise<boolean> {
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const rateLimitKey = `ratelimit:${key}`;
+
+  const current = await kv.get<{ count: number; resetAt: number }>(
+    rateLimitKey
+  );
+
   if (!current || now > current.resetAt) {
-    rateLimitMap.set(apiKey, { count: 1, resetAt: now + windowMs });
+    await kv.setex(rateLimitKey, 60, { count: 1, resetAt: now + windowMs });
     return true;
   }
-  
+
   if (current.count >= limit) {
     return false;
   }
-  
+
   current.count++;
+  await kv.set(rateLimitKey, current);
   return true;
 }
 
-export function getRateLimitInfo(apiKey: string): { remaining: number; resetAt: number } {
-  const current = rateLimitMap.get(apiKey);
+export async function getRateLimitInfo(
+  key: string
+): Promise<{ remaining: number; resetAt: number }> {
+  const current = await kv.get<{ count: number; resetAt: number }>(
+    `ratelimit:${key}`
+  );
   const limit = 60;
-  
+
   if (!current) {
     return { remaining: limit, resetAt: Date.now() + 60000 };
   }
-  
+
   return {
     remaining: Math.max(0, limit - current.count),
     resetAt: current.resetAt,
