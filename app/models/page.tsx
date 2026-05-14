@@ -1,4 +1,38 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface Model {
+  id: string;
+  object: string;
+  created: number;
+  owned_by: string;
+}
+
 export default function ModelsPage() {
+  const [models, setModels] = useState<Model[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchModels();
+  }, []);
+
+  async function fetchModels() {
+    try {
+      const response = await fetch('/api/v1/models');
+      if (!response.ok) throw new Error('Failed to fetch models');
+      const data = await response.json();
+      setModels(data.data || []);
+      setError('');
+    } catch (err) {
+      setError('Failed to load models. Please try again later.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <main>
       <section className="container" style={{ paddingTop: '80px', paddingBottom: '80px' }}>
@@ -9,39 +43,55 @@ export default function ModelsPage() {
             <strong>OpenRelay is powered by AIHubMix</strong>
           </p>
           <p style={{ marginBottom: '16px' }}>
-            Access 27+ free AI models including GPT-4o, Claude 3.5, Gemini 2.0, and more.
+            Access {models.length} free AI models including GPT-4o, Claude, Gemini, and more.
           </p>
           <a href="https://aihubmix.com/models" target="_blank" rel="noopener noreferrer" className="button">
             View All Models on AIHubMix
           </a>
         </div>
 
-        <h2 style={{ marginTop: '60px', marginBottom: '24px' }}>Popular Models</h2>
+        <h2 style={{ marginTop: '60px', marginBottom: '24px' }}>All Models ({models.length})</h2>
 
-        <h3 style={{ marginTop: '32px', marginBottom: '16px' }}>Text Models</h3>
-        <ul style={{ marginLeft: '20px', color: 'var(--text-secondary)' }}>
-          <li>gpt-4o-free — OpenAI GPT-4o</li>
-          <li>gpt-4.1-free — OpenAI GPT-4.1</li>
-          <li>gpt-4.1-mini-free — OpenAI GPT-4.1 Mini</li>
-          <li>coding-glm-5.1-free — Zhipu Coding GLM 5.1</li>
-          <li>xiaomi-mimo-v2.5-pro-free — Xiaomi MiMo V2.5 Pro</li>
-          <li>gemini-3-flash-preview-free — Google Gemini 3 Flash</li>
-          <li>gemini-3.1-flash-image-preview-free — Google Gemini 3.1 Flash</li>
-        </ul>
+        {error && <div className="error">{error}</div>}
 
-        <h3 style={{ marginTop: '32px', marginBottom: '16px' }}>Image Models</h3>
-        <ul style={{ marginLeft: '20px', color: 'var(--text-secondary)' }}>
-          <li>gpt-image-2-free — OpenAI DALL-E 3</li>
-          <li>flux, turbo, seedream — And more from AIHubMix</li>
-        </ul>
+        {loading ? (
+          <p>Loading models...</p>
+        ) : models.length === 0 ? (
+          <p style={{ color: 'var(--text-secondary)' }}>
+            No models available. Check your API configuration.
+          </p>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Model ID</th>
+                  <th>Provider</th>
+                </tr>
+              </thead>
+              <tbody>
+                {models.map((model) => (
+                  <tr key={model.id}>
+                    <td>
+                      <code style={{ fontSize: '0.9rem' }}>{model.id}</code>
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{model.owned_by}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-        <h3 style={{ marginTop: '32px', marginBottom: '16px' }}>Video Models</h3>
-        <ul style={{ marginLeft: '20px', color: 'var(--text-secondary)' }}>
-          <li>Video generation available through AIHubMix</li>
-        </ul>
+        <p style={{ marginTop: '40px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+          Use any model ID above in your API requests. Copy the ID and use it in the <code>model</code> parameter.
+        </p>
 
-        <p style={{ marginTop: '60px', color: 'var(--text-secondary)' }}>
-          Visit <a href="https://aihubmix.com/models">AIHubMix Models</a> for the complete list and to copy model IDs.
+        <p style={{ marginTop: '20px', color: 'var(--text-secondary)', textAlign: 'center' }}>
+          For more details, visit{' '}
+          <a href="https://aihubmix.com/models" target="_blank" rel="noopener noreferrer">
+            AIHubMix Models
+          </a>
         </p>
 
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
