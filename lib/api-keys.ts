@@ -74,8 +74,10 @@ export async function deleteApiKey(key: string, userId: string): Promise<void> {
 
 export async function checkRateLimit(
   key: string,
-  limit: number = 60
+  limit?: number
 ): Promise<boolean> {
+  // If no limit specified, use default of 60
+  const actualLimit = limit || 60;
   const now = Date.now();
   const windowMs = 60 * 1000;
   const rateLimitKey = `ratelimit:${key}`;
@@ -89,7 +91,7 @@ export async function checkRateLimit(
     return true;
   }
 
-  if (current.count >= limit) {
+  if (current.count >= actualLimit) {
     return false;
   }
 

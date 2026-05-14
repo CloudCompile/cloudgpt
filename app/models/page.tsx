@@ -7,12 +7,15 @@ interface Model {
   object: string;
   created: number;
   owned_by: string;
+  provider?: string;
+  description?: string;
 }
 
 export default function ModelsPage() {
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [providerFilter, setProviderFilter] = useState<string>('');
 
   useEffect(() => {
     fetchModels();
@@ -33,6 +36,18 @@ export default function ModelsPage() {
     }
   }
 
+  const providers = [...new Set(models.map((m) => m.provider || 'Unknown'))].sort();
+  const filteredModels = providerFilter
+    ? models.filter((m) => (m.provider || 'Unknown') === providerFilter)
+    : models;
+
+  const providerColors: Record<string, string> = {
+    AIHubMix: '#3b82f6',
+    Pollinations: '#8b5cf6',
+    VoidAI: '#06b6d4',
+    Airforce: '#f59e0b',
+  };
+
   return (
     <main>
       <section className="container" style={{ paddingTop: '80px', paddingBottom: '80px' }}>
@@ -40,26 +55,68 @@ export default function ModelsPage() {
 
         <div className="info-box">
           <p style={{ marginBottom: '12px' }}>
-            <strong>OpenRelay is powered by AIHubMix</strong>
+            <strong>OpenRelay is powered by multiple providers</strong>
           </p>
           <p style={{ marginBottom: '16px' }}>
-            Access {models.length} free AI models including GPT-4o, Claude, Gemini, and more.
+            Access {models.length} free AI models from AIHubMix, Pollinations, and more.
           </p>
-          <a href="https://aihubmix.com/models" target="_blank" rel="noopener noreferrer" className="button">
-            View All Models on AIHubMix
-          </a>
         </div>
 
-        <h2 style={{ marginTop: '60px', marginBottom: '24px' }}>All Models ({models.length})</h2>
+        <h2 style={{ marginTop: '60px', marginBottom: '24px' }}>Providers</h2>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '40px' }}>
+          <button
+            onClick={() => setProviderFilter('')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: providerFilter === '' ? '2px solid var(--accent)' : '1px solid var(--border)',
+              background: providerFilter === '' ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+              color: 'var(--fg)',
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            All ({models.length})
+          </button>
+          {providers.map((provider) => {
+            const count = models.filter((m) => (m.provider || 'Unknown') === provider).length;
+            return (
+              <button
+                key={provider}
+                onClick={() => setProviderFilter(provider)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border:
+                    providerFilter === provider
+                      ? `2px solid ${providerColors[provider as string] || 'var(--accent)'}`
+                      : '1px solid var(--border)',
+                  background:
+                    providerFilter === provider
+                      ? `rgba(${hexToRgb(providerColors[provider as string] || '#3b82f6')}, 0.1)`
+                      : 'transparent',
+                  color: 'var(--fg)',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                }}
+              >
+                {provider} ({count})
+              </button>
+            );
+          })}
+        </div>
+
+        <h2 style={{ marginTop: '40px', marginBottom: '24px' }}>
+          {filteredModels.length} {providerFilter ? `${providerFilter} ` : ''}
+          {filteredModels.length === 1 ? 'Model' : 'Models'}
+        </h2>
 
         {error && <div className="error">{error}</div>}
 
         {loading ? (
           <p>Loading models...</p>
-        ) : models.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)' }}>
-            No models available. Check your API configuration.
-          </p>
+        ) : filteredModels.length === 0 ? (
+          <p style={{ color: 'var(--text-secondary)' }}>No models found.</p>
         ) : (
           <div style={{ overflowX: 'auto' }}>
             <table>
@@ -67,15 +124,30 @@ export default function ModelsPage() {
                 <tr>
                   <th>Model ID</th>
                   <th>Provider</th>
+                  <th style={{ display: 'none', maxWidth: '400px' }}>Description</th>
                 </tr>
               </thead>
               <tbody>
-                {models.map((model) => (
+                {filteredModels.map((model) => (
                   <tr key={model.id}>
                     <td>
-                      <code style={{ fontSize: '0.9rem' }}>{model.id}</code>
+                      <code style={{ fontSize: '0.85rem' }}>{model.id}</code>
                     </td>
-                    <td style={{ color: 'var(--text-secondary)' }}>{model.owned_by}</td>
+                    <td>
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '0.85rem',
+                          fontWeight: '600',
+                          background: `${providerColors[model.provider as string] || '#666'}20`,
+                          color: providerColors[model.provider as string] || '#999',
+                        }}
+                      >
+                        {model.provider || 'Unknown'}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -87,17 +159,18 @@ export default function ModelsPage() {
           Use any model ID above in your API requests. Copy the ID and use it in the <code>model</code> parameter.
         </p>
 
-        <p style={{ marginTop: '20px', color: 'var(--text-secondary)', textAlign: 'center' }}>
-          For more details, visit{' '}
-          <a href="https://aihubmix.com/models" target="_blank" rel="noopener noreferrer">
-            AIHubMix Models
-          </a>
-        </p>
-
         <div style={{ textAlign: 'center', marginTop: '40px' }}>
           <a href="/" className="button">Back Home</a>
         </div>
       </section>
     </main>
   );
+}
+
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (result) {
+    return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
+  }
+  return '59, 130, 246';
 }

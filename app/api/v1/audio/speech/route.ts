@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractApiKey, validateApiKey, checkRateLimit } from '@/lib/api-keys';
+import { routeAudio, getDynamicRateLimit } from '@/lib/providers';
 
 export const runtime = 'edge';
 
@@ -26,7 +27,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const allowed = await checkRateLimit(apiKey, 60);
+    const body = await request.json();
+
+    if (!body.input) {
+      return NextResponse.json(
+        { error: 'input is required' },
+        { status: 400 }
+      );
+    }
+
+    const userModel = body.model;
+    const limit = await getDynamicRateLimit(userModel);
+
+    const allowed = await checkRateLimit(apiKey, limit);
     if (!allowed) {
       return NextResponse.json(
         { error: 'Rate limit exceeded' },
@@ -34,14 +47,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { error: 'No providers configured yet.' },
-      { status: 501 }
-    );
+    const response = await routeAudio(body, { autoFallback: true });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return NextResponse.json(
+        { error: 'Provider error', details: errorText },
+        { status: response.status }
+      );
+    }
+
+    // Check content type
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('audio/')) {
+      // Return raw audio
+      const audioBuffer = await response.arrayBuffer();
+      return new NextResponse(audioBuffer, {
+        headers: { 'Content-Type': contentType || 'audio/mpeg' },
+      });
+    }
+
+    // Return JSON response
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Audio API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     );
   }
