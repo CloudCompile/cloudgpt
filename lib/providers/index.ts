@@ -1,6 +1,7 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
 import { forwardPollinations, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
+import { forwardAirforce } from './airforce';
 
 /**
  * Provider routing logic
@@ -55,7 +56,11 @@ export async function routeChat(
     return forwardVoidAI('/chat/completions', 'POST', body, options);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI
+  if (model.startsWith('airforce/')) {
+    return forwardAirforce('/chat/completions', 'POST', body, options);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce
   try {
     return await forwardAIHubMix('/chat/completions', 'POST', body);
   } catch (error) {
@@ -63,7 +68,11 @@ export async function routeChat(
       try {
         return await forwardPollinations('/chat/completions', 'POST', body, options);
       } catch (pollinationsError) {
-        return await forwardVoidAI('/chat/completions', 'POST', body, options);
+        try {
+          return await forwardVoidAI('/chat/completions', 'POST', body, options);
+        } catch (voidaiError) {
+          return await forwardAirforce('/chat/completions', 'POST', body, options);
+        }
       }
     }
     throw error;
@@ -90,7 +99,11 @@ export async function routeImages(
     return forwardVoidAI('/images/generations', 'POST', body);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI
+  if (model.startsWith('airforce/')) {
+    return forwardAirforce('/images/generations', 'POST', body);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce
   try {
     return await forwardAIHubMix('/images/generations', 'POST', body);
   } catch (error) {
@@ -98,7 +111,11 @@ export async function routeImages(
       try {
         return await forwardPollinations('/images/generations', 'POST', body);
       } catch (pollinationsError) {
-        return await forwardVoidAI('/images/generations', 'POST', body);
+        try {
+          return await forwardVoidAI('/images/generations', 'POST', body);
+        } catch (voidaiError) {
+          return await forwardAirforce('/images/generations', 'POST', body);
+        }
       }
     }
     throw error;
@@ -111,7 +128,12 @@ export async function routeVideo(
 ) {
   const model = (body as any)?.model || 'pollinations/text-to-video';
 
-  // Videos are only available on Pollinations
+  // Airforce video endpoint
+  if (model.startsWith('airforce/')) {
+    return forwardAirforce('/video/generations', 'POST', body);
+  }
+
+  // Default: Pollinations for video
   if (model.startsWith('pollinations/')) {
     return forwardPollinations('/videos/generations', 'POST', body);
   }
@@ -133,7 +155,11 @@ export async function routeAudio(
     return forwardVoidAI('/audio/speech', 'POST', body);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI
+  if (model.startsWith('airforce/')) {
+    return forwardAirforce('/audio/speech', 'POST', body);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce
   try {
     return await forwardAIHubMix('/audio/speech', 'POST', body);
   } catch (error) {
@@ -141,11 +167,31 @@ export async function routeAudio(
       try {
         return await forwardPollinations('/audio/speech', 'POST', body);
       } catch (pollinationsError) {
-        return await forwardVoidAI('/audio/speech', 'POST', body);
+        try {
+          return await forwardVoidAI('/audio/speech', 'POST', body);
+        } catch (voidaiError) {
+          return await forwardAirforce('/audio/speech', 'POST', body);
+        }
       }
     }
     throw error;
   }
+}
+
+export async function routeMusic(
+  body: unknown,
+  options?: RouteOptions
+) {
+  // Music generation is Airforce only
+  return forwardAirforce('/audio/music', 'POST', body, options);
+}
+
+export async function routeSoundEffects(
+  body: unknown,
+  options?: RouteOptions
+) {
+  // Sound effects generation is Airforce only
+  return forwardAirforce('/audio/sound-effects', 'POST', body, options);
 }
 
 export async function routeEmbeddings(
@@ -162,7 +208,11 @@ export async function routeEmbeddings(
     return forwardVoidAI('/embeddings', 'POST', body);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI
+  if (model.startsWith('airforce/')) {
+    return forwardAirforce('/embeddings', 'POST', body);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce
   try {
     return await forwardAIHubMix('/embeddings', 'POST', body);
   } catch (error) {
@@ -170,8 +220,37 @@ export async function routeEmbeddings(
       try {
         return await forwardPollinations('/embeddings', 'POST', body);
       } catch (pollinationsError) {
-        return await forwardVoidAI('/embeddings', 'POST', body);
+        try {
+          return await forwardVoidAI('/embeddings', 'POST', body);
+        } catch (voidaiError) {
+          return await forwardAirforce('/embeddings', 'POST', body);
+        }
       }
+    }
+    throw error;
+  }
+}
+
+export async function routeTranscription(
+  body: unknown,
+  options?: RouteOptions
+) {
+  const model = (body as any)?.model || 'whisper-1';
+
+  if (model.startsWith('voidai/')) {
+    return forwardVoidAI('/audio/transcriptions', 'POST', body);
+  }
+
+  if (model.startsWith('airforce/')) {
+    return forwardAirforce('/audio/transcriptions', 'POST', body);
+  }
+
+  // Default: try VoidAI → Airforce
+  try {
+    return await forwardVoidAI('/audio/transcriptions', 'POST', body);
+  } catch (error) {
+    if (options?.autoFallback) {
+      return await forwardAirforce('/audio/transcriptions', 'POST', body);
     }
     throw error;
   }
@@ -180,17 +259,22 @@ export async function routeEmbeddings(
 export async function routeModels() {
   const models: any[] = [];
 
-  // Fetch AIHubMix models
+  // Fetch AIHubMix models (free tier only)
   try {
     const aihubmixResponse = await forwardAIHubMix('/models', 'GET');
     if (aihubmixResponse.ok) {
       const data = await aihubmixResponse.json();
       if (data.data && Array.isArray(data.data)) {
         models.push(
-          ...data.data.map((model: any) => ({
-            ...model,
-            provider: 'AIHubMix',
-          }))
+          ...data.data
+            .filter((model: any) => {
+              // Filter to free tier models (ending in -free)
+              return model.id.endsWith('-free');
+            })
+            .map((model: any) => ({
+              ...model,
+              provider: 'AIHubMix',
+            }))
         );
       }
     }
@@ -240,6 +324,24 @@ export async function routeModels() {
     console.error('Error fetching VoidAI models:', error);
   }
 
+  // Fetch Airforce models (all have free tier)
+  try {
+    const airforceResponse = await forwardAirforce('/models', 'GET');
+    if (airforceResponse.ok) {
+      const data = await airforceResponse.json();
+      if (data.data && Array.isArray(data.data)) {
+        models.push(
+          ...data.data.map((model: any) => ({
+            ...model,
+            provider: 'Airforce',
+          }))
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching Airforce models:', error);
+  }
+
   // Add special Pollinations models
   models.push(
     {
@@ -283,14 +385,20 @@ export async function getDynamicRateLimit(userModel?: string): Promise<number> {
     return getRateLimitForProvider('VOIDAI');
   }
 
+  // Check if user specified an Airforce model
+  if (userModel?.startsWith('airforce/')) {
+    return getRateLimitForProvider('AIRFORCE');
+  }
+
   // Check if user specified an AIHubMix model
   if (userModel?.startsWith('aihubmix/') || !userModel) {
     // AIHubMix only has one key, so always 60
     return 60;
   }
 
-  // Default to higher of the three providers
+  // Default to higher of the four providers
   const pollinationsLimit = await getRateLimitForProvider('POLLINATIONS');
   const voidaiLimit = await getRateLimitForProvider('VOIDAI');
-  return Math.max(60, pollinationsLimit, voidaiLimit);
+  const airforceLimit = await getRateLimitForProvider('AIRFORCE');
+  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit);
 }

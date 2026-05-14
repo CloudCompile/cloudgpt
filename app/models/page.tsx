@@ -45,6 +45,7 @@ export default function ModelsPage() {
     AIHubMix: '#3b82f6',
     Pollinations: '#8b5cf6',
     VoidAI: '#06b6d4',
+    Airforce: '#f59e0b',
   };
 
   return (
