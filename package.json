@@ -1,7 +1,7 @@
 {
-  "name": "cloudgpt",
+  "name": "openrelay",
   "version": "1.0.0",
-  "description": "Unified AI API Gateway - Chat, Image, and Video generation",
+  "description": "OpenRelay - Free AI API Gateway",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,16 +10,15 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.0.0",
+    "@vercel/kv": "^0.2.0",
     "next": "^15.5.9",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "uuid": "^11.1.0"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "@types/uuid": "^10.0.0",
     "typescript": "^5.0.0"
   },
   "engines": {
