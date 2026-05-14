@@ -1,5 +1,6 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
 import { forwardPollinations, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
+import { forwardVoidAI } from './voidai';
 
 /**
  * Provider routing logic
@@ -50,12 +51,20 @@ export async function routeChat(
     return forwardPollinations('/chat/completions', 'POST', body, options);
   }
 
-  // Default: try AIHubMix first, fallback to Pollinations
+  if (model.startsWith('voidai/')) {
+    return forwardVoidAI('/chat/completions', 'POST', body, options);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI
   try {
     return await forwardAIHubMix('/chat/completions', 'POST', body);
   } catch (error) {
     if (options?.autoFallback) {
-      return await forwardPollinations('/chat/completions', 'POST', body, options);
+      try {
+        return await forwardPollinations('/chat/completions', 'POST', body, options);
+      } catch (pollinationsError) {
+        return await forwardVoidAI('/chat/completions', 'POST', body, options);
+      }
     }
     throw error;
   }
@@ -77,12 +86,20 @@ export async function routeImages(
     return forwardPollinations('/images/generations', 'POST', body);
   }
 
-  // Default: try AIHubMix first, fallback to Pollinations
+  if (model.startsWith('voidai/')) {
+    return forwardVoidAI('/images/generations', 'POST', body);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI
   try {
     return await forwardAIHubMix('/images/generations', 'POST', body);
   } catch (error) {
     if (options?.autoFallback) {
-      return await forwardPollinations('/images/generations', 'POST', body);
+      try {
+        return await forwardPollinations('/images/generations', 'POST', body);
+      } catch (pollinationsError) {
+        return await forwardVoidAI('/images/generations', 'POST', body);
+      }
     }
     throw error;
   }
@@ -112,12 +129,20 @@ export async function routeAudio(
     return forwardPollinations('/audio/speech', 'POST', body);
   }
 
-  // Default: try AIHubMix first, fallback to Pollinations
+  if (model.startsWith('voidai/')) {
+    return forwardVoidAI('/audio/speech', 'POST', body);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI
   try {
     return await forwardAIHubMix('/audio/speech', 'POST', body);
   } catch (error) {
     if (options?.autoFallback) {
-      return await forwardPollinations('/audio/speech', 'POST', body);
+      try {
+        return await forwardPollinations('/audio/speech', 'POST', body);
+      } catch (pollinationsError) {
+        return await forwardVoidAI('/audio/speech', 'POST', body);
+      }
     }
     throw error;
   }
@@ -133,12 +158,20 @@ export async function routeEmbeddings(
     return forwardPollinations('/embeddings', 'POST', body);
   }
 
-  // Default: try AIHubMix first, fallback to Pollinations
+  if (model.startsWith('voidai/')) {
+    return forwardVoidAI('/embeddings', 'POST', body);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI
   try {
     return await forwardAIHubMix('/embeddings', 'POST', body);
   } catch (error) {
     if (options?.autoFallback) {
-      return await forwardPollinations('/embeddings', 'POST', body);
+      try {
+        return await forwardPollinations('/embeddings', 'POST', body);
+      } catch (pollinationsError) {
+        return await forwardVoidAI('/embeddings', 'POST', body);
+      }
     }
     throw error;
   }
@@ -183,6 +216,30 @@ export async function routeModels() {
     console.error('Error fetching Pollinations models:', error);
   }
 
+  // Fetch VoidAI models (free tier only)
+  try {
+    const voidaiResponse = await forwardVoidAI('/models', 'GET');
+    if (voidaiResponse.ok) {
+      const data = await voidaiResponse.json();
+      if (data.data && Array.isArray(data.data)) {
+        models.push(
+          ...data.data
+            .filter((model: any) => {
+              // Filter to free tier models
+              const planReqs = model.plan_requirements || [];
+              return planReqs.includes('free') || planReqs.length === 0;
+            })
+            .map((model: any) => ({
+              ...model,
+              provider: 'VoidAI',
+            }))
+        );
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching VoidAI models:', error);
+  }
+
   // Add special Pollinations models
   models.push(
     {
@@ -221,13 +278,19 @@ export async function getDynamicRateLimit(userModel?: string): Promise<number> {
     return getRateLimitForProvider('POLLINATIONS');
   }
 
+  // Check if user specified a VoidAI model
+  if (userModel?.startsWith('voidai/')) {
+    return getRateLimitForProvider('VOIDAI');
+  }
+
   // Check if user specified an AIHubMix model
   if (userModel?.startsWith('aihubmix/') || !userModel) {
     // AIHubMix only has one key, so always 60
     return 60;
   }
 
-  // Default to higher of the two
+  // Default to higher of the three providers
   const pollinationsLimit = await getRateLimitForProvider('POLLINATIONS');
-  return Math.max(60, pollinationsLimit);
+  const voidaiLimit = await getRateLimitForProvider('VOIDAI');
+  return Math.max(60, pollinationsLimit, voidaiLimit);
 }
