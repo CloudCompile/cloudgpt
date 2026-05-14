@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { redis } from './redis';
 
 export interface ApiKeyData {
   userId: string;
@@ -31,8 +31,9 @@ export function extractApiKey(headers: Headers): string | null {
 }
 
 export async function validateApiKey(key: string): Promise<ApiKeyData | null> {
-  const data = await kv.get<ApiKeyData>(`key:${key}`);
-  return data || null;
+  const data = await redis.get(`key:${key}`);
+  if (!data) return null;
+  return JSON.parse(data) as ApiKeyData;
 }
 
 export async function storeApiKey(
@@ -41,53 +42,65 @@ export async function storeApiKey(
   name: string
 ): Promise<void> {
   const now = Date.now();
-  await kv.set(`key:${key}`, {
-    userId,
-    name,
-    createdAt: now,
-  } as ApiKeyData);
+  await redis.set(
+    `key:${key}`,
+    JSON.stringify({
+      userId,
+      name,
+      createdAt: now,
+    } as ApiKeyData)
+  );
 
   const userKeysKey = `user:${userId}:keys`;
-  const existingKeys = (await kv.get<string[]>(userKeysKey)) || [];
+  const existingKeysStr = await redis.get(userKeysKey);
+  const existingKeys = existingKeysStr ? JSON.parse(existingKeysStr) : [];
   existingKeys.push(key);
-  await kv.set(userKeysKey, existingKeys);
+  await redis.set(userKeysKey, JSON.stringify(existingKeys));
 }
 
 export async function getUserKeys(userId: string): Promise<string[]> {
-  const keys = await kv.get<string[]>(`user:${userId}:keys`);
-  return keys || [];
+  const keysStr = await redis.get(`user:${userId}:keys`);
+  return keysStr ? JSON.parse(keysStr) : [];
 }
 
 export async function deleteApiKey(key: string, userId: string): Promise<void> {
-  const data = await kv.get<ApiKeyData>(`key:${key}`);
-  if (!data || data.userId !== userId) {
+  const dataStr = await redis.get(`key:${key}`);
+  if (!dataStr) {
     throw new Error('Key not found or does not belong to user');
   }
 
-  await kv.del(`key:${key}`);
+  const data = JSON.parse(dataStr) as ApiKeyData;
+  if (data.userId !== userId) {
+    throw new Error('Key not found or does not belong to user');
+  }
+
+  await redis.del(`key:${key}`);
 
   const userKeysKey = `user:${userId}:keys`;
-  const existingKeys = (await kv.get<string[]>(userKeysKey)) || [];
-  const filteredKeys = existingKeys.filter((k) => k !== key);
-  await kv.set(userKeysKey, filteredKeys);
+  const existingKeysStr = await redis.get(userKeysKey);
+  const existingKeys = existingKeysStr ? JSON.parse(existingKeysStr) : [];
+  const filteredKeys = existingKeys.filter((k: string) => k !== key);
+  await redis.set(userKeysKey, JSON.stringify(filteredKeys));
 }
 
 export async function checkRateLimit(
   key: string,
   limit?: number
 ): Promise<boolean> {
-  // If no limit specified, use default of 60
   const actualLimit = limit || 60;
   const now = Date.now();
   const windowMs = 60 * 1000;
   const rateLimitKey = `ratelimit:${key}`;
 
-  const current = await kv.get<{ count: number; resetAt: number }>(
-    rateLimitKey
-  );
+  const currentStr = await redis.get(rateLimitKey);
+  const current = currentStr ? JSON.parse(currentStr) : null;
 
   if (!current || now > current.resetAt) {
-    await kv.setex(rateLimitKey, 60, { count: 1, resetAt: now + windowMs });
+    await redis.setEx(
+      rateLimitKey,
+      60,
+      JSON.stringify({ count: 1, resetAt: now + windowMs })
+    );
     return true;
   }
 
@@ -96,16 +109,15 @@ export async function checkRateLimit(
   }
 
   current.count++;
-  await kv.set(rateLimitKey, current);
+  await redis.set(rateLimitKey, JSON.stringify(current));
   return true;
 }
 
 export async function getRateLimitInfo(
   key: string
 ): Promise<{ remaining: number; resetAt: number }> {
-  const current = await kv.get<{ count: number; resetAt: number }>(
-    `ratelimit:${key}`
-  );
+  const currentStr = await redis.get(`ratelimit:${key}`);
+  const current = currentStr ? JSON.parse(currentStr) : null;
   const limit = 60;
 
   if (!current) {
