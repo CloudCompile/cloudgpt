@@ -8,7 +8,7 @@ import {
   validateApiKey,
 } from '@/lib/api-keys';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export async function GET() {
   const { userId } = await auth();
