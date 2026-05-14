@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     const response = await forwardRequest(
       provider,
-      '/chat/completions',
+      '/videos/generations',
       'POST',
       body
     );
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Chat API error:', error);
+    console.error('Videos API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractApiKey, validateApiKey, checkRateLimit } from '@/lib/api-keys';
+import { getProvider, forwardRequest } from '@/lib/providers';
 
 export const runtime = 'edge';
 
@@ -34,10 +35,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { error: 'No providers configured yet.' },
-      { status: 501 }
+    const body = await request.json();
+    const provider = getProvider();
+
+    const response = await forwardRequest(
+      provider,
+      '/images/generations',
+      'POST',
+      body
     );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return NextResponse.json(
+        { error: 'Provider error', details: errorText },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Images API error:', error);
     return NextResponse.json(

@@ -247,6 +247,23 @@ export default function Dashboard() {
       </section>
 
       <section>
+        <h2 style={{ marginBottom: '24px' }}>About OpenRelay</h2>
+        <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
+          OpenRelay is powered by <a href="https://aihubmix.com" target="_blank" rel="noopener noreferrer">AIHubMix</a>, providing access to 27+ free AI models including:
+        </p>
+        <ul style={{ marginLeft: '20px', marginBottom: '24px', color: 'var(--text-secondary)' }}>
+          <li><strong>Text:</strong> GPT-4o, Claude 3.5, Gemini 2.0, DeepSeek, Qwen, and more</li>
+          <li><strong>Images:</strong> DALL-E, Flux, and others</li>
+          <li><strong>Video:</strong> Text-to-video generation</li>
+          <li><strong>Audio:</strong> Text-to-speech</li>
+        </ul>
+        <p style={{ marginBottom: '24px' }}>
+          <a href="/models">View available models</a> or visit{' '}
+          <a href="https://aihubmix.com/models" target="_blank" rel="noopener noreferrer">AIHubMix Models</a> to find model IDs.
+        </p>
+      </section>
+
+      <section>
         <h2 style={{ marginBottom: '24px' }}>Setup Instructions</h2>
 
         <h3 style={{ marginBottom: '12px', marginTop: '24px' }}>SillyTavern</h3>
@@ -267,13 +284,13 @@ export default function Dashboard() {
 
         <h3 style={{ marginBottom: '12px' }}>Using the API</h3>
         <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
-          OpenRelay supports the standard OpenAI API format:
+          OpenRelay supports the standard OpenAI API format. Use any model ID from AIHubMix:
         </p>
         <div className="curl-example">{`curl ${baseUrl}/v1/chat/completions \\
   -H "Authorization: Bearer YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "gpt-4",
+    "model": "gpt-4o-free",
     "messages": [{"role": "user", "content": "Hello!"}]
   }'`}</div>
       </section>

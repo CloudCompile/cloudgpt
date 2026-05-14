@@ -49,13 +49,13 @@ export default function Home() {
         <div className="container">
           <h2>Example Request</h2>
           <p style={{ marginBottom: '20px', color: 'var(--text-secondary)' }}>
-            OpenRelay is compatible with the OpenAI SDK and other clients that support OpenAI-compatible APIs.
+            OpenRelay is powered by AIHubMix and works with any OpenAI-compatible client. Simply use your OpenRelay API key and our /v1 endpoints with any model from AIHubMix.
           </p>
           <div className="curl-example">{`curl https://your-domain.com/v1/chat/completions \\
   -H "Authorization: Bearer or_YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "gpt-4",
+    "model": "gpt-4o-free",
     "messages": [{"role": "user", "content": "Hello!"}]
   }'`}</div>
 
@@ -68,7 +68,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-  model="gpt-4",
+  model="gpt-4o-free",  # Any AIHubMix model ID
   messages=[{"role": "user", "content": "Hello!"}]
 )
 
@@ -83,11 +83,16 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: "gpt-4",
+  model: "gpt-4o-free",  // Any AIHubMix model ID
   messages: [{ role: "user", content: "Hello!" }]
 });
 
 console.log(response.choices[0].message.content);`}</div>
+
+          <p style={{ marginTop: '40px', color: 'var(--text-secondary)' }}>
+            <a href="/models">View all available models</a> or visit{' '}
+            <a href="https://aihubmix.com/models" target="_blank" rel="noopener noreferrer">AIHubMix Models</a> to find model IDs.
+          </p>
         </div>
       </section>
 
