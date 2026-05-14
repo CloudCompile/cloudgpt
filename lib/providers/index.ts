@@ -34,7 +34,7 @@ async function forwardAIHubMix(
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    ...(body && { body: JSON.stringify(body) }),
+    ...(body ? { body: JSON.stringify(body) } : {}),
   });
 
   return response;
