@@ -67,7 +67,7 @@ export default function Home() {
       </section>
 
       {/* Providers Section */}
-      <section style={{ paddingTop: '80px', paddingBottom: '80px', borderBottom: '1px solid var(--border)' }}>
+      <section style={{ paddingTop: '100px', paddingBottom: '100px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
         <div className="container" style={{ maxWidth: '1200px' }}>
           <div style={{ textAlign: 'center', marginBottom: '60px' }}>
             <p style={{
@@ -80,51 +80,57 @@ export default function Home() {
             }}>
               Powered By
             </p>
-            <h2 style={{ fontSize: '2.2rem', fontWeight: '800', marginBottom: '16px' }}>
-              8 Leading AI Providers
+            <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '20px' }}>
+              200+ Models from 8 Providers
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto' }}>
-              We aggregate models from the best AI providers, ensuring reliability, speed, and comprehensive coverage.
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>
+              We aggregate the best AI models from industry-leading providers, giving you access to the latest technology with zero setup.
             </p>
           </div>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '24px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: '20px',
+            marginBottom: '40px',
           }}>
             {[
-              { name: 'AIHubMix', desc: '50+ models' },
-              { name: 'Pollinations', desc: '40+ models' },
-              { name: 'VoidAI', desc: '15+ models' },
-              { name: 'Airforce', desc: '20+ models' },
-              { name: 'Cerebras', desc: '3 models' },
-              { name: 'Groq', desc: '16+ models' },
-              { name: 'AI Horde', desc: '186+ models' },
+              { name: 'AIHubMix', desc: '50+ models', color: '#6366f1' },
+              { name: 'Pollinations', desc: '40+ models', color: '#a855f7' },
+              { name: 'VoidAI', desc: '15+ models', color: '#06b6d4' },
+              { name: 'Airforce', desc: '20+ models', color: '#f59e0b' },
+              { name: 'Cerebras', desc: '3 models', color: '#8b5cf6' },
+              { name: 'Groq', desc: '16+ models', color: '#00d084' },
+              { name: 'AI Horde', desc: '186+ models', color: '#ec4899' },
             ].map((provider) => (
               <div
                 key={provider.name}
                 style={{
-                  padding: '24px',
+                  padding: '28px',
                   borderRadius: '16px',
-                  border: '1px solid var(--border)',
-                  background: 'var(--bg-secondary)',
+                  border: `1px solid ${provider.color}30`,
+                  background: 'var(--bg)',
                   textAlign: 'center',
                   transition: 'all 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--accent)';
-                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.borderColor = provider.color;
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.background = `${provider.color}08`;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.borderColor = `${provider.color}30`;
                   e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.background = 'var(--bg)';
                 }}
               >
-                <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '8px' }}>
+                <div style={{ fontSize: '2.2rem', marginBottom: '12px', opacity: 0.7 }}>🤖</div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '8px', color: provider.color }}>
                   {provider.name}
                 </h3>
-                <p style={{ color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   {provider.desc}
                 </p>
               </div>
@@ -156,9 +162,9 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section style={{ paddingTop: '80px', paddingBottom: '80px', borderBottom: '1px solid var(--border)' }}>
+      <section style={{ paddingTop: '100px', paddingBottom: '100px', borderBottom: '1px solid var(--border)' }}>
         <div className="container" style={{ maxWidth: '1200px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '70px' }}>
             <p style={{
               fontSize: '0.85rem',
               fontWeight: '700',
@@ -167,34 +173,56 @@ export default function Home() {
               color: 'var(--accent)',
               marginBottom: '12px'
             }}>
-              Why OpenRelay
+              Features
             </p>
-            <h2 style={{ fontSize: '2.2rem', fontWeight: '800' }}>
-              Everything You Need
+            <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '20px' }}>
+              Built for Developers
             </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '650px', margin: '0 auto' }}>
+              Everything you need to build powerful AI applications, all in one simple API.
+            </p>
           </div>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '40px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '28px',
           }}>
             {[
-              { icon: '🚀', title: 'Lightning Fast', desc: 'Ultra-low latency with multiple providers for optimal performance' },
-              { icon: '🔄', title: 'Smart Routing', desc: 'Automatic fallback and load balancing across all providers' },
-              { icon: '🔐', title: 'Secure', desc: 'Enterprise-grade security with encrypted API keys' },
-              { icon: '📊', title: 'Comprehensive', desc: 'Chat, images, video, audio, embeddings, and more' },
-              { icon: '💰', title: 'Free Forever', desc: 'No credit card required. Generous free tier for everyone' },
-              { icon: '🔌', title: 'OpenAI Compatible', desc: 'Drop-in replacement for any OpenAI API client' },
+              { icon: '⚡', title: 'Lightning Fast', desc: 'Ultra-low latency routing with intelligent provider selection' },
+              { icon: '🔄', title: 'Auto Fallback', desc: 'Seamless provider switching on errors or rate limits' },
+              { icon: '🔒', title: 'Secure & Private', desc: 'Enterprise-grade encryption for all API keys and data' },
+              { icon: '🎨', title: 'All Model Types', desc: 'Text, images, video, audio, embeddings, and more' },
+              { icon: '💸', title: 'Completely Free', desc: 'No credit card needed. Unlimited free tier for developers' },
+              { icon: '🔌', title: 'Drop-in Ready', desc: 'OpenAI compatible API — switch providers with one line' },
             ].map((feature, idx) => (
-              <div key={idx} style={{ paddingLeft: '20px' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '16px' }}>
+              <div
+                key={idx}
+                style={{
+                  padding: '32px',
+                  borderRadius: '16px',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-secondary)',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--accent)';
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(124, 58, 237, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--border)';
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ fontSize: '2.8rem', marginBottom: '20px', lineHeight: '1' }}>
                   {feature.icon}
                 </div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '12px', color: 'var(--fg)' }}>
                   {feature.title}
                 </h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6', margin: 0 }}>
                   {feature.desc}
                 </p>
               </div>
@@ -205,21 +233,25 @@ export default function Home() {
 
       {/* CTA Section */}
       <section style={{
-        paddingTop: '100px',
-        paddingBottom: '100px',
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(79, 70, 229, 0.06) 100%)',
+        paddingTop: '120px',
+        paddingBottom: '120px',
+        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(79, 70, 229, 0.12) 50%, rgba(59, 130, 246, 0.08) 100%)',
         textAlign: 'center',
+        borderTop: '1px solid var(--border)',
       }}>
-        <div className="container" style={{ maxWidth: '800px' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '24px' }}>
-            Ready to get started?
+        <div className="container" style={{ maxWidth: '900px' }}>
+          <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', fontWeight: '900', marginBottom: '24px', lineHeight: '1.1' }}>
+            Start Building with AI Today
           </h2>
           <p style={{
             color: 'var(--text-secondary)',
-            fontSize: '1.1rem',
-            marginBottom: '40px',
+            fontSize: '1.15rem',
+            marginBottom: '48px',
+            lineHeight: '1.6',
+            maxWidth: '700px',
+            margin: '0 auto 48px',
           }}>
-            Get access to 200+ AI models. No credit card required.
+            Get instant access to 200+ AI models from 8 providers. No credit card, no setup fees, no limits.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <SignedIn>
@@ -327,47 +359,53 @@ export default function Home() {
           {/* Footer Info */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '48px',
-            marginBottom: '40px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '60px',
+            marginBottom: '50px',
           }}>
             <div>
-              <h4 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '16px', color: 'var(--fg)' }}>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '16px', color: 'var(--fg)' }}>
                 OpenRelay
               </h4>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.8' }}>
-                Free AI API gateway for everyone. Access 200+ models from 8 providers with a single API key.
+                Free AI API gateway for developers everywhere. Access 200+ cutting-edge models from 8 top providers with one API key.
               </p>
             </div>
             <div>
-              <h4 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '16px', color: 'var(--fg)' }}>
-                Quick Links
+              <h4 style={{ fontWeight: '700', marginBottom: '18px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
+                Product
               </h4>
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ marginBottom: '12px' }}>
-                  <a href="/docs" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Documentation</a>
+                <li style={{ marginBottom: '14px' }}>
+                  <a href="/models" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
+                    📚 Explore Models
+                  </a>
                 </li>
-                <li style={{ marginBottom: '12px' }}>
-                  <a href="/models" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Models</a>
+                <li style={{ marginBottom: '14px' }}>
+                  <a href="/providers" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
+                    🔌 Providers
+                  </a>
                 </li>
-                <li style={{ marginBottom: '12px' }}>
-                  <a href="/providers" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Providers</a>
+                <li style={{ marginBottom: '14px' }}>
+                  <a href="/docs" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
+                    📖 Documentation
+                  </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h4 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '16px', color: 'var(--fg)' }}>
-                Resources
+              <h4 style={{ fontWeight: '700', marginBottom: '18px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
+                Community
               </h4>
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ marginBottom: '12px' }}>
-                  <a href="https://github.com/CloudCompile/cloudgpt" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
-                    GitHub
+                <li style={{ marginBottom: '14px' }}>
+                  <a href="https://github.com/CloudCompile/cloudgpt" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
+                    ⭐ Star on GitHub
                   </a>
                 </li>
-                <li style={{ marginBottom: '12px' }}>
-                  <a href="https://github.com/CloudCompile/cloudgpt/issues" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
-                    Report Issues
+                <li style={{ marginBottom: '14px' }}>
+                  <a href="https://github.com/CloudCompile/cloudgpt/issues" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
+                    🐛 Report Issues
                   </a>
                 </li>
               </ul>
