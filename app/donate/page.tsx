@@ -178,7 +178,7 @@ export default function DonatePage() {
                     placeholder="Paste your API key…"
                     required
                     minLength={8}
-                    style={{ width: '100%', fontFamily: 'var(--font-geist-mono), monospace', letterSpacing: '0.05em' }}
+                    style={{ width: '100%', fontFamily: 'var(--font-mono), monospace', letterSpacing: '0.05em' }}
                   />
                 </div>
 
