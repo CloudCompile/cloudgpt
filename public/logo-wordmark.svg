@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"></stop>
+      <stop offset="55%" stop-color="#4f46e5"></stop>
+      <stop offset="100%" stop-color="#3b82f6"></stop>
+    </linearGradient>
+  </defs>
+
+  
+  <g transform="translate(8 12)">
+    <path d="M 10.5 37.33 Q 10.5 17.5 28 17.5 Q 45.5 17.5 45.5 37.33" stroke="url(#g)" stroke-width="3.5" stroke-linecap="round" fill="none"></path>
+    <circle cx="10.5" cy="37.33" r="5.25" fill="url(#g)"></circle>
+    <circle cx="45.5" cy="37.33" r="5.25" fill="url(#g)"></circle>
+    <circle cx="28" cy="17.5" r="7.58" fill="url(#g)"></circle>
+    <circle cx="28" cy="17.5" r="2.92" fill="#08070f"></circle>
+  </g>
+
+  
+  <text x="72" y="52" font-family="Geist, -apple-system, BlinkMacSystemFont, system-ui, sans-serif" font-size="36" font-weight="700" letter-spacing="-0.025em" fill="#f0eeff">Open<tspan fill="url(#g)">Relay</tspan></text>
+</svg>
