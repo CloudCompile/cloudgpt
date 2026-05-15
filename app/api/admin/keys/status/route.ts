@@ -15,6 +15,7 @@ const PROVIDER_TEST_URLS: Record<string, string> = {
   Cerebras:    'https://api.cerebras.ai/v1/models',
   Groq:        'https://api.groq.com/openai/v1/models',
   AIHorde:     'https://aihorde.net/api/v2/status/heartbeat',
+  TokenReply:  'https://api.tokenreply.com/v1beta/models',
 };
 
 async function testKey(provider: string, rawKey: string): Promise<'working' | 'rate_limited' | 'error'> {

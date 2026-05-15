@@ -6,6 +6,7 @@ import { forwardAirforce } from './airforce';
 import { forwardCerebras } from './cerebras';
 import { forwardGroq } from './groq';
 import { forwardAIHorde } from './aihorde';
+import { forwardTokenReply } from './tokenreply';
 
 export interface RouteOptions {
   streaming?: boolean;
@@ -94,7 +95,12 @@ export async function routeChat(
     return forwardAIHorde('/generate/text/async', 'POST', fwdBody, options);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde
+  if (model.startsWith('tokenreply/')) {
+    const fwdBody = { ...(body as any), model: model.replace('tokenreply/', '') };
+    return forwardTokenReply('/chat/completions', 'POST', fwdBody, options);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde → TokenReply
   if (!options?.autoFallback) {
     return forwardAIHubMix('/chat/completions', 'POST', body);
   }
@@ -110,6 +116,7 @@ export async function routeChat(
     { name: 'Cerebras',    fn: () => forwardCerebras('/chat/completions', 'POST', body, options) },
     { name: 'Groq',        fn: () => forwardGroq('/chat/completions', 'POST', body, options) },
     { name: 'AIHorde',     fn: () => forwardAIHorde('/generate/text/async', 'POST', { prompt, params: { max_length: (body as any).max_tokens || 80 } }, options) },
+    { name: 'TokenReply',  fn: () => forwardTokenReply('/chat/completions', 'POST', body, options) },
   ]);
 }
 
@@ -417,6 +424,23 @@ const GROQ_FREE_MODELS = [
   // Text-to-Speech
   { id: 'groq/canopylabs/orpheus-v1-english',  object: 'model', owned_by: 'Canopy',           provider: 'Groq', type: 'audio' },
   { id: 'groq/canopylabs/orpheus-arabic-saudi', object: 'model', owned_by: 'Canopy',          provider: 'Groq', type: 'audio' },
+];
+
+const TOKENREPLY_FREE_MODELS = [
+  { id: 'tokenreply/deepseek-ai/deepseek-v4-flash',             object: 'model', owned_by: 'DeepSeek',    provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/deepseek-ai/deepseek-v4-pro',               object: 'model', owned_by: 'DeepSeek',    provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/google/gemma-3n-e2b-it',                    object: 'model', owned_by: 'Google',      provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/google/gemma-3n-e4b-it',                    object: 'model', owned_by: 'Google',      provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/google/gemma-4-31b-it',                     object: 'model', owned_by: 'Google',      provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/grok-4.20-fast',                            object: 'model', owned_by: 'xAI',         provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/minimaxai/minimax-m2.7',                    object: 'model', owned_by: 'MiniMax',     provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/moonshotai/kimi-k2.6',                      object: 'model', owned_by: 'Moonshot',    provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/openai/gpt-oss-120b',                       object: 'model', owned_by: 'OpenAI',      provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/qwen/qwen3-coder-480b-a35b-instruct',       object: 'model', owned_by: 'Alibaba',     provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/qwen/qwen3.5-397b-a17b',                    object: 'model', owned_by: 'Alibaba',     provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/stepfun-ai/step-3.5-flash',                 object: 'model', owned_by: 'StepFun',     provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/z-ai/glm-5.1',                              object: 'model', owned_by: 'Z.ai',        provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/z-ai/glm5',                                 object: 'model', owned_by: 'Z.ai',        provider: 'TokenReply', type: 'text' },
 ];
 
 const AIHORDE_FREE_MODELS = [
@@ -815,6 +839,9 @@ export async function routeModels() {
   // Groq — free tier models with rate limits
   models.push(...GROQ_FREE_MODELS);
 
+  // TokenReply — free OpenAI-compatible models
+  models.push(...TOKENREPLY_FREE_MODELS);
+
   // AI Horde — decentralized volunteer network with 160+ image + 26+ text models
   models.push(...AIHORDE_FREE_MODELS);
 
@@ -891,12 +918,17 @@ export async function getDynamicRateLimit(userModel?: string): Promise<number> {
     return getRateLimitForProvider('AIHUBMIX');
   }
 
-  const [pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit] = await Promise.all([
+  if (userModel?.startsWith('tokenreply/')) {
+    return getRateLimitForProvider('TOKENREPLY');
+  }
+
+  const [pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit, tokenreplyLimit] = await Promise.all([
     getRateLimitForProvider('POLLINATIONS'),
     getRateLimitForProvider('VOIDAI'),
     getRateLimitForProvider('AIRFORCE'),
     getRateLimitForProvider('CEREBRAS'),
     getRateLimitForProvider('AIHUBMIX'),
+    getRateLimitForProvider('TOKENREPLY'),
   ]);
-  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit);
+  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit, tokenreplyLimit);
 }
