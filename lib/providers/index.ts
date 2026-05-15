@@ -3,6 +3,7 @@ import { forwardPollinations, forwardSimpleImage, forwardSimpleText, getPollMode
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
 import { forwardCerebras } from './cerebras';
+import { forwardGroq } from './groq';
 
 /**
  * Provider routing logic
@@ -69,7 +70,12 @@ export async function routeChat(
     return forwardCerebras('/chat/completions', 'POST', fwdBody, options);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras
+  if (model.startsWith('groq/')) {
+    const fwdBody = { ...(body as any), model: model.replace('groq/', '') };
+    return forwardGroq('/chat/completions', 'POST', fwdBody, options);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq
   try {
     return await forwardAIHubMix('/chat/completions', 'POST', body);
   } catch (error) {
@@ -83,7 +89,11 @@ export async function routeChat(
           try {
             return await forwardAirforce('/chat/completions', 'POST', body, options);
           } catch (airforceError) {
-            return await forwardCerebras('/chat/completions', 'POST', body, options);
+            try {
+              return await forwardCerebras('/chat/completions', 'POST', body, options);
+            } catch (cerebasError) {
+              return await forwardGroq('/chat/completions', 'POST', body, options);
+            }
           }
         }
       }
@@ -180,7 +190,12 @@ export async function routeAudio(
     return forwardAirforce('/audio/speech', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce
+  if (model.startsWith('groq/')) {
+    const fwdBody = { ...(body as any), model: model.replace('groq/', '') };
+    return forwardGroq('/audio/speech', 'POST', fwdBody);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Groq
   try {
     return await forwardAIHubMix('/audio/speech', 'POST', body);
   } catch (error) {
@@ -191,7 +206,11 @@ export async function routeAudio(
         try {
           return await forwardVoidAI('/audio/speech', 'POST', body);
         } catch (voidaiError) {
-          return await forwardAirforce('/audio/speech', 'POST', body);
+          try {
+            return await forwardAirforce('/audio/speech', 'POST', body);
+          } catch (airforceError) {
+            return await forwardGroq('/audio/speech', 'POST', body);
+          }
         }
       }
     }
@@ -271,12 +290,21 @@ export async function routeTranscription(
     return forwardAirforce('/audio/transcriptions', 'POST', fwdBody);
   }
 
-  // Default: try VoidAI → Airforce
+  if (model.startsWith('groq/')) {
+    const fwdBody = { ...(body as any), model: model.replace('groq/', '') };
+    return forwardGroq('/audio/transcriptions', 'POST', fwdBody);
+  }
+
+  // Default: try VoidAI → Airforce → Groq
   try {
     return await forwardVoidAI('/audio/transcriptions', 'POST', body);
   } catch (error) {
     if (options?.autoFallback) {
-      return await forwardAirforce('/audio/transcriptions', 'POST', body);
+      try {
+        return await forwardAirforce('/audio/transcriptions', 'POST', body);
+      } catch (airforceError) {
+        return await forwardGroq('/audio/transcriptions', 'POST', body);
+      }
     }
     throw error;
   }
@@ -355,6 +383,28 @@ const POLLINATIONS_FREE_MODELS = [
   { id: 'pollinations/scribe',               object: 'model', owned_by: 'ElevenLabs',       provider: 'Pollinations', type: 'transcription' },
 ];
 
+const GROQ_FREE_MODELS = [
+  // Chat Completions
+  { id: 'groq/llama-3.1-8b-instant',           object: 'model', owned_by: 'Meta',             provider: 'Groq', type: 'text' },
+  { id: 'groq/llama-3.3-70b-versatile',        object: 'model', owned_by: 'Meta',             provider: 'Groq', type: 'text' },
+  { id: 'groq/llama-4-scout-17b-16e-instruct', object: 'model', owned_by: 'Meta',             provider: 'Groq', type: 'text' },
+  { id: 'groq/qwen/qwen3-32b',                 object: 'model', owned_by: 'Alibaba',          provider: 'Groq', type: 'text' },
+  { id: 'groq/openai/gpt-oss-120b',            object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'text' },
+  { id: 'groq/openai/gpt-oss-20b',             object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'text' },
+  { id: 'groq/openai/gpt-oss-safeguard-20b',   object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'text' },
+  { id: 'groq/meta-llama/llama-prompt-guard-2-22m', object: 'model', owned_by: 'Meta',      provider: 'Groq', type: 'text' },
+  { id: 'groq/meta-llama/llama-prompt-guard-2-86m', object: 'model', owned_by: 'Meta',      provider: 'Groq', type: 'text' },
+  { id: 'groq/allam-2-7b',                     object: 'model', owned_by: 'Arabic Llama',     provider: 'Groq', type: 'text' },
+  { id: 'groq/compound',                       object: 'model', owned_by: 'Compound',         provider: 'Groq', type: 'text' },
+  { id: 'groq/compound-mini',                  object: 'model', owned_by: 'Compound',         provider: 'Groq', type: 'text' },
+  // Speech-to-Text (Transcription)
+  { id: 'groq/whisper-large-v3',               object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'transcription' },
+  { id: 'groq/whisper-large-v3-turbo',         object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'transcription' },
+  // Text-to-Speech
+  { id: 'groq/canopylabs/orpheus-v1-english',  object: 'model', owned_by: 'Canopy',           provider: 'Groq', type: 'audio' },
+  { id: 'groq/canopylabs/orpheus-arabic-saudi', object: 'model', owned_by: 'Canopy',          provider: 'Groq', type: 'audio' },
+];
+
 export async function routeModels() {
   const models: any[] = [];
 
@@ -421,6 +471,9 @@ export async function routeModels() {
     { id: 'cerebras/llama-4-scout', object: 'model', owned_by: 'Meta', provider: 'Cerebras', type: 'text' },
     { id: 'cerebras/deepseek-r1', object: 'model', owned_by: 'DeepSeek', provider: 'Cerebras', type: 'text' }
   );
+
+  // Groq — free tier models with rate limits
+  models.push(...GROQ_FREE_MODELS);
 
   // Deduplicate by id
   const seen = new Set<string>();

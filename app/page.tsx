@@ -21,6 +21,7 @@ export default function Home() {
             <a href="/dashboard" className="button">Dashboard</a>
           </SignedIn>
           <a href="/models" className="button secondary">Browse Models</a>
+          <a href="/docs" className="button secondary">Docs</a>
         </div>
       </section>
 
@@ -30,7 +31,7 @@ export default function Home() {
           <div className="step-item">
             <div className="step-number">1</div>
             <h3>Create Account</h3>
-            <p>Sign up for free and access 100+ AI models instantly</p>
+            <p>Sign up for free and access 150+ AI models instantly</p>
           </div>
           <div className="step-item">
             <div className="step-number">2</div>
@@ -105,7 +106,7 @@ console.log(response.choices[0].message.content);`}</div>
         <div style={{ paddingTop: '60px', paddingBottom: '60px', borderRadius: '32px 20px 28px 24px', padding: '60px 40px', background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(79, 70, 229, 0.06) 50%, rgba(59, 130, 246, 0.04) 100%)', border: '1px solid rgba(124, 58, 237, 0.25)', textAlign: 'center' }}>
           <h2 style={{ marginBottom: '30px', fontSize: '2rem' }}>Ready to Build?</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '40px', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto 40px' }}>
-            Get access to 100+ free AI models and start building with OpenAI-compatible API endpoints.
+            Get access to 150+ free AI models from 6 providers and start building with OpenAI-compatible API endpoints.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <SignedIn>
@@ -117,6 +118,7 @@ console.log(response.choices[0].message.content);`}</div>
               </SignUpButton>
             </SignedOut>
             <a href="/models" className="button secondary">View All Models</a>
+            <a href="/providers" className="button secondary">Our Providers</a>
           </div>
         </div>
       </section>
