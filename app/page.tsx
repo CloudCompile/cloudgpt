@@ -50,7 +50,7 @@ export default function Home() {
         <div className="container">
           <h2>Simple & Powerful</h2>
           <p style={{ marginBottom: '40px', color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
-            OpenRelay is fully OpenAI-compatible. Works with any client that supports the OpenAI API. Access models from <strong style={{ color: 'var(--fg)' }}>AIHubMix, Pollinations, VoidAI, Airforce, and Cerebras</strong>.
+            OpenRelay is fully OpenAI-compatible. Works with any client that supports the OpenAI API. Access models from <strong style={{ color: 'var(--fg)' }}>AIHubMix, Pollinations, VoidAI, Airforce, Cerebras, Groq, and AI Horde</strong>.
           </p>
 
           <h3>cURL</h3>
@@ -106,7 +106,7 @@ console.log(response.choices[0].message.content);`}</div>
         <div style={{ paddingTop: '60px', paddingBottom: '60px', borderRadius: '32px 20px 28px 24px', padding: '60px 40px', background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(79, 70, 229, 0.06) 50%, rgba(59, 130, 246, 0.04) 100%)', border: '1px solid rgba(124, 58, 237, 0.25)', textAlign: 'center' }}>
           <h2 style={{ marginBottom: '30px', fontSize: '2rem' }}>Ready to Build?</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '40px', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto 40px' }}>
-            Get access to 150+ free AI models from 6 providers and start building with OpenAI-compatible API endpoints.
+            Get access to 200+ free AI models from 8 providers and start building with OpenAI-compatible API endpoints.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <SignedIn>

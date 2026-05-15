@@ -50,6 +50,14 @@ export default function ProvidersPage() {
       models: '16+ models',
       features: ['Chat', 'Transcription', 'Text-to-Speech'],
     },
+    {
+      name: 'AI Horde',
+      icon: '🐴',
+      website: 'https://aihorde.net',
+      description: 'Decentralized volunteer worker network for distributed generation',
+      models: '186+ models',
+      features: ['Chat', 'Image (160+ models)', 'Interrogation'],
+    },
   ];
 
   return (
@@ -65,7 +73,7 @@ export default function ProvidersPage() {
         maxWidth: '700px',
         margin: '0 auto 60px'
       }}>
-        OpenRelay aggregates models from 6 leading AI providers, giving you access to 150+ free models with automatic fallback and load balancing.
+        OpenRelay aggregates models from 8 leading AI providers, giving you access to 200+ free models with automatic fallback and load balancing.
       </p>
 
       <div style={{

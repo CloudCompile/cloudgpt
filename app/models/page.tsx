@@ -65,7 +65,7 @@ export default function ModelsPage() {
           AI Models
         </h1>
         <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '50px', fontSize: '1.05rem' }}>
-          {models.length} free models across 6 providers
+          {models.length} free models across 8 providers
         </p>
 
         {/* Search */}
