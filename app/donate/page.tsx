@@ -5,7 +5,7 @@ import { IconArrowRight } from '@/components/brand/icons';
 
 const PROVIDERS = [
   'AIHubMix', 'Pollinations', 'VoidAI', 'Airforce',
-  'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI',
+  'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI', 'Happupy',
 ];
 
 const PROVIDER_SIGNUP_URLS: Record<string, string> = {
@@ -18,6 +18,11 @@ const PROVIDER_SIGNUP_URLS: Record<string, string> = {
   AIHorde:     'https://aihorde.net/register',
   TokenReply:  'https://tokenreply.com',
   NagaAI:      'https://naga.ac',
+  Happupy:     'https://beta.hapuppy.com',
+};
+
+const PROVIDER_NOTES: Record<string, string> = {
+  Happupy: 'Free account gives 100k tokens/day — donate your key to add that to the shared pool.',
 };
 
 export default function DonatePage() {
@@ -163,6 +168,11 @@ export default function DonatePage() {
                       <a href={PROVIDER_SIGNUP_URLS[provider]} target="_blank" rel="noopener noreferrer">
                         Sign up at {provider}
                       </a>
+                    </p>
+                  )}
+                  {provider && PROVIDER_NOTES[provider] && (
+                    <p style={{ color: 'var(--accent-light)', fontSize: '0.85rem', marginTop: '6px', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', padding: '8px 12px', borderRadius: '10px' }}>
+                      {PROVIDER_NOTES[provider]}
                     </p>
                   )}
                 </div>
