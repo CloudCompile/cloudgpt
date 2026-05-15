@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { redis } from '@/lib/redis';
 import { routeModels } from '@/lib/providers';
 
 const VIRTUAL_MODELS_KEY = 'virtual_models';
@@ -18,12 +18,12 @@ export async function GET() {
 
     let virtualModels = [];
     try {
-      const stored = await kv.get(VIRTUAL_MODELS_KEY);
-      if (stored && Array.isArray(stored)) {
-        virtualModels = stored;
+      const stored = await redis.get(VIRTUAL_MODELS_KEY);
+      if (stored) {
+        virtualModels = JSON.parse(stored);
       }
-    } catch (kvError) {
-      console.warn('KV read failed, returning empty models:', kvError);
+    } catch (redisError) {
+      console.warn('Redis read failed, returning empty models:', redisError);
     }
 
     return NextResponse.json({
@@ -56,12 +56,12 @@ export async function POST(request: NextRequest) {
 
     let models = [];
     try {
-      const stored = await kv.get(VIRTUAL_MODELS_KEY);
-      if (stored && Array.isArray(stored)) {
-        models = stored;
+      const stored = await redis.get(VIRTUAL_MODELS_KEY);
+      if (stored) {
+        models = JSON.parse(stored);
       }
-    } catch (kvError) {
-      console.warn('KV read failed, starting with empty array:', kvError);
+    } catch (redisError) {
+      console.warn('Redis read failed, starting with empty array:', redisError);
     }
 
     const existingIndex = models.findIndex((m: any) => m.id === id);
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       models.push(newModel);
     }
 
-    await kv.set(VIRTUAL_MODELS_KEY, models);
+    await redis.set(VIRTUAL_MODELS_KEY, JSON.stringify(models));
     console.log('[POST /api/admin/virtual-models] Model saved successfully:', newModel);
 
     return NextResponse.json({ success: true, model: newModel });
@@ -94,12 +94,12 @@ export async function DELETE(request: NextRequest) {
 
     let models = [];
     try {
-      const stored = await kv.get(VIRTUAL_MODELS_KEY);
-      if (stored && Array.isArray(stored)) {
-        models = stored;
+      const stored = await redis.get(VIRTUAL_MODELS_KEY);
+      if (stored) {
+        models = JSON.parse(stored);
       }
-    } catch (kvError) {
-      console.warn('KV read failed:', kvError);
+    } catch (redisError) {
+      console.warn('Redis read failed:', redisError);
       return NextResponse.json({ error: 'Failed to delete model' }, { status: 500 });
     }
 
@@ -109,7 +109,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Model not found' }, { status: 404 });
     }
 
-    await kv.set(VIRTUAL_MODELS_KEY, filtered);
+    await redis.set(VIRTUAL_MODELS_KEY, JSON.stringify(filtered));
     console.log('[DELETE /api/admin/virtual-models] Model deleted successfully:', id);
 
     return NextResponse.json({ success: true });
