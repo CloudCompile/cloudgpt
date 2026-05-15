@@ -37,8 +37,12 @@ export async function GET() {
     // KV keys
     const listJson = await redis.get(`admin:provider:keys:${provider.toLowerCase()}`);
     if (listJson) {
-      const list = JSON.parse(listJson);
-      count += list.length;
+      try {
+        const list = JSON.parse(listJson);
+        count += list.length;
+      } catch {
+        // Skip malformed key list
+      }
     }
     keyCountsByProvider[provider] = count;
     totalActiveKeys += count;
@@ -62,27 +66,39 @@ export async function GET() {
     for (let i = 1; i <= 10; i++) {
       const statusJson = await redis.get(`admin:key:status:${providerKey}:env-${i}`);
       if (statusJson) {
-        const { status } = JSON.parse(statusJson);
-        if (status === 'error') {
-          warnings.push(`${provider} key env-${i} is reporting errors`);
-        } else if (status === 'rate_limited') {
-          warnings.push(`${provider} key env-${i} is rate limited`);
+        try {
+          const { status } = JSON.parse(statusJson);
+          if (status === 'error') {
+            warnings.push(`${provider} key env-${i} is reporting errors`);
+          } else if (status === 'rate_limited') {
+            warnings.push(`${provider} key env-${i} is rate limited`);
+          }
+        } catch {
+          // Skip malformed status
         }
       }
     }
     const listJson = await redis.get(`admin:provider:keys:${providerKey}`);
     if (listJson) {
-      const list = JSON.parse(listJson);
-      for (const entry of list) {
-        const statusJson = await redis.get(`admin:key:status:${providerKey}:${entry.id}`);
-        if (statusJson) {
-          const { status } = JSON.parse(statusJson);
-          if (status === 'error') {
-            warnings.push(`${provider} key ${entry.preview} is reporting errors`);
-          } else if (status === 'rate_limited') {
-            warnings.push(`${provider} key ${entry.preview} is rate limited`);
+      try {
+        const list = JSON.parse(listJson);
+        for (const entry of list) {
+          const statusJson = await redis.get(`admin:key:status:${providerKey}:${entry.id}`);
+          if (statusJson) {
+            try {
+              const { status } = JSON.parse(statusJson);
+              if (status === 'error') {
+                warnings.push(`${provider} key ${entry.preview} is reporting errors`);
+              } else if (status === 'rate_limited') {
+                warnings.push(`${provider} key ${entry.preview} is rate limited`);
+              }
+            } catch {
+              // Skip malformed status
+            }
           }
         }
+      } catch {
+        // Skip malformed key list
       }
     }
   }

@@ -22,16 +22,18 @@ const features = [
 ];
 
 const providers = [
-  { name: 'AIHubMix',    desc: '50+ models',   color: '#6366f1' },
-  { name: 'Pollinations', desc: '40+ models',  color: '#a855f7' },
-  { name: 'VoidAI',      desc: '15+ models',   color: '#06b6d4' },
-  { name: 'Airforce',    desc: '20+ models',   color: '#f59e0b' },
-  { name: 'Cerebras',    desc: '3 models',     color: '#8b5cf6' },
-  { name: 'Groq',        desc: '16+ models',   color: '#00d084' },
-  { name: 'AI Horde',    desc: '186+ models',  color: '#ec4899' },
-  { name: 'TokenReply',  desc: '14+ models',   color: '#7c3aed' },
-  { name: 'NagaAI',     desc: '13 models',    color: '#10b981' },
+  { name: 'AIHubMix',    desc: '50+ models',   color: '#6366f1', modelCount: 50 },
+  { name: 'Pollinations', desc: '40+ models',  color: '#a855f7', modelCount: 40 },
+  { name: 'VoidAI',      desc: '15+ models',   color: '#06b6d4', modelCount: 15 },
+  { name: 'Airforce',    desc: '20+ models',   color: '#f59e0b', modelCount: 20 },
+  { name: 'Cerebras',    desc: '3 models',     color: '#8b5cf6', modelCount: 3 },
+  { name: 'Groq',        desc: '16+ models',   color: '#00d084', modelCount: 16 },
+  { name: 'AI Horde',    desc: '186+ models',  color: '#ec4899', modelCount: 186 },
+  { name: 'TokenReply',  desc: '14+ models',   color: '#7c3aed', modelCount: 14 },
+  { name: 'NagaAI',     desc: '13 models',    color: '#10b981', modelCount: 13 },
 ];
+
+const totalModelCount = providers.reduce((sum, p) => sum + p.modelCount, 0);
 
 const navLinkStyle = { color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s', display: 'inline-flex', alignItems: 'center' };
 function onHover(e: React.MouseEvent<HTMLAnchorElement>) { e.currentTarget.style.color = 'var(--accent)'; }
@@ -59,7 +61,7 @@ export default function Home() {
             maxWidth: '700px',
             margin: '0 auto 48px'
           }}>
-            Access 200+ AI models from 9 providers with a single API key. Fast, reliable, and completely free.
+            Access {totalModelCount}+ AI models from {providers.length} providers with a single API key. Fast, reliable, and completely free.
           </p>
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -98,7 +100,7 @@ export default function Home() {
               Powered By
             </p>
             <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '20px' }}>
-              200+ Models from 9 Providers
+              {totalModelCount}+ Models from {providers.length} Providers
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>
               We aggregate the best AI models from industry-leading providers, giving you access to the latest technology with zero setup.
@@ -247,7 +249,7 @@ export default function Home() {
             Start Building with AI Today
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.15rem', marginBottom: '48px', lineHeight: '1.6', maxWidth: '700px', margin: '0 auto 48px' }}>
-            Get instant access to 200+ AI models from 9 providers. No credit card, no setup fees, no limits.
+            Get instant access to {totalModelCount}+ AI models from {providers.length} providers. No credit card, no setup fees, no limits.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             {isClerkConfigured ? (
@@ -313,7 +315,7 @@ export default function Home() {
                 <Wordmark variant="full" size="sm" />
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.8' }}>
-                Free AI API gateway for developers everywhere. Access 200+ cutting-edge models from 9 top providers with one API key.
+                Free AI API gateway for developers everywhere. Access {totalModelCount}+ cutting-edge models from {providers.length} top providers with one API key.
               </p>
             </div>
             <div>
