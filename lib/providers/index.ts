@@ -50,6 +50,12 @@ export async function routeChat(
   // Extract model if provided
   const model = (body as any)?.model || 'gpt-4o-free';
 
+  // Check if this is a virtual model with multiple providers
+  const virtualProviders = getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.length > 0) {
+    return routeVirtualChat(body, virtualProviders, options);
+  }
+
   // Determine which provider to use
   if (model.startsWith('pollinations/')) {
     const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
@@ -132,6 +138,12 @@ export async function routeImages(
   options?: RouteOptions
 ) {
   const model = (body as any)?.model || 'gpt-image-2-free';
+
+  // Check if this is a virtual model with multiple providers
+  const virtualProviders = getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.some(p => p.type === 'image')) {
+    return routeVirtualImages(body, virtualProviders.filter(p => p.type === 'image'), options);
+  }
 
   if (model === 'pollinations/image-simple') {
     const prompt = (body as any)?.prompt;
@@ -463,23 +475,331 @@ const GROQ_FREE_MODELS = [
 const AIHORDE_FREE_MODELS = [
   // Text Generation (26 models)
   { id: 'aihorde/aphrodite-Cydonia-24B-v4.3',            object: 'model', owned_by: 'Cydonia',            provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/aphrodite-Behemoth-X-123B-v2.1',        object: 'model', owned_by: 'Behemoth',           provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/aphrodite-Skyfall-31B-v4.1',            object: 'model', owned_by: 'Skyfall',            provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Cydonia-24B-v4.3',            object: 'model', owned_by: 'Cydonia',            provider: 'AIHorde', type: 'text' },
   { id: 'aihorde/koboldcpp-L3-8B-Stheno-v3.2',           object: 'model', owned_by: 'Stheno',             provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Qwen-Qwen3-0.6B',             object: 'model', owned_by: 'Qwen',               provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Behemoth-R1-123B-v2',         object: 'model', owned_by: 'Behemoth',           provider: 'AIHorde', type: 'text' },
   { id: 'aihorde/koboldcpp-Angelic-Eclipse-12B',         object: 'model', owned_by: 'Angelic Eclipse',    provider: 'AIHorde', type: 'text' },
-  // Image Generation (160+ models) - Sample of popular ones
+  { id: 'aihorde/koboldcpp-Artemis-31B-v1b',             object: 'model', owned_by: 'Artemis',            provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Impish-Magic-24B',            object: 'model', owned_by: 'Impish Magic',       provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-L3-Super-Nova-RP-8B',         object: 'model', owned_by: 'L3 Nova',            provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Llama-3-Lumimaid-8B',         object: 'model', owned_by: 'Lumimaid',           provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Magidonia-24B-v4.3',          object: 'model', owned_by: 'Magidonia',          provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-mini-magnum-12b-v1.1',        object: 'model', owned_by: 'Mini Magnum',        provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Qwen-Qwen3.6-35B',            object: 'model', owned_by: 'Qwen',               provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Qwen-Qwen3.5-0.8B',           object: 'model', owned_by: 'Qwen',               provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-WizzGPTv8',                   object: 'model', owned_by: 'WizzGPT',            provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Gemma-4-E4B',                 object: 'model', owned_by: 'Gemma',              provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Cerebras-GPT-111M',           object: 'model', owned_by: 'Cerebras',           provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-pythia-70m',                  object: 'model', owned_by: 'EleutherAI',         provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-pygmalion-2-7b',              object: 'model', owned_by: 'Pygmalion',          provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/mradermacher-Qwen3.6-35B',              object: 'model', owned_by: 'Qwen',               provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/slm-Kai-0.35B-Instruct',                object: 'model', owned_by: 'Kai',                provider: 'AIHorde', type: 'text' },
+  // Image Generation (160+ models) - Updated from API list
   { id: 'aihorde/stable_diffusion',                      object: 'model', owned_by: 'Stability AI',       provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/juggernautXL_v9Rundiffusion',           object: 'model', owned_by: 'Juggernaut',         provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/protovisionXLEngineOmega',              object: 'model', owned_by: 'ProtoVision',        provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/darkSushiMixMix_225D',                  object: 'model', owned_by: 'DarkSushi',          provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/sd_xl_base_1.0',                        object: 'model', owned_by: 'Stability AI',       provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/sd_xl_turbo',                           object: 'model', owned_by: 'Stability AI',       provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/dreamshaper',                           object: 'model', owned_by: 'Dreamshaper',        provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/neverendingdream',                      object: 'model', owned_by: 'NeverEndingDream',   provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/ghostmixSSSuperior_bestQuality',        object: 'model', owned_by: 'GhostMix',           provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/ponyDiffusionXL',                       object: 'model', owned_by: 'Pony Diffusion',     provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/grapefruit-hentai',                     object: 'model', owned_by: 'Grapefruit',         provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/absolutereality',                       object: 'model', owned_by: 'Absolute Reality',   provider: 'AIHorde', type: 'image' },
-  { id: 'aihorde/epicrealism',                           object: 'model', owned_by: 'Epic Realism',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/WAI-NSFW-illustrious-SDXL',             object: 'model', owned_by: 'WAI NSFW',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/AlbedoBase-XL-3.1',                     object: 'model', owned_by: 'AlbedoBase',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/AlbedoBase-XL-SDXL',                    object: 'model', owned_by: 'AlbedoBase',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/AMPonyXL',                              object: 'model', owned_by: 'AMPony',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/CyberRealistic-Pony',                   object: 'model', owned_by: 'CyberRealistic',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Deliberate',                            object: 'model', owned_by: 'Deliberate',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Dreamshaper',                           object: 'model', owned_by: 'Dreamshaper',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Flux.1-Schnell-fp8',                    object: 'model', owned_by: 'Black Forest Labs',  provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ICBINP',                                object: 'model', owned_by: 'ICBINP',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Nova-Anime-XL',                         object: 'model', owned_by: 'Nova Anime',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/AbsoluteReality',                       object: 'model', owned_by: 'Absolute Reality',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Abyss-OrangeMix',                       object: 'model', owned_by: 'Abyss OrangeMix',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Anything-Diffusion',                    object: 'model', owned_by: 'Anything',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Anything-Diffusion-Inpainting',         object: 'model', owned_by: 'Anything',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/A-Zovya-RPG-Inpainting',                object: 'model', owned_by: 'A-Zovya',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/BlenderMix-Pony',                       object: 'model', owned_by: 'BlenderMix',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Deliberate-Inpainting',                 object: 'model', owned_by: 'Deliberate',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/DreamShaper-Inpainting',                object: 'model', owned_by: 'DreamShaper',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Epic-Diffusion-Inpainting',             object: 'model', owned_by: 'Epic Diffusion',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Hassaku-XL',                            object: 'model', owned_by: 'Hassaku',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Hentai-Diffusion',                      object: 'model', owned_by: 'Hentai Diffusion',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/iCoMix-Inpainting',                     object: 'model', owned_by: 'iCoMix',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Juggernaut-XL',                         object: 'model', owned_by: 'Juggernaut',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/NatViS',                                object: 'model', owned_by: 'NatViS',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/NeverEnding-Dream',                     object: 'model', owned_by: 'NeverEndingDream',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/NTR-MIX-IL-Noob-XL',                    object: 'model', owned_by: 'NTR MIX',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Pony-Diffusion-XL',                     object: 'model', owned_by: 'Pony Diffusion',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Realistic-Vision-Inpainting',           object: 'model', owned_by: 'Realistic Vision',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/SDXL-1.0',                              object: 'model', owned_by: 'Stability AI',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/stable_diffusion_2.1',                  object: 'model', owned_by: 'Stability AI',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/stable_diffusion_inpainting',           object: 'model', owned_by: 'Stability AI',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/WAI-ANI-NSFW-PONYXL',                   object: 'model', owned_by: 'WAI ANI NSFW',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Z-Image-Turbo',                         object: 'model', owned_by: 'Z-Image',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/2DN',                                   object: 'model', owned_by: '2DN',                provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/526Mix-Animated',                       object: 'model', owned_by: '526Mix',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/AAM-XL',                                object: 'model', owned_by: 'AAM XL',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/AbyssOrangeMix-AfterDark',              object: 'model', owned_by: 'Abyss OrangeMix',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ACertainThing',                         object: 'model', owned_by: 'A Certain Thing',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/AIO-Pixel-Art',                         object: 'model', owned_by: 'AIO Pixel',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Analog-Diffusion',                      object: 'model', owned_by: 'Analog Diffusion',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Analog-Madness',                        object: 'model', owned_by: 'Analog Madness',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Animagine-XL',                          object: 'model', owned_by: 'Animagine',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Anime-Illust-Diffusion-XL',             object: 'model', owned_by: 'Anime Illust',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Anime-Pencil-Diffusion',                object: 'model', owned_by: 'Anime Pencil',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Anygen',                                object: 'model', owned_by: 'Anygen',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/AnyLoRA',                               object: 'model', owned_by: 'AnyLoRA',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Anything-v3',                           object: 'model', owned_by: 'Anything V3',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Anything-v5',                           object: 'model', owned_by: 'Anything V5',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/App-Icon-Diffusion',                    object: 'model', owned_by: 'App Icon',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Art-Of-MTG',                            object: 'model', owned_by: 'Art Of MTG',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Aurora',                                object: 'model', owned_by: 'Aurora',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Babes',                                 object: 'model', owned_by: 'Babes',              provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/BB95-Furry-Mix',                        object: 'model', owned_by: 'BB95 Furry',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/BB95-Furry-Mix-v14',                    object: 'model', owned_by: 'BB95 Furry V14',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/BigASP',                                object: 'model', owned_by: 'BigASP',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Blank-Canvas-XL',                       object: 'model', owned_by: 'Blank Canvas',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/BweshMix',                              object: 'model', owned_by: 'BweshMix',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/CamelliaMix-2.5D',                      object: 'model', owned_by: 'CamelliaMix',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Cetus-Mix',                             object: 'model', owned_by: 'Cetus Mix',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Cheese-Daddys-Landscape',               object: 'model', owned_by: 'Cheese Daddys',      provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Cheyenne',                              object: 'model', owned_by: 'Cheyenne',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ChilloutMix',                           object: 'model', owned_by: 'ChilloutMix',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Comic-Diffusion',                       object: 'model', owned_by: 'Comic Diffusion',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Counterfeit',                           object: 'model', owned_by: 'Counterfeit',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/CyriousMix',                            object: 'model', owned_by: 'CyriousMix',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Dan-Mumford-Style',                     object: 'model', owned_by: 'Dan Mumford',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Dark-Sushi-Mix',                        object: 'model', owned_by: 'Dark Sushi Mix',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Deliberate-3.0',                        object: 'model', owned_by: 'Deliberate 3.0',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Double-Exposure-Diffusion',             object: 'model', owned_by: 'Double Exposure',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Dreamlike-Diffusion',                   object: 'model', owned_by: 'Dreamlike',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/DreamlikeSamKuvshinov',                 object: 'model', owned_by: 'Dreamlike',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/DreamShaper-XL',                        object: 'model', owned_by: 'DreamShaper',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/DucHaiten',                             object: 'model', owned_by: 'DucHaiten',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/DucHaiten-Classic-Anime',               object: 'model', owned_by: 'DucHaiten Anime',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Dungeons-and-Diffusion',                object: 'model', owned_by: 'Dungeons & D',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Dungeons-n-Waifus',                     object: 'model', owned_by: 'Dungeons n Waifus',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Edge-Of-Realism',                       object: 'model', owned_by: 'Edge Of Realism',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Eimis-Anime-Diffusion',                 object: 'model', owned_by: 'Eimis Anime',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Elysium-Anime',                         object: 'model', owned_by: 'Elysium Anime',      provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Epic-Diffusion',                        object: 'model', owned_by: 'Epic Diffusion',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Ether-Real-Mix',                        object: 'model', owned_by: 'Ether Real Mix',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Experience',                            object: 'model', owned_by: 'Experience',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ExpMix-Line',                           object: 'model', owned_by: 'ExpMix Line',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/FaeTastic',                             object: 'model', owned_by: 'FaeTastic',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Fantasy-Card-Diffusion',                object: 'model', owned_by: 'Fantasy Card',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Flat-2D-Animerge',                      object: 'model', owned_by: 'Flat 2D Animerge',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Furry-Epoch',                           object: 'model', owned_by: 'Furry Epoch',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Fustercluck',                           object: 'model', owned_by: 'Fustercluck',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Galena-Redux',                          object: 'model', owned_by: 'Galena Redux',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Ghibli-Diffusion',                      object: 'model', owned_by: 'Ghibli Diffusion',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/GhostMix',                              object: 'model', owned_by: 'GhostMix',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Grapefruit-Hentai',                     object: 'model', owned_by: 'Grapefruit',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/GTA5-Artwork-Diffusion',                object: 'model', owned_by: 'GTA5 Artwork',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/HASDX',                                 object: 'model', owned_by: 'HASDX',              provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Healy-s-Anime-Blend',                   object: 'model', owned_by: 'Healys Anime',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/HolyMix-ILXL',                          object: 'model', owned_by: 'HolyMix ILXL',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/HRL',                                   object: 'model', owned_by: 'HRL',                provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ICBINP-XL',                             object: 'model', owned_by: 'ICBINP XL',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/iCoMix',                                object: 'model', owned_by: 'iCoMix',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Illuminati-Diffusion',                  object: 'model', owned_by: 'Illuminati',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Inkpunk-Diffusion',                     object: 'model', owned_by: 'Inkpunk',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Jim-Eidomode',                          object: 'model', owned_by: 'Jim Eidomode',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/KaynegIllustriousXL',                   object: 'model', owned_by: 'Kayneg Illustrious', provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Lawlas-yiff-mix',                       object: 'model', owned_by: 'Lawlas',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Liberty',                               object: 'model', owned_by: 'Liberty',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Lyriel',                                object: 'model', owned_by: 'Lyriel',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/majicMIX-realistic',                    object: 'model', owned_by: 'MajicMIX',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/MeinaMix',                              object: 'model', owned_by: 'MeinaMix',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/MHXL-Aventis-Horizon',                  object: 'model', owned_by: 'MHXL',               provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Midjourney-PaintArt',                   object: 'model', owned_by: 'Midjourney',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Mistoon-Anime',                         object: 'model', owned_by: 'Mistoon Anime',      provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ModernArt-Diffusion',                   object: 'model', owned_by: 'ModernArt',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/MoonMix-Fantasy',                       object: 'model', owned_by: 'MoonMix Fantasy',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Movie-Diffusion',                       object: 'model', owned_by: 'Movie Diffusion',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Neurogen',                              object: 'model', owned_by: 'Neurogen',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/NEW-ERA',                               object: 'model', owned_by: 'NEW ERA',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/noobEvo',                               object: 'model', owned_by: 'NoobEvo',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/noob_v_pencil-XL',                      object: 'model', owned_by: 'NoobPencil XL',      provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Nova-Furry-Pony',                       object: 'model', owned_by: 'Nova Furry',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Pastel-Mix',                            object: 'model', owned_by: 'Pastel Mix',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Perfect-World',                         object: 'model', owned_by: 'Perfect World',      provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Photon',                                object: 'model', owned_by: 'Photon',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Poison',                                object: 'model', owned_by: 'Poison',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Pony-Realism',                          object: 'model', owned_by: 'Pony Realism',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/PPP',                                   object: 'model', owned_by: 'PPP',                provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Prefect-Pony',                          object: 'model', owned_by: 'Prefect Pony',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Pretty-2.5D',                           object: 'model', owned_by: 'Pretty 2.5D',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Project-Unreal-Engine-5',               object: 'model', owned_by: 'Project UE5',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Quiet-Goodnight-XL',                    object: 'model', owned_by: 'Quiet Goodnight',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/RealBiter',                             object: 'model', owned_by: 'RealBiter',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Real-Dos-Mix',                          object: 'model', owned_by: 'Real Dos Mix',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Realism-Engine',                        object: 'model', owned_by: 'Realism Engine',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Realistic-Vision',                      object: 'model', owned_by: 'Realistic Vision',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Reliberate',                            object: 'model', owned_by: 'Reliberate',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Rev-Animated',                          object: 'model', owned_by: 'Rev Animated',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/RPG',                                   object: 'model', owned_by: 'RPG',                provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Sci-Fi-Diffusion',                      object: 'model', owned_by: 'Sci-Fi Diffusion',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/SD-Silicon',                            object: 'model', owned_by: 'SD Silicon',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Something',                             object: 'model', owned_by: 'Something',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Stable-Cascade-1.0',                    object: 'model', owned_by: 'Stable Cascade',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/SwamPonyXL',                            object: 'model', owned_by: 'SwamPonyXL',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ToonYou',                               object: 'model', owned_by: 'ToonYou',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/TUNIX-Pony',                            object: 'model', owned_by: 'TUNIX Pony',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Uhmami',                                object: 'model', owned_by: 'Uhmami',             provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Unstable-Diffusers-XL',                 object: 'model', owned_by: 'Unstable Diffusers', provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Unstable-Ink-Dream',                    object: 'model', owned_by: 'Unstable Ink',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/URPM',                                  object: 'model', owned_by: 'URPM',               provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Vector-Art',                            object: 'model', owned_by: 'Vector Art',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/WAI-CUTE-Pony',                         object: 'model', owned_by: 'WAI CUTE Pony',      provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/waifu_diffusion',                       object: 'model', owned_by: 'Waifu Diffusion',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Western-Animation-Diffusion',           object: 'model', owned_by: 'Western Animation',  provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/White-Pony-Diffusion-4',                object: 'model', owned_by: 'White Pony D4',      provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Woop-Woop-Photo',                       object: 'model', owned_by: 'Woop Woop Photo',    provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Yiffy',                                 object: 'model', owned_by: 'Yiffy',              provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ZavyChromaXL',                          object: 'model', owned_by: 'ZavyChromaXL',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Zeipher-Female-Model',                  object: 'model', owned_by: 'Zeipher',            provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/DucHaiten-GameArt-Unreal-Pony',         object: 'model', owned_by: 'DucHaiten GameArt',  provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Qwen-Image-fp8',                        object: 'model', owned_by: 'Qwen Image',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/Ultraspice',                            object: 'model', owned_by: 'Ultraspice',         provider: 'AIHorde', type: 'image' },
 ];
+
+// Virtual models map: base model name -> array of providers
+const VIRTUAL_MODELS_MAP: Record<string, Array<{ provider: string; modelId: string; type: string }>> = {
+  'gpt-4o': [
+    { provider: 'groq', modelId: 'groq/openai/gpt-oss-120b', type: 'text' },
+    { provider: 'aihorde', modelId: 'aihorde/gpt-4-turbo', type: 'text' },
+  ],
+  'gpt-4': [
+    { provider: 'groq', modelId: 'groq/openai/gpt-oss-120b', type: 'text' },
+    { provider: 'aihorde', modelId: 'aihorde/gpt-4-turbo', type: 'text' },
+  ],
+  'claude': [
+    { provider: 'pollinations', modelId: 'pollinations/claude-fast', type: 'text' },
+    { provider: 'aihorde', modelId: 'aihorde/claude-3-sonnet', type: 'text' },
+  ],
+  'gemini': [
+    { provider: 'pollinations', modelId: 'pollinations/gemini-fast', type: 'text' },
+    { provider: 'aihorde', modelId: 'aihorde/gemini-pro', type: 'text' },
+  ],
+  'llama': [
+    { provider: 'groq', modelId: 'groq/llama-3.3-70b-versatile', type: 'text' },
+    { provider: 'aihorde', modelId: 'aihorde/aphrodite-Skyfall-31B-v4.1', type: 'text' },
+  ],
+  'mistral': [
+    { provider: 'pollinations', modelId: 'pollinations/mistral-large', type: 'text' },
+    { provider: 'aihorde', modelId: 'aihorde/mistral-large', type: 'text' },
+  ],
+  'qwen': [
+    { provider: 'groq', modelId: 'groq/qwen/qwen3-32b', type: 'text' },
+    { provider: 'aihorde', modelId: 'aihorde/koboldcpp-Qwen-Qwen3.6-35B', type: 'text' },
+  ],
+  'image-generation': [
+    { provider: 'pollinations', modelId: 'pollinations/flux', type: 'image' },
+    { provider: 'aihorde', modelId: 'aihorde/flux-1-schnell', type: 'image' },
+  ],
+  'flux': [
+    { provider: 'pollinations', modelId: 'pollinations/flux', type: 'image' },
+    { provider: 'aihorde', modelId: 'aihorde/flux-1-schnell', type: 'image' },
+  ],
+  'stable-diffusion': [
+    { provider: 'aihorde', modelId: 'aihorde/stable_diffusion_xl', type: 'image' },
+    { provider: 'pollinations', modelId: 'pollinations/image-simple', type: 'image' },
+  ],
+};
+
+function isVirtualModel(modelId: string): boolean {
+  return Object.keys(VIRTUAL_MODELS_MAP).some(base =>
+    modelId === base || modelId.startsWith(base + '-') || modelId.startsWith('virtual/')
+  );
+}
+
+function getVirtualModelProviders(modelId: string): Array<{ provider: string; modelId: string; type: string }> | null {
+  const base = Object.keys(VIRTUAL_MODELS_MAP).find(key =>
+    modelId === key || modelId.startsWith(key + '-') || modelId === `virtual/${key}`
+  );
+  return base ? VIRTUAL_MODELS_MAP[base] : null;
+}
+
+export async function routeVirtualChat(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const provider of providers) {
+    try {
+      const fwdBody = { ...(body as any), model: provider.modelId };
+
+      if (provider.provider === 'groq') {
+        return await forwardGroq('/chat/completions', 'POST', fwdBody, options);
+      } else if (provider.provider === 'pollinations') {
+        return await forwardPollinations('/v1/chat/completions', 'POST', fwdBody, options);
+      } else if (provider.provider === 'aihorde') {
+        const messages = fwdBody.messages || [];
+        const prompt = messages.map((m: any) => m.content).join('\n') || '';
+        const hordeBody = {
+          prompt,
+          params: {
+            max_length: fwdBody.max_tokens || 80,
+          },
+        };
+        return await forwardAIHorde('/generate/text/async', 'POST', hordeBody, options);
+      } else if (provider.provider === 'voidai') {
+        return await forwardVoidAI('/chat/completions', 'POST', fwdBody, options);
+      } else if (provider.provider === 'airforce') {
+        return await forwardAirforce('/chat/completions', 'POST', fwdBody, options);
+      } else if (provider.provider === 'cerebras') {
+        return await forwardCerebras('/chat/completions', 'POST', fwdBody, options);
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual model providers failed');
+}
+
+export async function routeVirtualImages(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const provider of providers) {
+    try {
+      const fwdBody = { ...(body as any), model: provider.modelId };
+      const prompt = fwdBody.prompt || '';
+
+      if (provider.provider === 'pollinations') {
+        if (provider.modelId === 'pollinations/image-simple') {
+          return forwardSimpleImage(prompt);
+        }
+        return await forwardPollinations('/v1/images/generations', 'POST', fwdBody);
+      } else if (provider.provider === 'aihorde') {
+        const hordeBody = {
+          prompt,
+          models: [provider.modelId.replace('aihorde/', '')],
+          params: {
+            sampler_name: 'k_euler',
+            cfg_scale: 7,
+            denoise: 1.0,
+            steps: 20,
+          },
+        };
+        return await forwardAIHorde('/generate/async', 'POST', hordeBody);
+      } else if (provider.provider === 'voidai') {
+        return await forwardVoidAI('/images/generations', 'POST', fwdBody);
+      } else if (provider.provider === 'airforce') {
+        return await forwardAirforce('/images/generations', 'POST', fwdBody);
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual model providers failed');
+}
 
 export async function routeModels() {
   const models: any[] = [];
@@ -553,6 +873,20 @@ export async function routeModels() {
 
   // AI Horde — decentralized volunteer network with 160+ image + 26+ text models
   models.push(...AIHORDE_FREE_MODELS);
+
+  // Virtual models - add auto-routing models for multi-provider availability
+  Object.entries(VIRTUAL_MODELS_MAP).forEach(([baseName, providers]) => {
+    if (providers.length > 1) {
+      const firstProvider = providers[0];
+      models.push({
+        id: baseName,
+        object: 'model',
+        owned_by: 'OpenRelay',
+        provider: 'OpenRelay Virtual',
+        type: firstProvider.type,
+      });
+    }
+  });
 
   // Deduplicate by id
   const seen = new Set<string>();

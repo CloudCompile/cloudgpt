@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-const PROVIDERS = ['AIHubMix', 'Pollinations', 'VoidAI', 'Airforce', 'Cerebras'] as const;
+const PROVIDERS = ['AIHubMix', 'Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'Groq', 'AIHorde'] as const;
 type Provider = typeof PROVIDERS[number];
 
 const PROVIDER_COLORS: Record<string, string> = {
@@ -11,6 +11,8 @@ const PROVIDER_COLORS: Record<string, string> = {
   VoidAI: '#06b6d4',
   Airforce: '#f59e0b',
   Cerebras: '#8b5cf6',
+  Groq: '#00d084',
+  AIHorde: '#ec4899',
 };
 
 const STATUS_META: Record<string, { color: string; label: string }> = {

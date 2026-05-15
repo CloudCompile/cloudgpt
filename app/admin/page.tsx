@@ -18,6 +18,8 @@ const PROVIDER_COLORS: Record<string, string> = {
   VoidAI: '#06b6d4',
   Airforce: '#f59e0b',
   Cerebras: '#8b5cf6',
+  Groq: '#00d084',
+  AIHorde: '#ec4899',
 };
 
 export default function AdminPage() {
