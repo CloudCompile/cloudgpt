@@ -47,7 +47,7 @@ export async function getUserRequestStats(userId: string): Promise<{
   const today = new Date().toISOString().split('T')[0];
 
   const todayStr = await redis.get(`analytics:user:req:${userId}:${today}`);
-  const todayCount = todayStr ? parseInt(todayStr) : 0;
+  const todayCount = todayStr ? (parseInt(todayStr, 10) || 0) : 0;
 
   let weekCount = 0;
   for (let i = 0; i < 7; i++) {
@@ -55,11 +55,11 @@ export async function getUserRequestStats(userId: string): Promise<{
     date.setUTCDate(date.getUTCDate() - i);
     const dateStr = date.toISOString().split('T')[0];
     const dayStr = await redis.get(`analytics:user:req:${userId}:${dateStr}`);
-    weekCount += dayStr ? parseInt(dayStr) : 0;
+    weekCount += dayStr ? (parseInt(dayStr, 10) || 0) : 0;
   }
 
   const totalStr = await redis.get(`analytics:user:req:${userId}:total`);
-  const total = totalStr ? parseInt(totalStr) : 0;
+  const total = totalStr ? (parseInt(totalStr, 10) || 0) : 0;
 
   return { today: todayCount, week: weekCount, total };
 }
@@ -73,7 +73,7 @@ export async function getSystemAnalytics(): Promise<{
   const today = new Date().toISOString().split('T')[0];
 
   const totalStr = await redis.get(`analytics:req:total:${today}`);
-  const requestsToday = totalStr ? parseInt(totalStr) : 0;
+  const requestsToday = totalStr ? (parseInt(totalStr, 10) || 0) : 0;
 
   const modelDataStr = await redis.get(`analytics:req:model:${today}`);
   const modelData: Record<string, number> = modelDataStr ? JSON.parse(modelDataStr) : {};
@@ -90,7 +90,7 @@ export async function getSystemAnalytics(): Promise<{
   let tokensToday = 0;
   for (let i = 0; i < 10; i++) {
     const tokenStr = await redis.get(`cerebras:${i}:tokens:${today}`);
-    if (tokenStr) tokensToday += parseInt(tokenStr);
+    if (tokenStr) tokensToday += (parseInt(tokenStr, 10) || 0);
   }
 
   return { requestsToday, topModels, providerBreakdown, tokensToday };

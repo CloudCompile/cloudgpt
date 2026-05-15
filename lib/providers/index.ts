@@ -663,52 +663,13 @@ const AIHORDE_FREE_MODELS = [
 
 // Virtual models map: base model name -> array of providers
 const VIRTUAL_MODELS_MAP: Record<string, Array<{ provider: string; modelId: string; type: string }>> = {
-  'gpt-4o': [
-    { provider: 'groq', modelId: 'groq/openai/gpt-oss-120b', type: 'text' },
-    { provider: 'aihorde', modelId: 'aihorde/gpt-4-turbo', type: 'text' },
-  ],
-  'gpt-4': [
-    { provider: 'groq', modelId: 'groq/openai/gpt-oss-120b', type: 'text' },
-    { provider: 'aihorde', modelId: 'aihorde/gpt-4-turbo', type: 'text' },
-  ],
-  'claude': [
-    { provider: 'pollinations', modelId: 'pollinations/claude-fast', type: 'text' },
-    { provider: 'aihorde', modelId: 'aihorde/claude-3-sonnet', type: 'text' },
-  ],
-  'gemini': [
-    { provider: 'pollinations', modelId: 'pollinations/gemini-fast', type: 'text' },
-    { provider: 'aihorde', modelId: 'aihorde/gemini-pro', type: 'text' },
-  ],
-  'llama': [
-    { provider: 'groq', modelId: 'groq/llama-3.3-70b-versatile', type: 'text' },
-    { provider: 'aihorde', modelId: 'aihorde/aphrodite-Skyfall-31B-v4.1', type: 'text' },
-  ],
-  'mistral': [
-    { provider: 'pollinations', modelId: 'pollinations/mistral-large', type: 'text' },
-    { provider: 'aihorde', modelId: 'aihorde/mistral-large', type: 'text' },
-  ],
-  'qwen': [
-    { provider: 'groq', modelId: 'groq/qwen/qwen3-32b', type: 'text' },
-    { provider: 'aihorde', modelId: 'aihorde/koboldcpp-Qwen-Qwen3.6-35B', type: 'text' },
-  ],
-  'image-generation': [
-    { provider: 'pollinations', modelId: 'pollinations/flux', type: 'image' },
-    { provider: 'aihorde', modelId: 'aihorde/flux-1-schnell', type: 'image' },
-  ],
-  'flux': [
-    { provider: 'pollinations', modelId: 'pollinations/flux', type: 'image' },
-    { provider: 'aihorde', modelId: 'aihorde/flux-1-schnell', type: 'image' },
-  ],
-  'stable-diffusion': [
-    { provider: 'aihorde', modelId: 'aihorde/stable_diffusion_xl', type: 'image' },
-    { provider: 'pollinations', modelId: 'pollinations/image-simple', type: 'image' },
-  ],
 };
 
 
 // Cache user virtual models in module scope to avoid Redis hit on every request
 let _userVirtualModelsCache: Record<string, Array<{ provider: string; modelId: string; type: string }>> | null = null;
 let _userVirtualModelsCacheTime = 0;
+let _userVirtualModelsFetching: Promise<Record<string, Array<{ provider: string; modelId: string; type: string }>>> | null = null;
 const USER_VIRTUAL_MODELS_TTL = 30_000; // 30 seconds
 
 async function getUserVirtualModels(): Promise<Record<string, Array<{ provider: string; modelId: string; type: string }>>> {
@@ -716,18 +677,30 @@ async function getUserVirtualModels(): Promise<Record<string, Array<{ provider: 
   if (_userVirtualModelsCache && now - _userVirtualModelsCacheTime < USER_VIRTUAL_MODELS_TTL) {
     return _userVirtualModelsCache;
   }
-  try {
-    const stored = await redis.get('virtual_models');
-    if (stored) {
-      const list: Array<{ id: string; providers: Array<{ provider: string; modelId: string; type: string }> }> = JSON.parse(stored);
-      _userVirtualModelsCache = Object.fromEntries(list.map(vm => [vm.id, vm.providers]));
-      _userVirtualModelsCacheTime = now;
-      return _userVirtualModelsCache;
-    }
-  } catch (e) {
-    console.warn('Could not load user virtual models:', e);
+
+  // If fetch is already in progress, wait for it instead of fetching again
+  if (_userVirtualModelsFetching) {
+    return _userVirtualModelsFetching;
   }
-  return {};
+
+  _userVirtualModelsFetching = (async () => {
+    try {
+      const stored = await redis.get('virtual_models');
+      if (stored) {
+        const list: Array<{ id: string; providers: Array<{ provider: string; modelId: string; type: string }> }> = JSON.parse(stored);
+        _userVirtualModelsCache = Object.fromEntries(list.map(vm => [vm.id, vm.providers]));
+        _userVirtualModelsCacheTime = now;
+        return _userVirtualModelsCache;
+      }
+    } catch (e) {
+      console.warn('Could not load user virtual models:', e);
+    }
+    return {};
+  })().finally(() => {
+    _userVirtualModelsFetching = null;
+  });
+
+  return _userVirtualModelsFetching;
 }
 
 async function getVirtualModelProviders(modelId: string): Promise<Array<{ provider: string; modelId: string; type: string }> | null> {
