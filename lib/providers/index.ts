@@ -669,6 +669,7 @@ const VIRTUAL_MODELS_MAP: Record<string, Array<{ provider: string; modelId: stri
 // Cache user virtual models in module scope to avoid Redis hit on every request
 let _userVirtualModelsCache: Record<string, Array<{ provider: string; modelId: string; type: string }>> | null = null;
 let _userVirtualModelsCacheTime = 0;
+let _userVirtualModelsFetching: Promise<Record<string, Array<{ provider: string; modelId: string; type: string }>>> | null = null;
 const USER_VIRTUAL_MODELS_TTL = 30_000; // 30 seconds
 
 async function getUserVirtualModels(): Promise<Record<string, Array<{ provider: string; modelId: string; type: string }>>> {
@@ -676,18 +677,30 @@ async function getUserVirtualModels(): Promise<Record<string, Array<{ provider: 
   if (_userVirtualModelsCache && now - _userVirtualModelsCacheTime < USER_VIRTUAL_MODELS_TTL) {
     return _userVirtualModelsCache;
   }
-  try {
-    const stored = await redis.get('virtual_models');
-    if (stored) {
-      const list: Array<{ id: string; providers: Array<{ provider: string; modelId: string; type: string }> }> = JSON.parse(stored);
-      _userVirtualModelsCache = Object.fromEntries(list.map(vm => [vm.id, vm.providers]));
-      _userVirtualModelsCacheTime = now;
-      return _userVirtualModelsCache;
-    }
-  } catch (e) {
-    console.warn('Could not load user virtual models:', e);
+
+  // If fetch is already in progress, wait for it instead of fetching again
+  if (_userVirtualModelsFetching) {
+    return _userVirtualModelsFetching;
   }
-  return {};
+
+  _userVirtualModelsFetching = (async () => {
+    try {
+      const stored = await redis.get('virtual_models');
+      if (stored) {
+        const list: Array<{ id: string; providers: Array<{ provider: string; modelId: string; type: string }> }> = JSON.parse(stored);
+        _userVirtualModelsCache = Object.fromEntries(list.map(vm => [vm.id, vm.providers]));
+        _userVirtualModelsCacheTime = now;
+        return _userVirtualModelsCache;
+      }
+    } catch (e) {
+      console.warn('Could not load user virtual models:', e);
+    }
+    return {};
+  })().finally(() => {
+    _userVirtualModelsFetching = null;
+  });
+
+  return _userVirtualModelsFetching;
 }
 
 async function getVirtualModelProviders(modelId: string): Promise<Array<{ provider: string; modelId: string; type: string }> | null> {

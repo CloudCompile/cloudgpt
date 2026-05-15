@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { redis } from './redis';
 
 export interface ApiKeyData {
@@ -6,17 +7,8 @@ export interface ApiKeyData {
   createdAt: number;
 }
 
-function randomHex(length: number): string {
-  const chars = '0123456789abcdef';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
 export function generateApiKey(): string {
-  return `or_${randomHex(32)}`;
+  return `or_${randomBytes(16).toString('hex')}`;
 }
 
 export function extractApiKey(headers: Headers): string | null {
@@ -33,7 +25,11 @@ export function extractApiKey(headers: Headers): string | null {
 export async function validateApiKey(key: string): Promise<ApiKeyData | null> {
   const data = await redis.get(`key:${key}`);
   if (!data) return null;
-  return JSON.parse(data) as ApiKeyData;
+  try {
+    return JSON.parse(data) as ApiKeyData;
+  } catch {
+    return null;
+  }
 }
 
 export async function storeApiKey(

@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
 
     // Fire-and-forget analytics (never blocks or throws)
     const model = (body as any)?.model || 'unknown';
-    trackRequest(model).catch(() => {});
-    trackUserRequest(keyData.userId, model).catch(() => {});
+    trackRequest(model).catch(e => console.warn('Failed to track request:', e));
+    trackUserRequest(keyData.userId, model).catch(e => console.warn('Failed to track user request:', e));
 
     // Handle streaming
     if (streaming && response.body) {
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Chat API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
