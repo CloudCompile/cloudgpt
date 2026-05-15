@@ -55,6 +55,7 @@ export const redis = {
   keys: async (pattern: string) => (await getRedis()).keys(pattern),
   hGet: async (key: string, field: string) => (await getRedis()).hGet(key, field),
   hSet: async (key: string, field: string, value: string) => (await getRedis()).hSet(key, field, value),
+  hIncrBy: async (key: string, field: string, increment: number) => (await getRedis()).hIncrBy(key, field, increment),
   hGetAll: async (key: string) => (await getRedis()).hGetAll(key),
   lPush: async (key: string, ...elements: string[]) => (await getRedis()).lPush(key, elements),
   lRange: async (key: string, start: number, stop: number) => (await getRedis()).lRange(key, start, stop),

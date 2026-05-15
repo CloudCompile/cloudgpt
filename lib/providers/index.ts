@@ -6,33 +6,19 @@ import { forwardAirforce } from './airforce';
 import { forwardCerebras } from './cerebras';
 import { forwardGroq } from './groq';
 import { forwardAIHorde } from './aihorde';
-
-/**
- * Provider routing logic
- * Tries AIHubMix first, then falls back to Pollinations
- * Automatically scales rate limits based on available keys
- */
+import { forwardTokenReply } from './tokenreply';
+import { forwardNagaAI } from './nagaai';
 
 export interface RouteOptions {
   streaming?: boolean;
   autoFallback?: boolean;
 }
 
-// Forward to AIHubMix
-async function forwardAIHubMix(
-  endpoint: string,
-  method: string,
-  body?: unknown
-) {
-  const apiKey = process.env.AIHUBMIX_KEY_1;
+async function forwardAIHubMix(endpoint: string, method: string, body?: unknown) {
+  const apiKey = await getNextKey('aihubmix');
+  if (!apiKey) throw new Error('No AIHubMix API key configured');
 
-  if (!apiKey) {
-    throw new Error('No AIHubMix API key configured');
-  }
-
-  const url = `https://aihubmix.com/v1${endpoint}`;
-
-  const response = await fetch(url, {
+  const response = await fetch(`https://aihubmix.com/v1${endpoint}`, {
     method,
     headers: {
       'Authorization': `Bearer ${apiKey}`,
@@ -42,6 +28,21 @@ async function forwardAIHubMix(
   });
 
   return response;
+}
+
+async function tryProviders(
+  providers: Array<{ name: string; fn: () => Promise<Response> }>
+): Promise<Response> {
+  let lastError: unknown;
+  for (const { name, fn } of providers) {
+    try {
+      return await fn();
+    } catch (e) {
+      console.warn(`[fallback] ${name}: ${e instanceof Error ? e.message : e}`);
+      lastError = e;
+    }
+  }
+  throw lastError ?? new Error('All providers failed');
 }
 
 export async function routeChat(
@@ -95,43 +96,35 @@ export async function routeChat(
     return forwardAIHorde('/generate/text/async', 'POST', fwdBody, options);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde
-  try {
-    return await forwardAIHubMix('/chat/completions', 'POST', body);
-  } catch (error) {
-    if (options?.autoFallback) {
-      try {
-        return await forwardPollinations('/v1/chat/completions', 'POST', body, options);
-      } catch (pollinationsError) {
-        try {
-          return await forwardVoidAI('/chat/completions', 'POST', body, options);
-        } catch (voidaiError) {
-          try {
-            return await forwardAirforce('/chat/completions', 'POST', body, options);
-          } catch (airforceError) {
-            try {
-              return await forwardCerebras('/chat/completions', 'POST', body, options);
-            } catch (cerebasError) {
-              try {
-                return await forwardGroq('/chat/completions', 'POST', body, options);
-              } catch (groqError) {
-                const messages = (body as any).messages || [];
-                const prompt = messages.map((m: any) => m.content).join('\n') || '';
-                const hordeBody = {
-                  prompt,
-                  params: {
-                    max_length: (body as any).max_tokens || 80,
-                  },
-                };
-                return await forwardAIHorde('/generate/text/async', 'POST', hordeBody, options);
-              }
-            }
-          }
-        }
-      }
-    }
-    throw error;
+  if (model.startsWith('tokenreply/')) {
+    const fwdBody = { ...(body as any), model: model.replace('tokenreply/', '') };
+    return forwardTokenReply('/chat/completions', 'POST', fwdBody, options);
   }
+
+  if (model.startsWith('nagaai/')) {
+    const fwdBody = { ...(body as any), model: model.replace('nagaai/', '') };
+    return forwardNagaAI('/chat/completions', 'POST', fwdBody, options);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde → TokenReply → NagaAI
+  if (!options?.autoFallback) {
+    return forwardAIHubMix('/chat/completions', 'POST', body);
+  }
+
+  const messages = (body as any).messages || [];
+  const prompt = messages.map((m: any) => m.content).join('\n') || '';
+
+  return tryProviders([
+    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/chat/completions', 'POST', body) },
+    { name: 'Pollinations', fn: () => forwardPollinations('/v1/chat/completions', 'POST', body, options) },
+    { name: 'VoidAI',      fn: () => forwardVoidAI('/chat/completions', 'POST', body, options) },
+    { name: 'Airforce',    fn: () => forwardAirforce('/chat/completions', 'POST', body, options) },
+    { name: 'Cerebras',    fn: () => forwardCerebras('/chat/completions', 'POST', body, options) },
+    { name: 'Groq',        fn: () => forwardGroq('/chat/completions', 'POST', body, options) },
+    { name: 'AIHorde',     fn: () => forwardAIHorde('/generate/text/async', 'POST', { prompt, params: { max_length: (body as any).max_tokens || 80 } }, options) },
+    { name: 'TokenReply',  fn: () => forwardTokenReply('/chat/completions', 'POST', body, options) },
+    { name: 'NagaAI',     fn: () => forwardNagaAI('/chat/completions', 'POST', body, options) },
+  ]);
 }
 
 export async function routeImages(
@@ -182,38 +175,29 @@ export async function routeImages(
     return forwardAIHorde('/generate/async', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → AIHorde
-  try {
-    return await forwardAIHubMix('/images/generations', 'POST', body);
-  } catch (error) {
-    if (options?.autoFallback) {
-      try {
-        return await forwardPollinations('/v1/images/generations', 'POST', body);
-      } catch (pollinationsError) {
-        try {
-          return await forwardVoidAI('/images/generations', 'POST', body);
-        } catch (voidaiError) {
-          try {
-            return await forwardAirforce('/images/generations', 'POST', body);
-          } catch (airforceError) {
-            const prompt = (body as any)?.prompt || '';
-            const hordeBody = {
-              prompt,
-              models: ['stable_diffusion'],
-              params: {
-                sampler_name: 'k_euler',
-                cfg_scale: 7,
-                denoise: 1.0,
-                steps: 20,
-              },
-            };
-            return await forwardAIHorde('/generate/async', 'POST', hordeBody);
-          }
-        }
-      }
-    }
-    throw error;
+  if (model.startsWith('nagaai/')) {
+    const fwdBody = { ...(body as any), model: model.replace('nagaai/', '') };
+    return forwardNagaAI('/images/generations', 'POST', fwdBody);
   }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → AIHorde → NagaAI
+  if (!options?.autoFallback) {
+    return forwardAIHubMix('/images/generations', 'POST', body);
+  }
+
+  const prompt = (body as any)?.prompt || '';
+  return tryProviders([
+    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/images/generations', 'POST', body) },
+    { name: 'Pollinations', fn: () => forwardPollinations('/v1/images/generations', 'POST', body) },
+    { name: 'VoidAI',      fn: () => forwardVoidAI('/images/generations', 'POST', body) },
+    { name: 'Airforce',    fn: () => forwardAirforce('/images/generations', 'POST', body) },
+    { name: 'AIHorde',     fn: () => forwardAIHorde('/generate/async', 'POST', {
+      prompt,
+      models: ['stable_diffusion'],
+      params: { sampler_name: 'k_euler', cfg_scale: 7, denoise: 1.0, steps: 20 },
+    }) },
+    { name: 'NagaAI',     fn: () => forwardNagaAI('/images/generations', 'POST', body) },
+  ]);
 }
 
 export async function routeVideo(
@@ -263,27 +247,24 @@ export async function routeAudio(
     return forwardGroq('/audio/speech', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Groq
-  try {
-    return await forwardAIHubMix('/audio/speech', 'POST', body);
-  } catch (error) {
-    if (options?.autoFallback) {
-      try {
-        return await forwardPollinations('/v1/audio/speech', 'POST', body);
-      } catch (pollinationsError) {
-        try {
-          return await forwardVoidAI('/audio/speech', 'POST', body);
-        } catch (voidaiError) {
-          try {
-            return await forwardAirforce('/audio/speech', 'POST', body);
-          } catch (airforceError) {
-            return await forwardGroq('/audio/speech', 'POST', body);
-          }
-        }
-      }
-    }
-    throw error;
+  if (model.startsWith('nagaai/')) {
+    const fwdBody = { ...(body as any), model: model.replace('nagaai/', '') };
+    return forwardNagaAI('/audio/speech', 'POST', fwdBody);
   }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Groq → NagaAI
+  if (!options?.autoFallback) {
+    return forwardAIHubMix('/audio/speech', 'POST', body);
+  }
+
+  return tryProviders([
+    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/audio/speech', 'POST', body) },
+    { name: 'Pollinations', fn: () => forwardPollinations('/v1/audio/speech', 'POST', body) },
+    { name: 'VoidAI',      fn: () => forwardVoidAI('/audio/speech', 'POST', body) },
+    { name: 'Airforce',    fn: () => forwardAirforce('/audio/speech', 'POST', body) },
+    { name: 'Groq',        fn: () => forwardGroq('/audio/speech', 'POST', body) },
+    { name: 'NagaAI',     fn: () => forwardNagaAI('/audio/speech', 'POST', body) },
+  ]);
 }
 
 export async function routeMusic(
@@ -324,22 +305,16 @@ export async function routeEmbeddings(
   }
 
   // Default: try AIHubMix → Pollinations → VoidAI → Airforce
-  try {
-    return await forwardAIHubMix('/embeddings', 'POST', body);
-  } catch (error) {
-    if (options?.autoFallback) {
-      try {
-        return await forwardPollinations('/v1/embeddings', 'POST', body);
-      } catch (pollinationsError) {
-        try {
-          return await forwardVoidAI('/embeddings', 'POST', body);
-        } catch (voidaiError) {
-          return await forwardAirforce('/embeddings', 'POST', body);
-        }
-      }
-    }
-    throw error;
+  if (!options?.autoFallback) {
+    return forwardAIHubMix('/embeddings', 'POST', body);
   }
+
+  return tryProviders([
+    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/embeddings', 'POST', body) },
+    { name: 'Pollinations', fn: () => forwardPollinations('/v1/embeddings', 'POST', body) },
+    { name: 'VoidAI',      fn: () => forwardVoidAI('/embeddings', 'POST', body) },
+    { name: 'Airforce',    fn: () => forwardAirforce('/embeddings', 'POST', body) },
+  ]);
 }
 
 export async function routeTranscription(
@@ -363,19 +338,22 @@ export async function routeTranscription(
     return forwardGroq('/audio/transcriptions', 'POST', fwdBody);
   }
 
-  // Default: try VoidAI → Airforce → Groq
-  try {
-    return await forwardVoidAI('/audio/transcriptions', 'POST', body);
-  } catch (error) {
-    if (options?.autoFallback) {
-      try {
-        return await forwardAirforce('/audio/transcriptions', 'POST', body);
-      } catch (airforceError) {
-        return await forwardGroq('/audio/transcriptions', 'POST', body);
-      }
-    }
-    throw error;
+  if (model.startsWith('nagaai/')) {
+    const fwdBody = { ...(body as any), model: model.replace('nagaai/', '') };
+    return forwardNagaAI('/audio/transcriptions', 'POST', fwdBody);
   }
+
+  // Default: try VoidAI → Airforce → Groq → NagaAI
+  if (!options?.autoFallback) {
+    return forwardVoidAI('/audio/transcriptions', 'POST', body);
+  }
+
+  return tryProviders([
+    { name: 'VoidAI',   fn: () => forwardVoidAI('/audio/transcriptions', 'POST', body) },
+    { name: 'Airforce', fn: () => forwardAirforce('/audio/transcriptions', 'POST', body) },
+    { name: 'Groq',     fn: () => forwardGroq('/audio/transcriptions', 'POST', body) },
+    { name: 'NagaAI',  fn: () => forwardNagaAI('/audio/transcriptions', 'POST', body) },
+  ]);
 }
 
 function inferType(id: string): string {
@@ -471,6 +449,43 @@ const GROQ_FREE_MODELS = [
   // Text-to-Speech
   { id: 'groq/canopylabs/orpheus-v1-english',  object: 'model', owned_by: 'Canopy',           provider: 'Groq', type: 'audio' },
   { id: 'groq/canopylabs/orpheus-arabic-saudi', object: 'model', owned_by: 'Canopy',          provider: 'Groq', type: 'audio' },
+];
+
+const TOKENREPLY_FREE_MODELS = [
+  { id: 'tokenreply/deepseek-ai/deepseek-v4-flash',             object: 'model', owned_by: 'DeepSeek',    provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/deepseek-ai/deepseek-v4-pro',               object: 'model', owned_by: 'DeepSeek',    provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/google/gemma-3n-e2b-it',                    object: 'model', owned_by: 'Google',      provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/google/gemma-3n-e4b-it',                    object: 'model', owned_by: 'Google',      provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/google/gemma-4-31b-it',                     object: 'model', owned_by: 'Google',      provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/grok-4.20-fast',                            object: 'model', owned_by: 'xAI',         provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/minimaxai/minimax-m2.7',                    object: 'model', owned_by: 'MiniMax',     provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/moonshotai/kimi-k2.6',                      object: 'model', owned_by: 'Moonshot',    provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/openai/gpt-oss-120b',                       object: 'model', owned_by: 'OpenAI',      provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/qwen/qwen3-coder-480b-a35b-instruct',       object: 'model', owned_by: 'Alibaba',     provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/qwen/qwen3.5-397b-a17b',                    object: 'model', owned_by: 'Alibaba',     provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/stepfun-ai/step-3.5-flash',                 object: 'model', owned_by: 'StepFun',     provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/z-ai/glm-5.1',                              object: 'model', owned_by: 'Z.ai',        provider: 'TokenReply', type: 'text' },
+  { id: 'tokenreply/z-ai/glm5',                                 object: 'model', owned_by: 'Z.ai',        provider: 'TokenReply', type: 'text' },
+];
+
+const NAGAAI_FREE_MODELS = [
+  // Text / Chat
+  { id: 'nagaai/glm-4.5-air',                      object: 'model', owned_by: 'Z.ai',             provider: 'NagaAI', type: 'text' },
+  { id: 'nagaai/nvidia/nemotron-3-super',           object: 'model', owned_by: 'Nvidia',           provider: 'NagaAI', type: 'text' },
+  { id: 'nagaai/gemini-2.5-flash',                  object: 'model', owned_by: 'Google',           provider: 'NagaAI', type: 'text' },
+  { id: 'nagaai/llama-3.3-70b-instruct',            object: 'model', owned_by: 'Meta',             provider: 'NagaAI', type: 'text' },
+  { id: 'nagaai/sonar',                             object: 'model', owned_by: 'Perplexity',       provider: 'NagaAI', type: 'text' },
+  { id: 'nagaai/llama-4-scout-17b-16e-instruct',    object: 'model', owned_by: 'Meta',             provider: 'NagaAI', type: 'text' },
+  { id: 'nagaai/gpt-4.1-mini',                      object: 'model', owned_by: 'OpenAI',           provider: 'NagaAI', type: 'text' },
+  // Audio TTS
+  { id: 'nagaai/eleven-multilingual-v2',             object: 'model', owned_by: 'ElevenLabs',      provider: 'NagaAI', type: 'audio' },
+  { id: 'nagaai/gpt-4o-mini-tts',                   object: 'model', owned_by: 'OpenAI',           provider: 'NagaAI', type: 'audio' },
+  // Image Generation
+  { id: 'nagaai/dall-e-3',                          object: 'model', owned_by: 'OpenAI',           provider: 'NagaAI', type: 'image' },
+  { id: 'nagaai/flux-1-schnell',                    object: 'model', owned_by: 'Black Forest Labs', provider: 'NagaAI', type: 'image' },
+  { id: 'nagaai/sdxl',                              object: 'model', owned_by: 'StabilityAI',      provider: 'NagaAI', type: 'image' },
+  // Transcription
+  { id: 'nagaai/whisper-large-v3',                  object: 'model', owned_by: 'OpenAI',           provider: 'NagaAI', type: 'transcription' },
 ];
 
 const AIHORDE_FREE_MODELS = [
@@ -869,6 +884,12 @@ export async function routeModels() {
   // Groq — free tier models with rate limits
   models.push(...GROQ_FREE_MODELS);
 
+  // TokenReply — free OpenAI-compatible models
+  models.push(...TOKENREPLY_FREE_MODELS);
+
+  // NagaAI — 13 free models across chat, audio, image, and transcription
+  models.push(...NAGAAI_FREE_MODELS);
+
   // AI Horde — decentralized volunteer network with 160+ image + 26+ text models
   models.push(...AIHORDE_FREE_MODELS);
 
@@ -941,16 +962,26 @@ export async function getDynamicRateLimit(userModel?: string): Promise<number> {
     return getRateLimitForProvider('CEREBRAS');
   }
 
-  // Check if user specified an AIHubMix model
   if (userModel?.startsWith('aihubmix/') || !userModel) {
-    // AIHubMix only has one key, so always 60
-    return 60;
+    return getRateLimitForProvider('AIHUBMIX');
   }
 
-  // Default to higher of the five providers
-  const pollinationsLimit = await getRateLimitForProvider('POLLINATIONS');
-  const voidaiLimit = await getRateLimitForProvider('VOIDAI');
-  const airforceLimit = await getRateLimitForProvider('AIRFORCE');
-  const cerebrasLimit = await getRateLimitForProvider('CEREBRAS');
-  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit);
+  if (userModel?.startsWith('tokenreply/')) {
+    return getRateLimitForProvider('TOKENREPLY');
+  }
+
+  if (userModel?.startsWith('nagaai/')) {
+    return getRateLimitForProvider('NAGAAI');
+  }
+
+  const [pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit, tokenreplyLimit, nagaaiLimit] = await Promise.all([
+    getRateLimitForProvider('POLLINATIONS'),
+    getRateLimitForProvider('VOIDAI'),
+    getRateLimitForProvider('AIRFORCE'),
+    getRateLimitForProvider('CEREBRAS'),
+    getRateLimitForProvider('AIHUBMIX'),
+    getRateLimitForProvider('TOKENREPLY'),
+    getRateLimitForProvider('NAGAAI'),
+  ]);
+  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit, tokenreplyLimit, nagaaiLimit);
 }

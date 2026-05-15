@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
 import {
   ClerkProvider,
   SignInButton,
@@ -7,7 +8,11 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/nextjs';
+import Wordmark from '@/components/brand/Wordmark';
 import './globals.css';
+
+const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' });
+const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'OpenRelay - Free AI API',
@@ -21,8 +26,8 @@ function Header() {
     return (
       <header className="header">
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <a href="/" style={{ fontSize: '1.25rem', fontWeight: 'bold', textDecoration: 'none', color: '#fff' }}>
-            OpenRelay
+          <a href="/" style={{ textDecoration: 'none' }} aria-label="OpenRelay home">
+            <Wordmark variant="full" size="sm" />
           </a>
           <nav style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <span style={{ color: '#999', fontSize: '0.875rem' }}>
@@ -37,8 +42,8 @@ function Header() {
   return (
     <header className="header">
       <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <a href="/" style={{ fontSize: '1.3rem', fontWeight: '800', textDecoration: 'none', color: '#fff', letterSpacing: '-0.5px' }}>
-          OpenRelay
+        <a href="/" style={{ textDecoration: 'none' }} aria-label="OpenRelay home">
+          <Wordmark variant="full" size="sm" />
         </a>
         <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
           <a href="/docs" className="nav-link">Docs</a>
@@ -65,7 +70,10 @@ export default function RootLayout({
 }) {
   if (!isClerkConfigured) {
     return (
-      <html lang="en">
+      <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+        <head>
+          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        </head>
         <body>
           <Header />
           {children}
@@ -76,7 +84,10 @@ export default function RootLayout({
 
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+        <head>
+          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        </head>
         <body>
           <Header />
           {children}

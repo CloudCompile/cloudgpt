@@ -62,13 +62,7 @@ async function trackTokens(
   const tokenKey = `cerebras:${keyIndex}:tokens:${today}`;
   const totalTokens = promptTokens + completionTokens;
 
-  const current = await redis.get(tokenKey);
-  const used = current ? parseInt(current) : 0;
-  const newTotal = used + totalTokens;
-
-  await redis.set(tokenKey, newTotal.toString());
-
-  // Set expiry to 48 hours to auto-clean old entries
+  await redis.incrBy(tokenKey, totalTokens);
   await redis.expire(tokenKey, 172800);
 }
 

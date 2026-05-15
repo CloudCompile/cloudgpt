@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
     const response = await routeChat(body, { streaming, autoFallback: true });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      console.error('Provider error:', response.status, await response.text());
       return NextResponse.json(
-        { error: 'Provider error', details: errorText },
+        { error: 'Provider error' },
         { status: response.status }
       );
     }
