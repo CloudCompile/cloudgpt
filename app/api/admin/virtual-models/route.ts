@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { routeModels } from '@/lib/providers';
 
-// Simple in-memory storage for demo
+// In-memory storage (would be Redis/DB in production)
 const virtualModels: Record<string, any> = {
   'gpt-4': {
     id: 'gpt-4',
@@ -9,17 +10,34 @@ const virtualModels: Record<string, any> = {
       { provider: 'aihorde', modelId: 'aihorde/gpt-4-turbo', type: 'text' },
     ]
   },
-  'claude': {
-    id: 'claude',
-    providers: [
-      { provider: 'pollinations', modelId: 'pollinations/claude-fast', type: 'text' },
-      { provider: 'aihorde', modelId: 'aihorde/claude-3-sonnet', type: 'text' },
-    ]
-  },
 };
 
 export async function GET() {
-  return NextResponse.json({ models: Object.values(virtualModels) });
+  try {
+    // Fetch all available models from providers
+    const allModels = await routeModels();
+
+    // Group models by provider
+    const modelsByProvider: Record<string, any[]> = {};
+    allModels.data.forEach((model: any) => {
+      if (!modelsByProvider[model.provider]) {
+        modelsByProvider[model.provider] = [];
+      }
+      modelsByProvider[model.provider].push(model);
+    });
+
+    return NextResponse.json({
+      models: Object.values(virtualModels),
+      availableModels: modelsByProvider
+    });
+  } catch (error) {
+    console.error('Error fetching models:', error);
+    return NextResponse.json({
+      models: Object.values(virtualModels),
+      availableModels: {},
+      error: 'Failed to fetch some models'
+    });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -32,7 +50,7 @@ export async function POST(request: NextRequest) {
     }
 
     virtualModels[id] = { id, providers };
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, model: virtualModels[id] });
   } catch {
     return NextResponse.json({ error: 'Failed to create model' }, { status: 500 });
   }
@@ -49,3 +67,4 @@ export async function DELETE(request: NextRequest) {
   delete virtualModels[id];
   return NextResponse.json({ success: true });
 }
+

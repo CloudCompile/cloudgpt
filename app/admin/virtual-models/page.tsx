@@ -7,17 +7,9 @@ interface VirtualModel {
   providers: Array<{ provider: string; modelId: string; type: string }>;
 }
 
-const AVAILABLE_MODELS: Record<string, string[]> = {
-  groq: ['groq/llama-3.3-70b-versatile', 'groq/llama-3.1-8b-instant', 'groq/qwen/qwen3-32b'],
-  pollinations: ['pollinations/openai', 'pollinations/claude-fast', 'pollinations/gemini-fast', 'pollinations/mistral-large'],
-  aihorde: ['aihorde/aphrodite-Skyfall-31B-v4.1', 'aihorde/gpt-4-turbo', 'aihorde/claude-3-sonnet'],
-  voidai: ['voidai/gpt-4o-mini', 'voidai/claude-3-sonnet'],
-  airforce: ['airforce/gpt-4o', 'airforce/claude-3-sonnet'],
-  cerebras: ['cerebras/llama-3.3-70b', 'cerebras/llama-4-scout'],
-};
-
 export default function VirtualModelsPage() {
   const [models, setModels] = useState<VirtualModel[]>([]);
+  const [availableModels, setAvailableModels] = useState<Record<string, any[]>>({});
   const [newModelName, setNewModelName] = useState('');
   const [selectedProviders, setSelectedProviders] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -31,10 +23,11 @@ export default function VirtualModelsPage() {
     try {
       const res = await fetch('/api/admin/virtual-models');
       const d = await res.json();
+      setModels(d.models || []);
+      setAvailableModels(d.availableModels || {});
       if (d.error) setError(d.error);
-      else setModels(d.models || []);
     } catch {
-      setError('Failed to load virtual models');
+      setError('Failed to load models');
     } finally {
       setLoading(false);
     }
@@ -133,19 +126,19 @@ export default function VirtualModelsPage() {
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600' }}>Select Providers</label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-            {Object.entries(AVAILABLE_MODELS).map(([provider, modelList]) => (
+            {Object.entries(availableModels).map(([provider, modelList]) => (
               <div key={provider} style={{ padding: '12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '12px' }}>
                 <div style={{ fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  {provider}
+                  {provider} ({modelList.length})
                 </div>
                 <select
                   value={selectedProviders[provider] || ''}
                   onChange={(e) => handleProviderSelect(provider, e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--fg)' }}
+                  style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--fg)', fontSize: '0.85rem' }}
                 >
                   <option value="">Select model...</option>
-                  {modelList.map(model => (
-                    <option key={model} value={model}>{model.split('/')[1]}</option>
+                  {modelList.map((model: any) => (
+                    <option key={model.id} value={model.id}>{model.id.split('/').pop()}</option>
                   ))}
                 </select>
               </div>
