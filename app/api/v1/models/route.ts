@@ -10,7 +10,7 @@ export async function GET() {
   } catch (error) {
     console.error('Models API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

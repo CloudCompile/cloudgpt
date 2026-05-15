@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
     const response = await routeAudio(body, { autoFallback: true });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      console.error('Provider error:', response.status, await response.text());
       return NextResponse.json(
-        { error: 'Provider error', details: errorText },
+        { error: 'Provider error' },
         { status: response.status }
       );
     }
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Audio API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error', details: String(error) },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

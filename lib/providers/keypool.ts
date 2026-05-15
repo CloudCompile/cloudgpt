@@ -93,13 +93,7 @@ export async function trackTokensUsed(
   const today = new Date().toISOString().split('T')[0];
   const key = `${providerName.toLowerCase()}:${keyIndex}:tokens:${today}`;
 
-  const current = await redis.get(key);
-  const used = current ? parseInt(current) : 0;
-  const newTotal = used + tokens;
-
-  await redis.set(key, newTotal.toString());
-
-  // Set expiry to 48 hours to auto-clean old entries
+  await redis.incrBy(key, tokens);
   await redis.expire(key, 172800);
 }
 
