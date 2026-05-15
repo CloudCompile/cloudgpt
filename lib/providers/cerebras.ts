@@ -27,13 +27,10 @@ async function getKeyIndexForCerebras(
     throw new Error('No Cerebras API keys configured');
   }
 
-  // Get next key and its index
+  // Atomic INCR to avoid race condition under concurrent requests
   const indexKey = `pool:cerebras:index`;
-  const indexStr = await redis.get(indexKey);
-  const currentIndex = indexStr ? parseInt(indexStr) : 0;
-  const nextIndex = (currentIndex + 1) % keys.length;
-
-  await redis.set(indexKey, nextIndex.toString());
+  const counter = await redis.incr(indexKey);
+  const currentIndex = (counter - 1) % keys.length;
 
   return {
     key: keys[currentIndex],
@@ -104,6 +101,7 @@ export async function forwardCerebras(
 
   // Track tokens if chat completion was successful
   if (response.ok && endpoint === '/chat/completions') {
+    const cloned = response.clone();
     try {
       const responseBody = await response.json();
       const usage = responseBody.usage;
@@ -118,7 +116,7 @@ export async function forwardCerebras(
       });
     } catch (e) {
       // If tracking fails, still return success (don't break the request)
-      return response;
+      return cloned;
     }
   }
 

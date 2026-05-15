@@ -13,6 +13,8 @@ const PROVIDER_TEST_URLS: Record<string, string> = {
   VoidAI:      'https://api.voidai.app/v1/models',
   Airforce:    'https://api.airforce/v1/models',
   Cerebras:    'https://api.cerebras.ai/v1/models',
+  Groq:        'https://api.groq.com/openai/v1/models',
+  AIHorde:     'https://aihorde.net/api/v2/status/heartbeat',
 };
 
 async function testKey(provider: string, rawKey: string): Promise<'working' | 'rate_limited' | 'error'> {
@@ -50,7 +52,10 @@ export async function POST(request: NextRequest) {
   let rawKey: string | null = null;
 
   if (id.startsWith('env-')) {
-    const n = parseInt(id.replace('env-', ''));
+    const n = parseInt(id.replace('env-', ''), 10);
+    if (!Number.isInteger(n) || n < 1 || n > 10) {
+      return NextResponse.json({ error: 'Invalid key id' }, { status: 400 });
+    }
     rawKey = process.env[`${provider.toUpperCase()}_KEY_${n}`] || null;
   } else if (id.startsWith('kv-') && encKey) {
     const listJson = await redis.get(`admin:provider:keys:${providerKey}`);

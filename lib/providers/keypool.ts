@@ -58,14 +58,12 @@ export async function getNextKey(providerName: string): Promise<string | null> {
     return null;
   }
 
+  // Use atomic INCR to avoid read-modify-write race condition under concurrent requests
   const indexKey = `pool:${providerName.toLowerCase()}:index`;
-  const indexStr = await redis.get(indexKey);
-  const currentIndex = indexStr ? parseInt(indexStr) : 0;
-  const nextIndex = (currentIndex + 1) % keys.length;
+  const counter = await redis.incr(indexKey);
+  const index = (counter - 1) % keys.length;
 
-  await redis.set(indexKey, nextIndex.toString());
-
-  return keys[currentIndex];
+  return keys[index];
 }
 
 export async function getRateLimitForProvider(
