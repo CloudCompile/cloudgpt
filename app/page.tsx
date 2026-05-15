@@ -372,7 +372,7 @@ export default function Home() {
               </p>
             </div>
             <div>
-              <h4 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '18px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
+              <h4 style={{ fontWeight: '700', marginBottom: '18px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
                 Product
               </h4>
               <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -394,7 +394,7 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h4 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '18px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
+              <h4 style={{ fontWeight: '700', marginBottom: '18px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
                 Community
               </h4>
               <ul style={{ listStyle: 'none', padding: 0 }}>

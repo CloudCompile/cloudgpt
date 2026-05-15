@@ -2,15 +2,15 @@ import { createClient, type RedisClientType } from 'redis';
 
 const redisUrl = process.env.REDIS_URL;
 
-if (!redisUrl) {
-  throw new Error('REDIS_URL environment variable is required');
-}
-
 let _client: RedisClientType | null = null;
 let _connectPromise: Promise<void> | null = null;
 
 function getClient(): RedisClientType {
   if (!_client) {
+    if (!redisUrl) {
+      throw new Error('REDIS_URL environment variable is required for Redis operations');
+    }
+
     _client = createClient({
       url: redisUrl,
       socket: {
