@@ -4,6 +4,7 @@ import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
 import { forwardCerebras } from './cerebras';
 import { forwardGroq } from './groq';
+import { forwardAIHorde } from './aihorde';
 
 /**
  * Provider routing logic
@@ -75,7 +76,19 @@ export async function routeChat(
     return forwardGroq('/chat/completions', 'POST', fwdBody, options);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq
+  if (model.startsWith('aihorde/')) {
+    const messages = (body as any).messages || [];
+    const prompt = messages.map((m: any) => m.content).join('\n') || '';
+    const fwdBody = {
+      prompt,
+      params: {
+        max_length: (body as any).max_tokens || 80,
+      },
+    };
+    return forwardAIHorde('/generate/text/async', 'POST', fwdBody, options);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde
   try {
     return await forwardAIHubMix('/chat/completions', 'POST', body);
   } catch (error) {
@@ -92,7 +105,19 @@ export async function routeChat(
             try {
               return await forwardCerebras('/chat/completions', 'POST', body, options);
             } catch (cerebasError) {
-              return await forwardGroq('/chat/completions', 'POST', body, options);
+              try {
+                return await forwardGroq('/chat/completions', 'POST', body, options);
+              } catch (groqError) {
+                const messages = (body as any).messages || [];
+                const prompt = messages.map((m: any) => m.content).join('\n') || '';
+                const hordeBody = {
+                  prompt,
+                  params: {
+                    max_length: (body as any).max_tokens || 80,
+                  },
+                };
+                return await forwardAIHorde('/generate/text/async', 'POST', hordeBody, options);
+              }
             }
           }
         }
@@ -129,7 +154,22 @@ export async function routeImages(
     return forwardAirforce('/images/generations', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce
+  if (model.startsWith('aihorde/')) {
+    const prompt = (body as any)?.prompt || '';
+    const fwdBody = {
+      prompt,
+      models: [model.replace('aihorde/', '')],
+      params: {
+        sampler_name: 'k_euler',
+        cfg_scale: 7,
+        denoise: 1.0,
+        steps: 20,
+      },
+    };
+    return forwardAIHorde('/generate/async', 'POST', fwdBody);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → AIHorde
   try {
     return await forwardAIHubMix('/images/generations', 'POST', body);
   } catch (error) {
@@ -140,7 +180,22 @@ export async function routeImages(
         try {
           return await forwardVoidAI('/images/generations', 'POST', body);
         } catch (voidaiError) {
-          return await forwardAirforce('/images/generations', 'POST', body);
+          try {
+            return await forwardAirforce('/images/generations', 'POST', body);
+          } catch (airforceError) {
+            const prompt = (body as any)?.prompt || '';
+            const hordeBody = {
+              prompt,
+              models: ['stable_diffusion'],
+              params: {
+                sampler_name: 'k_euler',
+                cfg_scale: 7,
+                denoise: 1.0,
+                steps: 20,
+              },
+            };
+            return await forwardAIHorde('/generate/async', 'POST', hordeBody);
+          }
         }
       }
     }
@@ -405,6 +460,27 @@ const GROQ_FREE_MODELS = [
   { id: 'groq/canopylabs/orpheus-arabic-saudi', object: 'model', owned_by: 'Canopy',          provider: 'Groq', type: 'audio' },
 ];
 
+const AIHORDE_FREE_MODELS = [
+  // Text Generation (26 models)
+  { id: 'aihorde/aphrodite-Cydonia-24B-v4.3',            object: 'model', owned_by: 'Cydonia',            provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-L3-8B-Stheno-v3.2',           object: 'model', owned_by: 'Stheno',             provider: 'AIHorde', type: 'text' },
+  { id: 'aihorde/koboldcpp-Angelic-Eclipse-12B',         object: 'model', owned_by: 'Angelic Eclipse',    provider: 'AIHorde', type: 'text' },
+  // Image Generation (160+ models) - Sample of popular ones
+  { id: 'aihorde/stable_diffusion',                      object: 'model', owned_by: 'Stability AI',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/juggernautXL_v9Rundiffusion',           object: 'model', owned_by: 'Juggernaut',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/protovisionXLEngineOmega',              object: 'model', owned_by: 'ProtoVision',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/darkSushiMixMix_225D',                  object: 'model', owned_by: 'DarkSushi',          provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/sd_xl_base_1.0',                        object: 'model', owned_by: 'Stability AI',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/sd_xl_turbo',                           object: 'model', owned_by: 'Stability AI',       provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/dreamshaper',                           object: 'model', owned_by: 'Dreamshaper',        provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/neverendingdream',                      object: 'model', owned_by: 'NeverEndingDream',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ghostmixSSSuperior_bestQuality',        object: 'model', owned_by: 'GhostMix',           provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/ponyDiffusionXL',                       object: 'model', owned_by: 'Pony Diffusion',     provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/grapefruit-hentai',                     object: 'model', owned_by: 'Grapefruit',         provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/absolutereality',                       object: 'model', owned_by: 'Absolute Reality',   provider: 'AIHorde', type: 'image' },
+  { id: 'aihorde/epicrealism',                           object: 'model', owned_by: 'Epic Realism',       provider: 'AIHorde', type: 'image' },
+];
+
 export async function routeModels() {
   const models: any[] = [];
 
@@ -474,6 +550,9 @@ export async function routeModels() {
 
   // Groq — free tier models with rate limits
   models.push(...GROQ_FREE_MODELS);
+
+  // AI Horde — decentralized volunteer network with 160+ image + 26+ text models
+  models.push(...AIHORDE_FREE_MODELS);
 
   // Deduplicate by id
   const seen = new Set<string>();
