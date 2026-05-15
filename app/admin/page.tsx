@@ -82,7 +82,7 @@ export default function AdminPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '48px' }}>
             {/* Top models */}
             <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px 16px 20px 22px', padding: '28px' }}>
-              <h2 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '20px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', fontSize: '0.8rem' }}>
+              <h2 style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '20px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Top Models Today
               </h2>
               {analytics.topModels.length === 0 ? (
