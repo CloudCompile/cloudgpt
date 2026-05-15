@@ -15,7 +15,13 @@ export async function GET() {
   const isAdmin = await checkAdmin(userId);
   if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const analytics = await getSystemAnalytics();
+  let analytics;
+  try {
+    analytics = await getSystemAnalytics();
+  } catch (e) {
+    console.error('getSystemAnalytics failed:', e);
+    return NextResponse.json({ error: 'Analytics unavailable' }, { status: 500 });
+  }
   const today = new Date().toISOString().split('T')[0];
 
   // Count active provider keys (env + KV)

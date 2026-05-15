@@ -59,4 +59,5 @@ export const redis = {
   hGetAll: async (key: string) => (await getRedis()).hGetAll(key),
   lPush: async (key: string, ...elements: string[]) => (await getRedis()).lPush(key, elements),
   lRange: async (key: string, start: number, stop: number) => (await getRedis()).lRange(key, start, stop),
+  lTrim: async (key: string, start: number, stop: number) => (await getRedis()).lTrim(key, start, stop),
 };

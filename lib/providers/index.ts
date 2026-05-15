@@ -1,5 +1,6 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
 import { redis } from '../redis';
+import { logError } from '../analytics';
 import { forwardPollinations, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
@@ -42,6 +43,8 @@ async function tryProviders(
       lastError = e;
     }
   }
+  const msg = lastError instanceof Error ? lastError.message : String(lastError);
+  logError(providers.map(p => p.name).join('→'), msg).catch(() => {});
   throw lastError ?? new Error('All providers failed');
 }
 
