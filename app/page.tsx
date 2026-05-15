@@ -279,15 +279,9 @@ export default function Home() {
               alignItems: 'center',
             }}>
               {/* Groq Badge */}
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <a href="https://groq.com" target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
-                  <img
-                    src="https://console.groq.com/powered-by-groq-dark.svg"
-                    alt="Powered by Groq for fast inference"
-                    style={{ height: '40px', width: 'auto', filter: 'brightness(0.9)' }}
-                  />
-                </a>
-              </div>
+              <a href="https://groq.com" target="_blank" rel="noopener noreferrer">
+                <img src="https://console.groq.com/powered-by-groq-dark.svg" alt="Powered by Groq for fast inference." />
+              </a>
 
               {/* Other Providers */}
               {['AIHubMix', 'Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'AI Horde'].map((provider) => (
