@@ -45,14 +45,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { id, providers } = body;
 
+    console.log('[POST /api/admin/virtual-models] Received:', { id, providers });
+
     if (!id || !providers || providers.length === 0) {
+      console.error('[POST /api/admin/virtual-models] Validation failed:', { id, providers });
       return NextResponse.json({ error: 'Invalid model data' }, { status: 400 });
     }
 
     virtualModels[id] = { id, providers };
+    console.log('[POST /api/admin/virtual-models] Model created successfully:', virtualModels[id]);
     return NextResponse.json({ success: true, model: virtualModels[id] });
-  } catch {
-    return NextResponse.json({ error: 'Failed to create model' }, { status: 500 });
+  } catch (error) {
+    console.error('[POST /api/admin/virtual-models] Error:', error);
+    return NextResponse.json({ error: 'Failed to create model: ' + (error instanceof Error ? error.message : 'Unknown error') }, { status: 500 });
   }
 }
 

@@ -59,31 +59,38 @@ export default function VirtualModelsPage() {
     setError('');
     setSuccess('');
     try {
+      const payload = {
+        id: newModelName.toLowerCase().replace(/\s+/g, '-'),
+        providers: Object.entries(selectedProviders).flatMap(([provider, modelIds]) =>
+          modelIds.map(modelId => ({
+            provider,
+            modelId,
+            type: 'text'
+          }))
+        )
+      };
+      console.log('Creating model with payload:', payload);
+
       const res = await fetch('/api/admin/virtual-models', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: newModelName.toLowerCase().replace(/\s+/g, '-'),
-          providers: Object.entries(selectedProviders).flatMap(([provider, modelIds]) =>
-            modelIds.map(modelId => ({
-              provider,
-              modelId,
-              type: 'text'
-            }))
-          )
-        }),
+        body: JSON.stringify(payload),
       });
+
       const d = await res.json();
+      console.log('Response status:', res.status, 'Response:', d);
+
       if (!res.ok) {
-        setError(d.error || 'Failed to create model');
+        setError(d.error || `Failed to create model (${res.status})`);
         return;
       }
       setSuccess(`Virtual model "${newModelName}" created!`);
       setNewModelName('');
       setSelectedProviders({});
       await fetchModels();
-    } catch {
-      setError('Network error');
+    } catch (err) {
+      console.error('Error creating model:', err);
+      setError(err instanceof Error ? err.message : 'Network error');
     } finally {
       setLoading(false);
     }
