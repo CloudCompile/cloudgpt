@@ -49,15 +49,18 @@ export async function routeChat(
 
   // Determine which provider to use
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/v1/chat/completions', 'POST', body, options);
+    const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
+    return forwardPollinations('/v1/chat/completions', 'POST', fwdBody, options);
   }
 
   if (model.startsWith('voidai/')) {
-    return forwardVoidAI('/chat/completions', 'POST', body, options);
+    const fwdBody = { ...(body as any), model: model.replace('voidai/', '') };
+    return forwardVoidAI('/chat/completions', 'POST', fwdBody, options);
   }
 
   if (model.startsWith('airforce/')) {
-    return forwardAirforce('/chat/completions', 'POST', body, options);
+    const fwdBody = { ...(body as any), model: model.replace('airforce/', '') };
+    return forwardAirforce('/chat/completions', 'POST', fwdBody, options);
   }
 
   // Default: try AIHubMix → Pollinations → VoidAI → Airforce
@@ -92,15 +95,18 @@ export async function routeImages(
   }
 
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/v1/images/generations', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
+    return forwardPollinations('/v1/images/generations', 'POST', fwdBody);
   }
 
   if (model.startsWith('voidai/')) {
-    return forwardVoidAI('/images/generations', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('voidai/', '') };
+    return forwardVoidAI('/images/generations', 'POST', fwdBody);
   }
 
   if (model.startsWith('airforce/')) {
-    return forwardAirforce('/images/generations', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('airforce/', '') };
+    return forwardAirforce('/images/generations', 'POST', fwdBody);
   }
 
   // Default: try AIHubMix → Pollinations → VoidAI → Airforce
@@ -130,12 +136,14 @@ export async function routeVideo(
 
   // Airforce video endpoint
   if (model.startsWith('airforce/')) {
-    return forwardAirforce('/video/generations', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('airforce/', '') };
+    return forwardAirforce('/video/generations', 'POST', fwdBody);
   }
 
   // Default: Pollinations for video
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/v1/videos/generations', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
+    return forwardPollinations('/v1/videos/generations', 'POST', fwdBody);
   }
 
   return forwardPollinations('/v1/videos/generations', 'POST', body);
@@ -148,15 +156,18 @@ export async function routeAudio(
   const model = (body as any)?.model || 'tts-1';
 
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/v1/audio/speech', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
+    return forwardPollinations('/v1/audio/speech', 'POST', fwdBody);
   }
 
   if (model.startsWith('voidai/')) {
-    return forwardVoidAI('/audio/speech', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('voidai/', '') };
+    return forwardVoidAI('/audio/speech', 'POST', fwdBody);
   }
 
   if (model.startsWith('airforce/')) {
-    return forwardAirforce('/audio/speech', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('airforce/', '') };
+    return forwardAirforce('/audio/speech', 'POST', fwdBody);
   }
 
   // Default: try AIHubMix → Pollinations → VoidAI → Airforce
@@ -201,15 +212,18 @@ export async function routeEmbeddings(
   const model = (body as any)?.model || 'text-embedding-ada-002';
 
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/v1/embeddings', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
+    return forwardPollinations('/v1/embeddings', 'POST', fwdBody);
   }
 
   if (model.startsWith('voidai/')) {
-    return forwardVoidAI('/embeddings', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('voidai/', '') };
+    return forwardVoidAI('/embeddings', 'POST', fwdBody);
   }
 
   if (model.startsWith('airforce/')) {
-    return forwardAirforce('/embeddings', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('airforce/', '') };
+    return forwardAirforce('/embeddings', 'POST', fwdBody);
   }
 
   // Default: try AIHubMix → Pollinations → VoidAI → Airforce
@@ -238,11 +252,13 @@ export async function routeTranscription(
   const model = (body as any)?.model || 'whisper-1';
 
   if (model.startsWith('voidai/')) {
-    return forwardVoidAI('/audio/transcriptions', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('voidai/', '') };
+    return forwardVoidAI('/audio/transcriptions', 'POST', fwdBody);
   }
 
   if (model.startsWith('airforce/')) {
-    return forwardAirforce('/audio/transcriptions', 'POST', body);
+    const fwdBody = { ...(body as any), model: model.replace('airforce/', '') };
+    return forwardAirforce('/audio/transcriptions', 'POST', fwdBody);
   }
 
   // Default: try VoidAI → Airforce
@@ -256,121 +272,148 @@ export async function routeTranscription(
   }
 }
 
+function inferType(id: string): string {
+  const s = id.toLowerCase();
+  if (/imagen|image|flux|dall-e|gptimage|wan-image|zimage|klein|kontext|suno/.test(s)) return 'image';
+  if (/video|reel|ltx/.test(s)) return 'video';
+  if (/\btts\b|openai-audio|qwen-tts|acestep|elevenlabs-music/.test(s)) return 'audio';
+  if (/whisper|scribe|transcri|universal-2/.test(s)) return 'transcription';
+  if (/embed/.test(s)) return 'embedding';
+  if (/elevenlabs-sfx|elevenlabs-dubbing|elevenlabs-isolation|voice.?changer/.test(s)) return 'audio';
+  return 'text';
+}
+
+function inferAirforceType(m: any): string {
+  const id = (m.id || '').toLowerCase();
+  if (m.sfx_caps || m.audio_caps || m.dubbing_caps) return 'audio';
+  if (/suno/.test(id)) return 'audio';
+  if (/imagen|image|flux|z-image/.test(id)) return 'image';
+  if (/scribe|transcri/.test(id)) return 'transcription';
+  if (/isolation|voice.?changer/.test(id)) return 'audio';
+  if (m.supports_images && !m.supports_chat) return 'image';
+  return 'text';
+}
+
+const POLLINATIONS_FREE_MODELS = [
+  // Text / Chat
+  { id: 'pollinations/openai',               object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/openai-fast',          object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/openai-large',         object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/claude-fast',          object: 'model', owned_by: 'Anthropic',        provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/gemini-fast',          object: 'model', owned_by: 'Google',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/gemini-search',        object: 'model', owned_by: 'Google',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/mistral',              object: 'model', owned_by: 'Mistral',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/mistral-large',        object: 'model', owned_by: 'Mistral',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/llama',                object: 'model', owned_by: 'Meta',             provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/llama-scout',          object: 'model', owned_by: 'Meta',             provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/qwen-coder',           object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/qwen-coder-large',     object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/qwen-large',           object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/qwen-vision',          object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/qwen-safety',          object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/grok',                 object: 'model', owned_by: 'xAI',              provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/kimi',                 object: 'model', owned_by: 'Moonshot',         provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/kimi-k2.6',            object: 'model', owned_by: 'Moonshot',         provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/perplexity-fast',      object: 'model', owned_by: 'Perplexity',       provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/perplexity-reasoning', object: 'model', owned_by: 'Perplexity',       provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/nova-fast',            object: 'model', owned_by: 'Amazon',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/nova',                 object: 'model', owned_by: 'Amazon',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/minimax',              object: 'model', owned_by: 'MiniMax',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/midijourney',          object: 'model', owned_by: 'MIDIjourney',      provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/glm',                  object: 'model', owned_by: 'Z.ai',             provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/text-simple',          object: 'model', owned_by: 'Pollinations',     provider: 'Pollinations', type: 'text' },
+  // Image
+  { id: 'pollinations/flux',                 object: 'model', owned_by: 'Black Forest Labs', provider: 'Pollinations', type: 'image' },
+  { id: 'pollinations/zimage',               object: 'model', owned_by: 'ZImage',           provider: 'Pollinations', type: 'image' },
+  { id: 'pollinations/klein',                object: 'model', owned_by: 'Black Forest Labs', provider: 'Pollinations', type: 'image' },
+  { id: 'pollinations/gptimage',             object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'image' },
+  { id: 'pollinations/kontext',              object: 'model', owned_by: 'Black Forest Labs', provider: 'Pollinations', type: 'image' },
+  { id: 'pollinations/gptimage-large',       object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'image' },
+  { id: 'pollinations/wan-image',            object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'image' },
+  { id: 'pollinations/qwen-image',           object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'image' },
+  { id: 'pollinations/image-simple',         object: 'model', owned_by: 'Pollinations',     provider: 'Pollinations', type: 'image' },
+  // Video
+  { id: 'pollinations/nova-reel',            object: 'model', owned_by: 'Amazon',           provider: 'Pollinations', type: 'video' },
+  { id: 'pollinations/ltx-2',               object: 'model', owned_by: 'LightTricks',       provider: 'Pollinations', type: 'video' },
+  // Audio / TTS
+  { id: 'pollinations/openai-audio',         object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'audio' },
+  { id: 'pollinations/qwen-tts',             object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'audio' },
+  { id: 'pollinations/acestep',              object: 'model', owned_by: 'ACE',              provider: 'Pollinations', type: 'audio' },
+  // Transcription
+  { id: 'pollinations/universal-2',          object: 'model', owned_by: 'AssemblyAI',       provider: 'Pollinations', type: 'transcription' },
+  { id: 'pollinations/whisper',              object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'transcription' },
+  { id: 'pollinations/scribe',               object: 'model', owned_by: 'ElevenLabs',       provider: 'Pollinations', type: 'transcription' },
+];
+
 export async function routeModels() {
   const models: any[] = [];
 
-  // Fetch AIHubMix models (free tier only)
+  // AIHubMix — free tier only (model IDs ending in -free)
   try {
-    const aihubmixResponse = await forwardAIHubMix('/models', 'GET');
-    if (aihubmixResponse.ok) {
-      const data = await aihubmixResponse.json();
+    const r = await forwardAIHubMix('/models', 'GET');
+    if (r.ok) {
+      const data = await r.json();
       if (data.data && Array.isArray(data.data)) {
         models.push(
           ...data.data
-            .filter((model: any) => {
-              // Filter to free tier models (ending in -free)
-              return model.id.endsWith('-free');
+            .filter((m: any) => m.id.endsWith('-free'))
+            .map((m: any) => ({ ...m, provider: 'AIHubMix', type: inferType(m.id) }))
+        );
+      }
+    }
+  } catch (e) { console.error('AIHubMix models error:', e); }
+
+  // Pollinations — hardcoded free model list
+  models.push(...POLLINATIONS_FREE_MODELS);
+
+  // VoidAI — free tier only
+  try {
+    const r = await forwardVoidAI('/models', 'GET');
+    if (r.ok) {
+      const data = await r.json();
+      if (data.data && Array.isArray(data.data)) {
+        models.push(
+          ...data.data
+            .filter((m: any) => {
+              const p = m.plan_requirements || [];
+              return p.includes('free') || p.length === 0;
             })
-            .map((model: any) => ({
-              ...model,
-              provider: 'AIHubMix',
+            .map((m: any) => ({ ...m, provider: 'VoidAI', type: inferType(m.id) }))
+        );
+      }
+    }
+  } catch (e) { console.error('VoidAI models error:', e); }
+
+  // Airforce — free plan: multiplier == null or multiplier <= 1
+  try {
+    const r = await forwardAirforce('/models', 'GET');
+    if (r.ok) {
+      const data = await r.json();
+      if (data.data && Array.isArray(data.data)) {
+        models.push(
+          ...data.data
+            .filter((m: any) => m.multiplier == null || m.multiplier <= 1)
+            .map((m: any) => ({
+              id: `airforce/${m.id}`,
+              object: 'model',
+              owned_by: m.owned_by || 'Airforce',
+              provider: 'Airforce',
+              type: inferAirforceType(m),
             }))
         );
       }
     }
-  } catch (error) {
-    console.error('Error fetching AIHubMix models:', error);
-  }
-
-  // Fetch Pollinations models
-  try {
-    const pollinationsResponse = await forwardPollinations('/v1/models', 'GET');
-    if (pollinationsResponse.ok) {
-      const data = await pollinationsResponse.json();
-      if (data.data && Array.isArray(data.data)) {
-        models.push(
-          ...data.data.map((model: any) => ({
-            ...model,
-            provider: 'Pollinations',
-          }))
-        );
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching Pollinations models:', error);
-  }
-
-  // Fetch VoidAI models (free tier only)
-  try {
-    const voidaiResponse = await forwardVoidAI('/models', 'GET');
-    if (voidaiResponse.ok) {
-      const data = await voidaiResponse.json();
-      if (data.data && Array.isArray(data.data)) {
-        models.push(
-          ...data.data
-            .filter((model: any) => {
-              // Filter to free tier models
-              const planReqs = model.plan_requirements || [];
-              return planReqs.includes('free') || planReqs.length === 0;
-            })
-            .map((model: any) => ({
-              ...model,
-              provider: 'VoidAI',
-            }))
-        );
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching VoidAI models:', error);
-  }
-
-  // Fetch Airforce models (all have free tier)
-  try {
-    const airforceResponse = await forwardAirforce('/models', 'GET');
-    if (airforceResponse.ok) {
-      const data = await airforceResponse.json();
-      if (data.data && Array.isArray(data.data)) {
-        models.push(
-          ...data.data.map((model: any) => ({
-            ...model,
-            provider: 'Airforce',
-          }))
-        );
-      }
-    }
-  } catch (error) {
-    console.error('Error fetching Airforce models:', error);
-  }
-
-  // Add special Pollinations models
-  models.push(
-    {
-      id: 'pollinations/image-simple',
-      object: 'model',
-      owned_by: 'Pollinations',
-      provider: 'Pollinations',
-      description: 'Simple image generation via image.pollinations.ai',
-    },
-    {
-      id: 'pollinations/text-simple',
-      object: 'model',
-      owned_by: 'Pollinations',
-      provider: 'Pollinations',
-      description: 'Simple text generation via text.pollinations.ai',
-    }
-  );
+  } catch (e) { console.error('Airforce models error:', e); }
 
   // Deduplicate by id
   const seen = new Set<string>();
-  const deduped = models.filter((model) => {
-    if (seen.has(model.id)) return false;
-    seen.add(model.id);
-    return true;
-  });
-
   return {
     object: 'list',
-    data: deduped,
+    data: models.filter((m) => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    }),
   };
 }
 

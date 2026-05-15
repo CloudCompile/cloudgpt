@@ -218,7 +218,7 @@ export default function Dashboard() {
         <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
           Use this base URL with any OpenAI-compatible client.
         </p>
-        <div style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)', borderRadius: '12px', padding: '20px 24px' }}>
+        <div style={{ background: 'rgba(124, 58, 237, 0.08)', border: '1px solid rgba(124, 58, 237, 0.28)', borderRadius: '12px', padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Base URL</p>
@@ -226,7 +226,7 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => copyToClipboard(`${BASE_URL}/v1`, 'baseurl')}
-              style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', color: 'var(--accent)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+              style={{ background: 'rgba(124, 58, 237, 0.15)', border: '1px solid rgba(124, 58, 237, 0.35)', color: 'var(--accent-light)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
             >
               {copying === 'baseurl' ? '✓ Copied' : 'Copy URL'}
             </button>

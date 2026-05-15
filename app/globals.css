@@ -1,17 +1,17 @@
 :root {
-  --bg: #0a0a0a;
-  --bg-secondary: #111111;
-  --bg-tertiary: #1a1a1a;
-  --fg: #ffffff;
-  --fg-secondary: #e0e0e0;
-  --accent: #3b82f6;
-  --accent-light: #60a5fa;
-  --accent-dark: #1e40af;
-  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  --border: #222222;
-  --border-light: #333333;
-  --text-secondary: #a0a0a0;
-  --text-tertiary: #707070;
+  --bg: #08070f;
+  --bg-secondary: #0e0c1a;
+  --bg-tertiary: #161228;
+  --fg: #f0eeff;
+  --fg-secondary: #d8d0f8;
+  --accent: #7c3aed;
+  --accent-light: #a78bfa;
+  --accent-dark: #4f46e5;
+  --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #3b82f6 100%);
+  --border: #1e1a30;
+  --border-light: #2d2550;
+  --text-secondary: #9080c0;
+  --text-tertiary: #5a4f80;
   --success: #22c55e;
   --error: #ef4444;
   --warning: #f59e0b;
@@ -94,14 +94,23 @@ a:hover {
 }
 
 .header nav a:hover {
-  color: var(--accent);
-  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent-light);
+  background: rgba(124, 58, 237, 0.1);
 }
 
 /* Hero Section */
 .hero {
   padding: 140px 0 100px;
   text-align: center;
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(124, 58, 237, 0.18) 0%, rgba(79, 70, 229, 0.06) 50%, transparent 70%);
+  pointer-events: none;
 }
 
 .hero h1 {
@@ -125,8 +134,8 @@ a:hover {
 }
 
 .hero .base-url {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.35);
   padding: 14px 24px;
   border-radius: 12px;
   font-family: 'Monaco', 'Courier New', monospace;
@@ -135,12 +144,14 @@ a:hover {
   margin: 0 auto 40px;
   color: var(--accent-light);
   transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.08);
 }
 
 .hero .base-url:hover {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(124, 58, 237, 0.14);
+  border-color: rgba(124, 58, 237, 0.6);
   transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.2);
 }
 
 /* Buttons */
@@ -158,6 +169,7 @@ a:hover {
   text-decoration: none;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
 }
 
 .button::before {
@@ -167,13 +179,13 @@ a:hover {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   transition: left 0.3s ease;
 }
 
 .button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 8px 28px rgba(124, 58, 237, 0.5);
 }
 
 .button:hover::before {
@@ -182,12 +194,15 @@ a:hover {
 
 .button.secondary {
   background: transparent;
-  border: 1.5px solid var(--accent);
-  color: var(--accent);
+  border: 1.5px solid rgba(124, 58, 237, 0.6);
+  color: var(--accent-light);
+  box-shadow: none;
 }
 
 .button.secondary:hover {
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(124, 58, 237, 0.12);
+  border-color: var(--accent);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
 }
 
 .button.secondary::before {
@@ -197,7 +212,7 @@ a:hover {
 /* Steps Section */
 .steps {
   padding: 100px 0;
-  background: var(--bg);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-secondary) 100%);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
@@ -227,9 +242,10 @@ a:hover {
 }
 
 .step-item:hover {
-  border-color: var(--accent);
-  background: rgba(59, 130, 246, 0.05);
+  border-color: rgba(124, 58, 237, 0.5);
+  background: rgba(124, 58, 237, 0.05);
   transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(124, 58, 237, 0.12);
 }
 
 .step-number {
@@ -244,7 +260,7 @@ a:hover {
   font-size: 1.8rem;
   margin: 0 auto 24px;
   color: white;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
 }
 
 .step-item h3 {
@@ -261,7 +277,7 @@ a:hover {
 /* Example Section */
 .example-section {
   padding: 100px 0;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(30, 64, 175, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(79, 70, 229, 0.04) 50%, rgba(59, 130, 246, 0.03) 100%);
   border-bottom: 1px solid var(--border);
 }
 
@@ -279,7 +295,7 @@ a:hover {
 }
 
 .curl-example {
-  background: var(--bg);
+  background: rgba(14, 12, 26, 0.8);
   border: 1px solid var(--border-light);
   padding: 24px;
   border-radius: 12px;
@@ -289,7 +305,8 @@ a:hover {
   color: var(--accent-light);
   line-height: 1.6;
   margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(124, 58, 237, 0.1);
+  white-space: pre;
 }
 
 .curl-example::-webkit-scrollbar {
@@ -373,7 +390,7 @@ th {
   padding: 16px;
   border-bottom: 1px solid var(--border-light);
   font-weight: 600;
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(124, 58, 237, 0.1);
   color: var(--accent-light);
   font-size: 0.9rem;
   text-transform: uppercase;
@@ -391,7 +408,7 @@ tr:last-child td {
 }
 
 tbody tr:hover {
-  background: rgba(59, 130, 246, 0.05);
+  background: rgba(124, 58, 237, 0.06);
 }
 
 /* Forms */
@@ -412,7 +429,7 @@ textarea:focus {
   outline: none;
   border-color: var(--accent);
   background: var(--bg);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
 }
 
 /* Alerts */
@@ -437,8 +454,8 @@ textarea:focus {
 }
 
 .info-box {
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.28);
   color: var(--fg);
   padding: 20px;
   border-radius: 10px;

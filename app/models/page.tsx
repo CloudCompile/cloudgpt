@@ -5,204 +5,178 @@ import { useState, useEffect } from 'react';
 interface Model {
   id: string;
   object: string;
-  created: number;
   owned_by: string;
   provider?: string;
-  description?: string;
+  type?: string;
 }
+
+const PROVIDER_COLORS: Record<string, string> = {
+  AIHubMix: '#6366f1',
+  Pollinations: '#a855f7',
+  VoidAI: '#06b6d4',
+  Airforce: '#f59e0b',
+};
+
+const TYPE_META: Record<string, { color: string; label: string }> = {
+  text:          { color: '#6366f1', label: 'Text' },
+  image:         { color: '#a855f7', label: 'Image' },
+  video:         { color: '#f43f5e', label: 'Video' },
+  audio:         { color: '#22c55e', label: 'Audio' },
+  transcription: { color: '#f59e0b', label: 'Transcription' },
+  embedding:     { color: '#06b6d4', label: 'Embedding' },
+};
 
 export default function ModelsPage() {
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [providerFilter, setProviderFilter] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [providerFilter, setProviderFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    fetchModels();
-  }, []);
+  useEffect(() => { fetchModels(); }, []);
 
   async function fetchModels() {
     try {
-      const response = await fetch('/api/v1/models');
-      if (!response.ok) throw new Error('Failed to fetch models');
-      const data = await response.json();
+      const res = await fetch('/api/v1/models');
+      if (!res.ok) throw new Error();
+      const data = await res.json();
       setModels(data.data || []);
-      setError('');
-    } catch (err) {
+    } catch {
       setError('Failed to load models. Please try again later.');
-      console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
   const providers = [...new Set(models.map((m) => m.provider || 'Unknown'))].sort();
-  let filteredModels = providerFilter
-    ? models.filter((m) => (m.provider || 'Unknown') === providerFilter)
-    : models;
+  const types = [...new Set(models.map((m) => m.type || 'text'))].sort();
 
-  if (searchTerm) {
-    filteredModels = filteredModels.filter((m) =>
-      m.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }
-
-  const providerColors: Record<string, string> = {
-    AIHubMix: '#3b82f6',
-    Pollinations: '#8b5cf6',
-    VoidAI: '#06b6d4',
-    Airforce: '#f59e0b',
-  };
+  let filtered = models;
+  if (providerFilter) filtered = filtered.filter((m) => (m.provider || 'Unknown') === providerFilter);
+  if (typeFilter)    filtered = filtered.filter((m) => (m.type || 'text') === typeFilter);
+  if (search)        filtered = filtered.filter((m) => m.id.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <main>
       <section className="container" style={{ paddingTop: '80px', paddingBottom: '80px' }}>
-        <h1 style={{ marginBottom: '20px', textAlign: 'center', fontSize: 'clamp(2rem, 5vw, 3rem)' }}>AI Models</h1>
+        <h1 style={{ textAlign: 'center', fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: '16px' }}>
+          AI Models
+        </h1>
         <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '50px', fontSize: '1.05rem' }}>
-          Browse {models.length} free AI models from multiple providers
+          {models.length} free models across 4 providers
         </p>
 
-        <div className="info-box">
-          <p style={{ marginBottom: '0' }}>
-            <strong>✨ 100+ Free Models</strong> from <strong>AIHubMix</strong>, <strong>Pollinations</strong>, <strong>VoidAI</strong>, and <strong>Airforce</strong> — all powered by OpenRelay.
-          </p>
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Search by model ID..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: '100%', marginBottom: '32px' }}
+        />
+
+        {/* Provider filter */}
+        <p style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-tertiary)', marginBottom: '12px', fontWeight: '600' }}>Provider</p>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '28px' }}>
+          <FilterChip label={`All (${models.length})`} active={providerFilter === ''} color="var(--accent)" onClick={() => setProviderFilter('')} />
+          {providers.map((p) => (
+            <FilterChip key={p} label={`${p} (${models.filter((m) => (m.provider || 'Unknown') === p).length})`}
+              active={providerFilter === p} color={PROVIDER_COLORS[p] || 'var(--accent)'}
+              onClick={() => setProviderFilter(providerFilter === p ? '' : p)} />
+          ))}
         </div>
 
-        <div style={{ marginTop: '40px', marginBottom: '40px' }}>
-          <input
-            type="text"
-            placeholder="Search models..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              fontSize: '1rem',
-              borderRadius: '10px',
-              border: '1px solid var(--border-light)',
-              background: 'var(--bg-secondary)',
-              color: 'var(--fg)',
-              transition: 'all 0.2s ease',
-            }}
-          />
+        {/* Type filter */}
+        <p style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-tertiary)', marginBottom: '12px', fontWeight: '600' }}>Type</p>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '40px' }}>
+          <FilterChip label="All Types" active={typeFilter === ''} color="var(--accent)" onClick={() => setTypeFilter('')} />
+          {types.map((t) => (
+            <FilterChip key={t} label={TYPE_META[t]?.label || t}
+              active={typeFilter === t} color={TYPE_META[t]?.color || 'var(--accent)'}
+              onClick={() => setTypeFilter(typeFilter === t ? '' : t)} />
+          ))}
         </div>
 
-        <h2 style={{ marginBottom: '20px', fontSize: '1.3rem', fontWeight: '600' }}>Filter by Provider</h2>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '50px' }}>
-          <button
-            onClick={() => setProviderFilter('')}
-            style={{
-              padding: '10px 18px',
-              borderRadius: '8px',
-              border: providerFilter === '' ? '2px solid var(--accent)' : '1px solid var(--border)',
-              background: providerFilter === '' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-              color: providerFilter === '' ? 'var(--accent)' : 'var(--fg)',
-              cursor: 'pointer',
-              fontSize: '0.95rem',
-              fontWeight: '500',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            All ({models.length})
-          </button>
-          {providers.map((provider) => {
-            const count = models.filter((m) => (m.provider || 'Unknown') === provider).length;
-            const color = providerColors[provider as string] || 'var(--accent)';
-            return (
-              <button
-                key={provider}
-                onClick={() => setProviderFilter(provider)}
-                style={{
-                  padding: '10px 18px',
-                  borderRadius: '8px',
-                  border: providerFilter === provider ? `2px solid ${color}` : '1px solid var(--border)',
-                  background:
-                    providerFilter === provider ? `${color}20` : 'transparent',
-                  color: providerFilter === provider ? color : 'var(--fg)',
-                  cursor: 'pointer',
-                  fontSize: '0.95rem',
-                  fontWeight: '500',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {provider} ({count})
-              </button>
-            );
-          })}
-        </div>
-
-        <h2 style={{ marginBottom: '20px', fontSize: '1.3rem', fontWeight: '600' }}>
-          {filteredModels.length} {providerFilter ? `${providerFilter} ` : ''}
-          {filteredModels.length === 1 ? 'Model' : 'Models'}
-        </h2>
+        <p style={{ fontWeight: '600', marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+          {filtered.length} model{filtered.length !== 1 ? 's' : ''}
+          {(providerFilter || typeFilter || search) ? ' matching filters' : ''}
+        </p>
 
         {error && <div className="error">{error}</div>}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
-            <p>Loading models...</p>
-          </div>
-        ) : filteredModels.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
-            <p>No models found.</p>
-          </div>
+          <p style={{ color: 'var(--text-secondary)', padding: '40px 0', textAlign: 'center' }}>Loading models...</p>
+        ) : filtered.length === 0 ? (
+          <p style={{ color: 'var(--text-secondary)', padding: '40px 0', textAlign: 'center' }}>No models found.</p>
         ) : (
           <div style={{ overflowX: 'auto', marginBottom: '40px' }}>
             <table>
               <thead>
                 <tr>
                   <th>Model ID</th>
+                  <th>Type</th>
                   <th>Provider</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredModels.map((model) => (
-                  <tr key={model.id}>
-                    <td style={{ fontFamily: "'Monaco', 'Courier New', monospace" }}>
-                      <code>{model.id}</code>
-                    </td>
-                    <td>
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          fontSize: '0.85rem',
-                          fontWeight: '600',
-                          background: `${providerColors[model.provider as string] || '#666'}20`,
-                          color: providerColors[model.provider as string] || '#999',
-                          border: `1px solid ${providerColors[model.provider as string] || '#666'}40`,
-                        }}
-                      >
-                        {model.provider || 'Unknown'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((model) => {
+                  const typeMeta = TYPE_META[model.type || 'text'] || TYPE_META.text;
+                  const provColor = PROVIDER_COLORS[model.provider || ''] || '#666';
+                  return (
+                    <tr key={model.id}>
+                      <td><code>{model.id}</code></td>
+                      <td>
+                        <span style={{
+                          display: 'inline-block', padding: '4px 10px', borderRadius: '5px',
+                          fontSize: '0.8rem', fontWeight: '600',
+                          background: `${typeMeta.color}18`, color: typeMeta.color,
+                          border: `1px solid ${typeMeta.color}35`,
+                        }}>
+                          {typeMeta.label}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{
+                          display: 'inline-block', padding: '4px 10px', borderRadius: '5px',
+                          fontSize: '0.8rem', fontWeight: '600',
+                          background: `${provColor}18`, color: provColor,
+                          border: `1px solid ${provColor}35`,
+                        }}>
+                          {model.provider || 'Unknown'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
 
-        <div style={{ background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '10px', padding: '24px', marginTop: '40px', marginBottom: '40px' }}>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '0' }}>
-            <strong style={{ color: 'var(--fg)' }}>How to use:</strong> Copy any model ID and use it in the <code>model</code> parameter of your API requests.
+        <div className="info-box">
+          <p>
+            <strong>How to use:</strong> Copy any model ID and pass it as the <code>model</code> parameter in your API request.
           </p>
-        </div>
-
-        <div style={{ textAlign: 'center' }}>
-          <a href="/" className="button">← Back Home</a>
         </div>
       </section>
     </main>
   );
 }
 
-function hexToRgb(hex: string): string {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (result) {
-    return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
-  }
-  return '59, 130, 246';
+function FilterChip({ label, active, color, onClick }: { label: string; active: boolean; color: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '8px 16px', borderRadius: '8px', cursor: 'pointer',
+        fontSize: '0.9rem', fontWeight: '500', transition: 'all 0.2s ease',
+        border: active ? `2px solid ${color}` : '1px solid var(--border)',
+        background: active ? `${color}20` : 'transparent',
+        color: active ? color : 'var(--fg-secondary)',
+      }}
+    >
+      {label}
+    </button>
+  );
 }
