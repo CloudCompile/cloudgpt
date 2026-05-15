@@ -1,25 +1,50 @@
 import { redis } from '../redis';
+import { decryptKey } from '../crypto';
 
 /**
  * Dynamic key pool system that automatically scales rate limits
  * based on the number of available keys per provider.
  *
  * Env vars pattern: {PROVIDER}_KEY_1, {PROVIDER}_KEY_2, etc.
- * Examples:
- *   AIHUBMIX_KEY_1=sk_...
- *   POLLINATIONS_KEY_1=sk_...
- *   POLLINATIONS_KEY_2=sk_...
+ * KV keys stored by admin: admin:provider:keys:{provider} → JSON array of ProviderKeyEntry
  */
+
+export interface ProviderKeyEntry {
+  id: string;
+  encryptedKey: string;
+  preview: string;
+  createdAt: number;
+}
 
 export async function getKeysForProvider(providerName: string): Promise<string[]> {
   const keys: string[] = [];
   const prefix = `${providerName.toUpperCase()}_KEY_`;
 
-  // Read environment variables
+  // 1. Read environment variables
   for (let i = 1; i <= 10; i++) {
     const key = process.env[`${prefix}${i}`];
-    if (key) {
-      keys.push(key);
+    if (key) keys.push(key);
+  }
+
+  // 2. Read KV-stored keys (added via admin panel)
+  const encKey = process.env.ENCRYPTION_KEY;
+  if (encKey) {
+    try {
+      const listJson = await redis.get(
+        `admin:provider:keys:${providerName.toLowerCase()}`
+      );
+      if (listJson) {
+        const entries: ProviderKeyEntry[] = JSON.parse(listJson);
+        for (const entry of entries) {
+          try {
+            keys.push(decryptKey(entry.encryptedKey, encKey));
+          } catch (e) {
+            console.error(`Failed to decrypt provider key ${entry.id}:`, e);
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`Failed to fetch KV keys for ${providerName}:`, e);
     }
   }
 
