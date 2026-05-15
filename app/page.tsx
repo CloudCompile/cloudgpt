@@ -184,6 +184,41 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Donate CTA */}
+      <section style={{ paddingTop: '80px', paddingBottom: '80px', borderBottom: '1px solid var(--border)', background: 'var(--bg)' }}>
+        <div className="container" style={{ maxWidth: '900px', textAlign: 'center' }}>
+          <p style={{ fontSize: '0.8rem', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px' }}>
+            Contributor Program
+          </p>
+          <h2 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.4rem)', fontWeight: '900', marginBottom: '16px', lineHeight: '1.15' }}>
+            OpenRelay is free because contributors donate API keys
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '640px', margin: '0 auto 32px', lineHeight: '1.7' }}>
+            Many providers offer free API keys with generous daily limits. If you have one — from Groq, Cerebras, Happupy, AIHorde, or others — donating it takes 30 seconds and helps keep this service free for everyone.
+          </p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '32px' }}>
+            <a href="/donate" className="button" style={{ padding: '13px 36px', fontSize: '1rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              🔑 Donate a Key
+            </a>
+            <a href="/contributor" className="button secondary" style={{ padding: '13px 28px', fontSize: '1rem' }}>
+              View Contributor Perks
+            </a>
+          </div>
+          <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Monitor your keys', desc: 'See status and uptime in real time' },
+              { label: 'System insights', desc: 'Error logs and request metrics' },
+              { label: 'Discord role', desc: 'Automatic Contributor badge' },
+            ].map((b, i) => (
+              <div key={i} style={{ textAlign: 'left', maxWidth: '200px' }}>
+                <p style={{ fontWeight: '600', fontSize: '0.88rem', color: 'var(--accent-light)', marginBottom: '4px' }}>✓ {b.label}</p>
+                <p style={{ color: 'var(--text-tertiary)', fontSize: '0.82rem', margin: 0 }}>{b.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section style={{ paddingTop: '100px', paddingBottom: '100px', borderBottom: '1px solid var(--border)' }}>
         <div className="container" style={{ maxWidth: '1200px' }}>

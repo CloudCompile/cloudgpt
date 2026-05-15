@@ -114,6 +114,28 @@ export default function Dashboard() {
 
   return (
     <main className="container" style={{ paddingTop: '50px', paddingBottom: '100px', maxWidth: '900px' }}>
+      {/* Donate Banner */}
+      <div style={{
+        marginBottom: '40px',
+        padding: '20px 24px',
+        borderRadius: '18px 14px 16px 20px',
+        background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(79,70,229,0.08) 100%)',
+        border: '1px solid rgba(124,58,237,0.35)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap',
+      }}>
+        <div>
+          <p style={{ fontWeight: '700', fontSize: '0.95rem', marginBottom: '4px' }}>
+            🔑 Keep OpenRelay free — donate an API key
+          </p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
+            Got a free API key from Groq, Cerebras, Happupy, or others? Donate it to power the network for everyone.
+          </p>
+        </div>
+        <a href="/donate" className="button" style={{ padding: '9px 22px', fontSize: '0.9rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          Donate a Key
+        </a>
+      </div>
+
       <h1 style={{ marginBottom: '8px', fontSize: '2rem' }}>API Keys</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '50px' }}>
         Manage your OpenRelay API keys. Use them with any OpenAI-compatible client.

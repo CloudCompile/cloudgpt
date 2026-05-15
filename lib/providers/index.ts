@@ -9,6 +9,7 @@ import { forwardGroq } from './groq';
 import { forwardAIHorde } from './aihorde';
 import { forwardTokenReply } from './tokenreply';
 import { forwardNagaAI } from './nagaai';
+import { forwardHappupy } from './happupy';
 
 export interface RouteOptions {
   streaming?: boolean;
@@ -109,7 +110,12 @@ export async function routeChat(
     return forwardNagaAI('/chat/completions', 'POST', fwdBody, options);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde → TokenReply → NagaAI
+  if (model.startsWith('happupy/')) {
+    const fwdBody = { ...(body as any), model: model.replace('happupy/', '') };
+    return forwardHappupy('/v1/chat/completions', 'POST', fwdBody, options);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde → TokenReply → NagaAI → Happupy
   if (!options?.autoFallback) {
     return forwardAIHubMix('/chat/completions', 'POST', body);
   }
@@ -126,7 +132,8 @@ export async function routeChat(
     { name: 'Groq',        fn: () => forwardGroq('/chat/completions', 'POST', body, options) },
     { name: 'AIHorde',     fn: () => forwardAIHorde('/generate/text/async', 'POST', { prompt, params: { max_length: (body as any).max_tokens || 80 } }, options) },
     { name: 'TokenReply',  fn: () => forwardTokenReply('/chat/completions', 'POST', body, options) },
-    { name: 'NagaAI',     fn: () => forwardNagaAI('/chat/completions', 'POST', body, options) },
+    { name: 'NagaAI',      fn: () => forwardNagaAI('/chat/completions', 'POST', body, options) },
+    { name: 'Happupy',     fn: () => forwardHappupy('/v1/chat/completions', 'POST', body, options) },
   ]);
 }
 
@@ -183,7 +190,12 @@ export async function routeImages(
     return forwardNagaAI('/images/generations', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → AIHorde → NagaAI
+  if (model.startsWith('happupy/')) {
+    const fwdBody = { ...(body as any), model: model.replace('happupy/', '') };
+    return forwardHappupy('/v1/images/generations', 'POST', fwdBody);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → AIHorde → NagaAI → Happupy
   if (!options?.autoFallback) {
     return forwardAIHubMix('/images/generations', 'POST', body);
   }
@@ -199,7 +211,8 @@ export async function routeImages(
       models: ['stable_diffusion'],
       params: { sampler_name: 'k_euler', cfg_scale: 7, denoise: 1.0, steps: 20 },
     }) },
-    { name: 'NagaAI',     fn: () => forwardNagaAI('/images/generations', 'POST', body) },
+    { name: 'NagaAI',      fn: () => forwardNagaAI('/images/generations', 'POST', body) },
+    { name: 'Happupy',     fn: () => forwardHappupy('/v1/images/generations', 'POST', body) },
   ]);
 }
 
