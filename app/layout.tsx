@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Inter, IBM_Plex_Mono } from 'next/font/google';
 import {
   ClerkProvider,
   SignInButton,
@@ -11,8 +11,8 @@ import {
 import Wordmark from '@/components/brand/Wordmark';
 import './globals.css';
 
-const geist = Geist({ subsets: ['latin'], variable: '--font-geist', display: 'swap' });
-const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono', display: 'swap' });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const ibmPlexMono = IBM_Plex_Mono({ weight: ['400', '600', '700'], subsets: ['latin'], variable: '--font-mono', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'OpenRelay - Free AI API',
@@ -71,7 +71,7 @@ export default function RootLayout({
 }) {
   if (!isClerkConfigured) {
     return (
-      <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+      <html lang="en" className={`${inter.variable} ${ibmPlexMono.variable}`}>
         <head>
           <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         </head>
@@ -85,7 +85,7 @@ export default function RootLayout({
 
   return (
     <ClerkProvider>
-      <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+      <html lang="en" className={`${inter.variable} ${ibmPlexMono.variable}`}>
         <head>
           <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         </head>
