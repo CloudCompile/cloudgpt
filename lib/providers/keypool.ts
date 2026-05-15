@@ -14,6 +14,7 @@ export interface ProviderKeyEntry {
   encryptedKey: string;
   preview: string;
   createdAt: number;
+  donorId?: string;
 }
 
 export async function getKeysForProvider(providerName: string): Promise<string[]> {

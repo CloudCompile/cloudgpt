@@ -54,6 +54,7 @@ function Header() {
             <SignUpButton />
           </SignedOut>
           <SignedIn>
+            <a href="/donate" className="nav-link">Contribute</a>
             <a href="/dashboard" className="nav-link">Dashboard</a>
             <UserButton />
           </SignedIn>

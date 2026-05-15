@@ -69,13 +69,13 @@ export async function getSystemAnalytics(): Promise<{
   const totalStr = await redis.get(`analytics:req:total:${today}`);
   const requestsToday = totalStr ? (parseInt(totalStr, 10) || 0) : 0;
 
-  const modelHash = await redis.hGetAll(`analytics:req:model:${today}`);
+  const modelHash = (await redis.hGetAll(`analytics:req:model:${today}`)) ?? {};
   const topModels = Object.entries(modelHash)
     .map(([model, count]) => ({ model, count: parseInt(count, 10) || 0 }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 
-  const providerHash = await redis.hGetAll(`analytics:req:provider:${today}`);
+  const providerHash = (await redis.hGetAll(`analytics:req:provider:${today}`)) ?? {};
   const providerBreakdown: Record<string, number> = Object.fromEntries(
     Object.entries(providerHash).map(([k, v]) => [k, parseInt(v, 10) || 0])
   );
@@ -87,4 +87,25 @@ export async function getSystemAnalytics(): Promise<{
   }
 
   return { requestsToday, topModels, providerBreakdown, tokensToday };
+}
+
+export async function logError(provider: string, message: string): Promise<void> {
+  try {
+    const entry = JSON.stringify({ provider, message, ts: Date.now() });
+    await redis.lPush('errors:recent', entry);
+    await redis.lTrim('errors:recent', 0, 19);
+  } catch (e) {
+    console.error('Failed to log error to Redis:', e);
+  }
+}
+
+export async function getRecentErrors(limit = 5): Promise<Array<{ provider: string; message: string; ts: number }>> {
+  try {
+    const entries = await redis.lRange('errors:recent', 0, limit - 1);
+    return entries
+      .map(e => { try { return JSON.parse(e); } catch { return null; } })
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
 }
