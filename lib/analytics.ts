@@ -5,6 +5,8 @@ function inferProvider(model: string): string {
   if (model.startsWith('voidai/')) return 'VoidAI';
   if (model.startsWith('airforce/')) return 'Airforce';
   if (model.startsWith('cerebras/')) return 'Cerebras';
+  if (model.startsWith('groq/')) return 'Groq';
+  if (model.startsWith('aihorde/')) return 'AIHorde';
   return 'AIHubMix';
 }
 
