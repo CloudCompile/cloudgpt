@@ -73,7 +73,7 @@ export default function ModelsPage() {
           placeholder="Search by model ID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ width: '100%', marginBottom: '32px' }}
+          style={{ width: '100%', marginBottom: '32px', borderRadius: '16px 12px 14px 18px' }}
         />
 
         {/* Provider filter */}
@@ -128,7 +128,7 @@ export default function ModelsPage() {
                       <td><code>{model.id}</code></td>
                       <td>
                         <span style={{
-                          display: 'inline-block', padding: '4px 10px', borderRadius: '5px',
+                          display: 'inline-block', padding: '4px 10px', borderRadius: '10px 6px 8px 12px',
                           fontSize: '0.8rem', fontWeight: '600',
                           background: `${typeMeta.color}18`, color: typeMeta.color,
                           border: `1px solid ${typeMeta.color}35`,
@@ -138,7 +138,7 @@ export default function ModelsPage() {
                       </td>
                       <td>
                         <span style={{
-                          display: 'inline-block', padding: '4px 10px', borderRadius: '5px',
+                          display: 'inline-block', padding: '4px 10px', borderRadius: '10px 6px 8px 12px',
                           fontSize: '0.8rem', fontWeight: '600',
                           background: `${provColor}18`, color: provColor,
                           border: `1px solid ${provColor}35`,
@@ -169,7 +169,7 @@ function FilterChip({ label, active, color, onClick }: { label: string; active: 
     <button
       onClick={onClick}
       style={{
-        padding: '8px 16px', borderRadius: '8px', cursor: 'pointer',
+        padding: '8px 16px', borderRadius: '14px 10px 12px 16px', cursor: 'pointer',
         fontSize: '0.9rem', fontWeight: '500', transition: 'all 0.2s ease',
         border: active ? `2px solid ${color}` : '1px solid var(--border)',
         background: active ? `${color}20` : 'transparent',
