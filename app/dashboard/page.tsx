@@ -17,6 +17,8 @@ interface NewKeyResponse {
   createdAt: number;
 }
 
+const BASE_URL = 'https://www.cjhauser.me';
+
 export default function Dashboard() {
   const { userId, isSignedIn } = useAuth();
   const [keys, setKeys] = useState<ApiKey[]>([]);
@@ -24,7 +26,7 @@ export default function Dashboard() {
   const [newKeyName, setNewKeyName] = useState('');
   const [createdKey, setCreatedKey] = useState<NewKeyResponse | null>(null);
   const [error, setError] = useState('');
-  const [copying, setCopying] = useState(false);
+  const [copying, setCopying] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -38,7 +40,7 @@ export default function Dashboard() {
       const data = await response.json();
       setKeys(data.keys || []);
       setError('');
-    } catch (err) {
+    } catch {
       setError('Failed to load API keys');
     } finally {
       setLoading(false);
@@ -50,145 +52,125 @@ export default function Dashboard() {
       setError('Please enter a key name');
       return;
     }
-
     try {
       const response = await fetch('/api/dashboard/keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newKeyName }),
       });
-
       if (!response.ok) {
         const data = await response.json();
         setError(data.error || 'Failed to create key');
         return;
       }
-
       const data = await response.json();
       setCreatedKey(data);
       setNewKeyName('');
       setError('');
       await fetchKeys();
-    } catch (err) {
+    } catch {
       setError('Failed to create API key');
     }
   }
 
   async function deleteKey(id: string) {
-    if (!confirm('Are you sure? This cannot be undone.')) return;
-
+    if (!confirm('Delete this key? This cannot be undone.')) return;
     try {
       const response = await fetch('/api/dashboard/keys', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-
       if (!response.ok) {
         const data = await response.json();
         setError(data.error || 'Failed to delete key');
         return;
       }
-
       setError('');
       await fetchKeys();
-    } catch (err) {
+    } catch {
       setError('Failed to delete API key');
     }
   }
 
-  async function copyToClipboard(text: string) {
-    setCopying(true);
+  async function copyToClipboard(text: string, id: string) {
     try {
       await navigator.clipboard.writeText(text);
-      setTimeout(() => setCopying(false), 2000);
-    } catch (err) {
+      setCopying(id);
+      setTimeout(() => setCopying(null), 2000);
+    } catch {
       setError('Failed to copy to clipboard');
-      setCopying(false);
     }
   }
 
   if (!isSignedIn) {
     return (
-      <main className="container" style={{ paddingTop: '80px', paddingBottom: '80px', textAlign: 'center' }}>
-        <h1>Dashboard</h1>
-        <p style={{ color: 'var(--text-secondary)', marginTop: '20px' }}>
-          Please sign in to access your API keys
-        </p>
+      <main className="container" style={{ paddingTop: '120px', paddingBottom: '80px', textAlign: 'center' }}>
+        <h1 style={{ marginBottom: '16px' }}>Dashboard</h1>
+        <p style={{ color: 'var(--text-secondary)' }}>Please sign in to access your API keys.</p>
       </main>
     );
   }
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-
   return (
-    <main className="container" style={{ paddingTop: '40px', paddingBottom: '80px', maxWidth: '900px' }}>
-      <h1 style={{ marginBottom: '40px' }}>API Keys</h1>
+    <main className="container" style={{ paddingTop: '50px', paddingBottom: '100px', maxWidth: '900px' }}>
+      <h1 style={{ marginBottom: '8px', fontSize: '2rem' }}>API Keys</h1>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '50px' }}>
+        Manage your OpenRelay API keys. Use them with any OpenAI-compatible client.
+      </p>
 
       {error && <div className="error">{error}</div>}
 
       {createdKey && (
-        <div className="success">
-          <p style={{ marginBottom: '16px' }}>
-            <strong>✓ New API Key Created</strong>
-          </p>
-          <p style={{ marginBottom: '12px', color: 'var(--text-secondary)' }}>
-            Save this key securely — it will not be shown again!
-          </p>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px' }}>
-            <code style={{ flex: 1, background: '#000', padding: '12px', borderRadius: '6px', overflow: 'auto' }}>
+        <div className="success" style={{ marginBottom: '40px' }}>
+          <p style={{ marginBottom: '12px', fontWeight: '600' }}>Key created — save it now, it won't be shown again.</p>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <code style={{ flex: 1, background: 'rgba(0,0,0,0.4)', padding: '12px 16px', borderRadius: '8px', wordBreak: 'break-all', fontSize: '0.9rem' }}>
               {createdKey.key}
             </code>
             <button
-              onClick={() => copyToClipboard(createdKey.key)}
+              onClick={() => copyToClipboard(createdKey.key, 'new')}
               className="button"
-              style={{ whiteSpace: 'nowrap' }}
+              style={{ whiteSpace: 'nowrap', padding: '10px 20px' }}
             >
-              {copying ? '✓ Copied' : 'Copy'}
+              {copying === 'new' ? '✓ Copied' : 'Copy'}
             </button>
           </div>
           <button
             onClick={() => setCreatedKey(null)}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--accent)',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-            }}
+            style={{ marginTop: '12px', background: 'transparent', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: '0.9rem' }}
           >
             Dismiss
           </button>
         </div>
       )}
 
-      <section style={{ marginBottom: '60px' }}>
-        <h2 style={{ marginBottom: '24px' }}>Create a New Key</h2>
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px' }}>
+      {/* Create Key */}
+      <section style={{ marginBottom: '60px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '14px', padding: '32px' }}>
+        <h2 style={{ marginBottom: '8px', fontSize: '1.25rem' }}>Create a New Key</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>Up to 5 keys per account.</p>
+        <div style={{ display: 'flex', gap: '12px' }}>
           <input
             type="text"
-            placeholder="Key name (e.g., Production, Testing)"
+            placeholder="Key name (e.g., Production, My App)"
             value={newKeyName}
             onChange={(e) => setNewKeyName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && createKey()}
             style={{ flex: 1 }}
           />
-          <button onClick={createKey} className="button">
-            Create
-          </button>
+          <button onClick={createKey} className="button">Create Key</button>
         </div>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          Maximum 5 keys per account
-        </p>
       </section>
 
+      {/* Keys List */}
       <section style={{ marginBottom: '60px' }}>
-        <h2 style={{ marginBottom: '24px' }}>Your Keys</h2>
+        <h2 style={{ marginBottom: '24px', fontSize: '1.25rem' }}>Your Keys</h2>
         {loading ? (
-          <p>Loading...</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
         ) : keys.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)' }}>
-            No API keys yet. Create one above to get started.
-          </p>
+          <div style={{ padding: '40px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '12px', textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-secondary)' }}>No API keys yet — create one above.</p>
+          </div>
         ) : (
           <table>
             <thead>
@@ -196,27 +178,28 @@ export default function Dashboard() {
                 <th>Name</th>
                 <th>Key</th>
                 <th>Created</th>
-                <th style={{ textAlign: 'right' }}>Action</th>
+                <th style={{ textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {keys.map((key) => (
                 <tr key={key.id}>
-                  <td>{key.name}</td>
-                  <td>
-                    <code>{key.keyPreview}</code>
-                  </td>
-                  <td>{new Date(key.createdAt).toLocaleDateString()}</td>
+                  <td style={{ fontWeight: '500' }}>{key.name}</td>
+                  <td><code>{key.keyPreview}</code></td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{new Date(key.createdAt).toLocaleDateString()}</td>
                   <td style={{ textAlign: 'right' }}>
                     <button
                       onClick={() => deleteKey(key.id)}
                       style={{
                         background: 'rgba(239, 68, 68, 0.1)',
-                        border: '1px solid #ef4444',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
                         color: '#fca5a5',
-                        padding: '6px 12px',
-                        borderRadius: '4px',
+                        padding: '6px 14px',
+                        borderRadius: '6px',
                         cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: '500',
+                        transition: 'all 0.2s ease',
                       }}
                     >
                       Delete
@@ -229,70 +212,94 @@ export default function Dashboard() {
         )}
       </section>
 
+      {/* Quick Connect */}
       <section style={{ marginBottom: '60px' }}>
-        <h2 style={{ marginBottom: '24px' }}>Quick Connect</h2>
-        <p style={{ marginBottom: '20px', color: 'var(--text-secondary)' }}>
-          {keys.length > 0
-            ? 'Use your first API key with the following base URL:'
-            : 'Create an API key above to see your connection details.'}
+        <h2 style={{ marginBottom: '8px', fontSize: '1.25rem' }}>Quick Connect</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
+          Use this base URL with any OpenAI-compatible client.
         </p>
-        {keys.length > 0 && (
-          <div className="info-box">
-            <code style={{ fontSize: '0.85rem', wordBreak: 'break-all' }}>
-              Authorization: Bearer {/* Show first key preview */}
-              {keys[0]?.keyPreview}...
-            </code>
+        <div style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.25)', borderRadius: '12px', padding: '20px 24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Base URL</p>
+              <code style={{ color: 'var(--accent-light)', fontSize: '1rem' }}>{BASE_URL}/v1</code>
+            </div>
+            <button
+              onClick={() => copyToClipboard(`${BASE_URL}/v1`, 'baseurl')}
+              style={{ background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', color: 'var(--accent)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+            >
+              {copying === 'baseurl' ? '✓ Copied' : 'Copy URL'}
+            </button>
           </div>
-        )}
+        </div>
       </section>
 
-      <section>
-        <h2 style={{ marginBottom: '24px' }}>About OpenRelay</h2>
-        <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
-          OpenRelay is powered by <a href="https://aihubmix.com" target="_blank" rel="noopener noreferrer">AIHubMix</a>, providing access to 27+ free AI models including:
+      {/* Usage Examples */}
+      <section style={{ marginBottom: '60px' }}>
+        <h2 style={{ marginBottom: '8px', fontSize: '1.25rem' }}>Usage</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
+          OpenRelay is fully OpenAI-compatible. Works with SillyTavern, OpenWebUI, LiteLLM, and any OpenAI SDK.
         </p>
-        <ul style={{ marginLeft: '20px', marginBottom: '24px', color: 'var(--text-secondary)' }}>
-          <li><strong>Text:</strong> GPT-4o, Claude 3.5, Gemini 2.0, DeepSeek, Qwen, and more</li>
-          <li><strong>Images:</strong> DALL-E, Flux, and others</li>
-          <li><strong>Video:</strong> Text-to-video generation</li>
-          <li><strong>Audio:</strong> Text-to-speech</li>
-        </ul>
-        <p style={{ marginBottom: '24px' }}>
-          <a href="/models">View available models</a> or visit{' '}
-          <a href="https://aihubmix.com/models" target="_blank" rel="noopener noreferrer">AIHubMix Models</a> to find model IDs.
-        </p>
-      </section>
 
-      <section>
-        <h2 style={{ marginBottom: '24px' }}>Setup Instructions</h2>
-
-        <h3 style={{ marginBottom: '12px', marginTop: '24px' }}>SillyTavern</h3>
-        <ol style={{ marginLeft: '20px', marginBottom: '24px', color: 'var(--text-secondary)' }}>
-          <li>Go to User Settings → API Connections</li>
-          <li>Select OpenAI and enable it</li>
-          <li>Set API Base URL to: <code>{baseUrl}/v1</code></li>
-          <li>Paste your API key in the API Key field</li>
-        </ol>
-
-        <h3 style={{ marginBottom: '12px' }}>OpenWebUI</h3>
-        <ol style={{ marginLeft: '20px', marginBottom: '24px', color: 'var(--text-secondary)' }}>
-          <li>Go to Settings → OpenAI</li>
-          <li>Set API Base URL to: <code>{baseUrl}/v1</code></li>
-          <li>Paste your API key in the API Key field</li>
-          <li>Models will be loaded automatically</li>
-        </ol>
-
-        <h3 style={{ marginBottom: '12px' }}>Using the API</h3>
-        <p style={{ marginBottom: '16px', color: 'var(--text-secondary)' }}>
-          OpenRelay supports the standard OpenAI API format. Use any model ID from AIHubMix:
-        </p>
-        <div className="curl-example">{`curl ${baseUrl}/v1/chat/completions \\
+        <h3 style={{ marginBottom: '12px', fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>cURL</h3>
+        <div className="curl-example">{`curl ${BASE_URL}/v1/chat/completions \\
   -H "Authorization: Bearer YOUR_KEY_HERE" \\
   -H "Content-Type: application/json" \\
   -d '{
     "model": "gpt-4o-free",
     "messages": [{"role": "user", "content": "Hello!"}]
   }'`}</div>
+
+        <h3 style={{ marginBottom: '12px', marginTop: '32px', fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Python</h3>
+        <div className="curl-example">{`from openai import OpenAI
+
+client = OpenAI(
+  api_key="YOUR_KEY_HERE",
+  base_url="${BASE_URL}/v1"
+)
+
+response = client.chat.completions.create(
+  model="gpt-4o-free",
+  messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)`}</div>
+
+        <h3 style={{ marginBottom: '12px', marginTop: '32px', fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>SillyTavern</h3>
+        <ol style={{ marginLeft: '20px', color: 'var(--text-secondary)', lineHeight: '2', fontSize: '0.95rem' }}>
+          <li>Go to <strong style={{ color: 'var(--fg)' }}>User Settings → API Connections</strong></li>
+          <li>Select <strong style={{ color: 'var(--fg)' }}>OpenAI</strong> and enable it</li>
+          <li>Set API Base URL to: <code>{BASE_URL}/v1</code></li>
+          <li>Paste your API key and connect</li>
+        </ol>
+
+        <h3 style={{ marginBottom: '12px', marginTop: '32px', fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>OpenWebUI</h3>
+        <ol style={{ marginLeft: '20px', color: 'var(--text-secondary)', lineHeight: '2', fontSize: '0.95rem' }}>
+          <li>Go to <strong style={{ color: 'var(--fg)' }}>Settings → Connections → OpenAI</strong></li>
+          <li>Set API Base URL to: <code>{BASE_URL}/v1</code></li>
+          <li>Paste your API key — models load automatically</li>
+        </ol>
+      </section>
+
+      {/* Available Models */}
+      <section>
+        <h2 style={{ marginBottom: '8px', fontSize: '1.25rem' }}>Available Models</h2>
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
+          100+ free models across 4 providers. Use any model ID in your requests.
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          {[
+            { name: 'AIHubMix', color: '#3b82f6', models: 'GPT-4o, Claude 3.5, Gemini 2.0, DeepSeek' },
+            { name: 'Pollinations', color: '#8b5cf6', models: 'Image, text, and specialized generation' },
+            { name: 'VoidAI', color: '#06b6d4', models: 'Free-tier models from major providers' },
+            { name: 'Airforce', color: '#f59e0b', models: '53 models: OpenAI, Anthropic, Meta, xAI' },
+          ].map(({ name, color, models }) => (
+            <div key={name} style={{ background: 'var(--bg-secondary)', border: `1px solid ${color}30`, borderRadius: '10px', padding: '18px' }}>
+              <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600', background: `${color}20`, color, marginBottom: '10px' }}>{name}</span>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: '1.5' }}>{models}</p>
+            </div>
+          ))}
+        </div>
+        <a href="/models" className="button secondary">Browse All Models</a>
       </section>
     </main>
   );
