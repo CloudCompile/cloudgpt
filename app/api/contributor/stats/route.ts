@@ -16,13 +16,19 @@ export async function GET() {
 
     const today = new Date().toISOString().split('T')[0];
 
-    const totalStr = await redis.get(`analytics:req:total:${today}`);
-    const requestsToday = totalStr ? (parseInt(totalStr, 10) || 0) : 0;
+    let requestsToday = 0;
+    try {
+      const totalStr = await redis.get(`analytics:req:total:${today}`);
+      requestsToday = totalStr ? (parseInt(totalStr, 10) || 0) : 0;
+    } catch { /* WRONGTYPE — skip */ }
 
     const refs = await getContributorKeyRefs(userId);
     const contributedProviders = [...new Set(refs.map(r => r.provider))];
 
-    const providerHash = (await redis.hGetAll(`analytics:req:provider:${today}`)) ?? {};
+    let providerHash: Record<string, string> = {};
+    try {
+      providerHash = (await redis.hGetAll(`analytics:req:provider:${today}`)) ?? {};
+    } catch { /* WRONGTYPE — key is wrong Redis type, skip */ }
     const providerBreakdown: Record<string, number> = {};
     for (const prov of contributedProviders) {
       providerBreakdown[prov] = parseInt(providerHash[prov] ?? '0', 10) || 0;

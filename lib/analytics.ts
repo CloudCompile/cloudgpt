@@ -66,24 +66,35 @@ export async function getSystemAnalytics(): Promise<{
 }> {
   const today = new Date().toISOString().split('T')[0];
 
-  const totalStr = await redis.get(`analytics:req:total:${today}`);
-  const requestsToday = totalStr ? (parseInt(totalStr, 10) || 0) : 0;
+  let requestsToday = 0;
+  try {
+    const totalStr = await redis.get(`analytics:req:total:${today}`);
+    requestsToday = totalStr ? (parseInt(totalStr, 10) || 0) : 0;
+  } catch { /* key type mismatch — skip */ }
 
-  const modelHash = (await redis.hGetAll(`analytics:req:model:${today}`)) ?? {};
-  const topModels = Object.entries(modelHash)
-    .map(([model, count]) => ({ model, count: parseInt(count, 10) || 0 }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  let topModels: Array<{ model: string; count: number }> = [];
+  try {
+    const modelHash = (await redis.hGetAll(`analytics:req:model:${today}`)) ?? {};
+    topModels = Object.entries(modelHash)
+      .map(([model, count]) => ({ model, count: parseInt(count, 10) || 0 }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  } catch { /* key type mismatch — skip */ }
 
-  const providerHash = (await redis.hGetAll(`analytics:req:provider:${today}`)) ?? {};
-  const providerBreakdown: Record<string, number> = Object.fromEntries(
-    Object.entries(providerHash).map(([k, v]) => [k, parseInt(v, 10) || 0])
-  );
+  let providerBreakdown: Record<string, number> = {};
+  try {
+    const providerHash = (await redis.hGetAll(`analytics:req:provider:${today}`)) ?? {};
+    providerBreakdown = Object.fromEntries(
+      Object.entries(providerHash).map(([k, v]) => [k, parseInt(v, 10) || 0])
+    );
+  } catch { /* key type mismatch — skip */ }
 
   let tokensToday = 0;
   for (let i = 0; i < 10; i++) {
-    const tokenStr = await redis.get(`cerebras:${i}:tokens:${today}`);
-    if (tokenStr) tokensToday += (parseInt(tokenStr, 10) || 0);
+    try {
+      const tokenStr = await redis.get(`cerebras:${i}:tokens:${today}`);
+      if (tokenStr) tokensToday += (parseInt(tokenStr, 10) || 0);
+    } catch { /* key type mismatch — skip */ }
   }
 
   return { requestsToday, topModels, providerBreakdown, tokensToday };
