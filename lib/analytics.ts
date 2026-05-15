@@ -8,6 +8,7 @@ function inferProvider(model: string): string {
   if (model.startsWith('groq/')) return 'Groq';
   if (model.startsWith('aihorde/')) return 'AIHorde';
   if (model.startsWith('tokenreply/')) return 'TokenReply';
+  if (model.startsWith('nagaai/')) return 'NagaAI';
   return 'AIHubMix';
 }
 

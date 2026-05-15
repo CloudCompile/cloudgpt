@@ -30,6 +30,7 @@ const providers = [
   { name: 'Groq',        desc: '16+ models',   color: '#00d084' },
   { name: 'AI Horde',    desc: '186+ models',  color: '#ec4899' },
   { name: 'TokenReply',  desc: '14+ models',   color: '#7c3aed' },
+  { name: 'NagaAI',     desc: '13 models',    color: '#10b981' },
 ];
 
 const navLinkStyle = { color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s', display: 'inline-flex', alignItems: 'center' };
@@ -58,7 +59,7 @@ export default function Home() {
             maxWidth: '700px',
             margin: '0 auto 48px'
           }}>
-            Access 200+ AI models from 8 providers with a single API key. Fast, reliable, and completely free.
+            Access 200+ AI models from 9 providers with a single API key. Fast, reliable, and completely free.
           </p>
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -97,7 +98,7 @@ export default function Home() {
               Powered By
             </p>
             <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '20px' }}>
-              200+ Models from 8 Providers
+              200+ Models from 9 Providers
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>
               We aggregate the best AI models from industry-leading providers, giving you access to the latest technology with zero setup.
@@ -246,7 +247,7 @@ export default function Home() {
             Start Building with AI Today
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.15rem', marginBottom: '48px', lineHeight: '1.6', maxWidth: '700px', margin: '0 auto 48px' }}>
-            Get instant access to 200+ AI models from 8 providers. No credit card, no setup fees, no limits.
+            Get instant access to 200+ AI models from 9 providers. No credit card, no setup fees, no limits.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             {isClerkConfigured ? (
@@ -312,7 +313,7 @@ export default function Home() {
                 <Wordmark variant="full" size="sm" />
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.8' }}>
-                Free AI API gateway for developers everywhere. Access 200+ cutting-edge models from 8 top providers with one API key.
+                Free AI API gateway for developers everywhere. Access 200+ cutting-edge models from 9 top providers with one API key.
               </p>
             </div>
             <div>

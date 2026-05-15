@@ -120,6 +120,17 @@ export const GlyphAIHorde = (p: GlyphProps) => (
   </GlyphBase>
 );
 
+// NagaAI — three serpentine waves (naga = mythological serpent)
+export const GlyphNagaAI = (p: GlyphProps) => (
+  <GlyphBase {...p}>
+    <path d="M7 10.5 C10 7 14 7 16 10 C18 13 22 13 25 10" />
+    <path d="M7 16 C10 12.5 14 12.5 16 15.5 C18 18.5 22 18.5 25 15.5" />
+    <path d="M7 21.5 C10 18 14 18 16 21 C18 24 22 24 25 21" />
+    <circle cx="7" cy="10.5" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="25" cy="21" r="1.3" fill="currentColor" stroke="none" />
+  </GlyphBase>
+);
+
 // Lookup keyed by the provider name as used in app/page.tsx + app/providers/page.tsx
 export const PROVIDER_GLYPHS: Record<
   string,
@@ -132,4 +143,5 @@ export const PROVIDER_GLYPHS: Record<
   Cerebras:       { Glyph: GlyphCerebras,     color: '#8b5cf6' },
   Groq:           { Glyph: GlyphGroq,         color: '#00d084' },
   'AI Horde':     { Glyph: GlyphAIHorde,      color: '#ec4899' },
+  NagaAI:         { Glyph: GlyphNagaAI,       color: '#10b981' },
 };

@@ -6,7 +6,7 @@ import { redis } from '@/lib/redis';
 
 export const runtime = 'nodejs';
 
-const PROVIDERS = ['AIHubMix', 'Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply'];
+const PROVIDERS = ['AIHubMix', 'Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI'];
 
 // GET /api/admin/analytics — system-wide analytics
 export async function GET() {
