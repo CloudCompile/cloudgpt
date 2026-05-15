@@ -284,7 +284,7 @@ print(response.choices[0].message.content)`}</div>
       <section>
         <h2 style={{ marginBottom: '8px', fontSize: '1.25rem' }}>Available Models</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
-          100+ free models across 4 providers. Use any model ID in your requests.
+          100+ free models across 5 providers. Use any model ID in your requests.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           {[
@@ -292,6 +292,7 @@ print(response.choices[0].message.content)`}</div>
             { name: 'Pollinations', color: '#8b5cf6', models: 'Image, text, and specialized generation' },
             { name: 'VoidAI', color: '#06b6d4', models: 'Free-tier models from major providers' },
             { name: 'Airforce', color: '#f59e0b', models: '53 models: OpenAI, Anthropic, Meta, xAI' },
+            { name: 'Cerebras', color: '#a855f7', models: 'Llama 3.3, Llama 4 Scout, DeepSeek R1 (1M tokens/day)' },
           ].map(({ name, color, models }) => (
             <div key={name} style={{ background: 'var(--bg-secondary)', border: `1px solid ${color}30`, borderRadius: '24px 16px 20px 22px', padding: '18px' }}>
               <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600', background: `${color}20`, color, marginBottom: '10px' }}>{name}</span>

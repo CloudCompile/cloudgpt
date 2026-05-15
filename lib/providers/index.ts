@@ -2,6 +2,7 @@ import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypo
 import { forwardPollinations, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
+import { forwardCerebras } from './cerebras';
 
 /**
  * Provider routing logic
@@ -63,7 +64,12 @@ export async function routeChat(
     return forwardAirforce('/chat/completions', 'POST', fwdBody, options);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce
+  if (model.startsWith('cerebras/')) {
+    const fwdBody = { ...(body as any), model: model.replace('cerebras/', '') };
+    return forwardCerebras('/chat/completions', 'POST', fwdBody, options);
+  }
+
+  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras
   try {
     return await forwardAIHubMix('/chat/completions', 'POST', body);
   } catch (error) {
@@ -74,7 +80,11 @@ export async function routeChat(
         try {
           return await forwardVoidAI('/chat/completions', 'POST', body, options);
         } catch (voidaiError) {
-          return await forwardAirforce('/chat/completions', 'POST', body, options);
+          try {
+            return await forwardAirforce('/chat/completions', 'POST', body, options);
+          } catch (airforceError) {
+            return await forwardCerebras('/chat/completions', 'POST', body, options);
+          }
         }
       }
     }
@@ -405,6 +415,13 @@ export async function routeModels() {
     }
   } catch (e) { console.error('Airforce models error:', e); }
 
+  // Cerebras — free tier models (text only, 1M tokens/day)
+  models.push(
+    { id: 'cerebras/llama-3.3-70b', object: 'model', owned_by: 'Meta', provider: 'Cerebras', type: 'text' },
+    { id: 'cerebras/llama-4-scout', object: 'model', owned_by: 'Meta', provider: 'Cerebras', type: 'text' },
+    { id: 'cerebras/deepseek-r1', object: 'model', owned_by: 'DeepSeek', provider: 'Cerebras', type: 'text' }
+  );
+
   // Deduplicate by id
   const seen = new Set<string>();
   return {
@@ -433,15 +450,21 @@ export async function getDynamicRateLimit(userModel?: string): Promise<number> {
     return getRateLimitForProvider('AIRFORCE');
   }
 
+  // Check if user specified a Cerebras model
+  if (userModel?.startsWith('cerebras/')) {
+    return getRateLimitForProvider('CEREBRAS');
+  }
+
   // Check if user specified an AIHubMix model
   if (userModel?.startsWith('aihubmix/') || !userModel) {
     // AIHubMix only has one key, so always 60
     return 60;
   }
 
-  // Default to higher of the four providers
+  // Default to higher of the five providers
   const pollinationsLimit = await getRateLimitForProvider('POLLINATIONS');
   const voidaiLimit = await getRateLimitForProvider('VOIDAI');
   const airforceLimit = await getRateLimitForProvider('AIRFORCE');
-  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit);
+  const cerebrasLimit = await getRateLimitForProvider('CEREBRAS');
+  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit);
 }

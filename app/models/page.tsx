@@ -15,6 +15,7 @@ const PROVIDER_COLORS: Record<string, string> = {
   Pollinations: '#a855f7',
   VoidAI: '#06b6d4',
   Airforce: '#f59e0b',
+  Cerebras: '#8b5cf6',
 };
 
 const TYPE_META: Record<string, { color: string; label: string }> = {
@@ -64,7 +65,7 @@ export default function ModelsPage() {
           AI Models
         </h1>
         <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '50px', fontSize: '1.05rem' }}>
-          {models.length} free models across 4 providers
+          {models.length} free models across 5 providers
         </p>
 
         {/* Search */}

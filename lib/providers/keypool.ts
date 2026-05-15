@@ -55,3 +55,48 @@ export async function getProviderKeyCount(providerName: string): Promise<number>
   const keys = await getKeysForProvider(providerName);
   return keys.length;
 }
+
+/**
+ * Track token usage for a provider key for daily limits
+ * @param providerName - Provider name (e.g., "cerebras")
+ * @param keyIndex - 0-based index of the key in the pool
+ * @param tokens - Number of tokens to add
+ */
+export async function trackTokensUsed(
+  providerName: string,
+  keyIndex: number,
+  tokens: number
+): Promise<void> {
+  const today = new Date().toISOString().split('T')[0];
+  const key = `${providerName.toLowerCase()}:${keyIndex}:tokens:${today}`;
+
+  const current = await redis.get(key);
+  const used = current ? parseInt(current) : 0;
+  const newTotal = used + tokens;
+
+  await redis.set(key, newTotal.toString());
+
+  // Set expiry to 48 hours to auto-clean old entries
+  await redis.expire(key, 172800);
+}
+
+/**
+ * Get remaining daily tokens for a provider key
+ * @param providerName - Provider name (e.g., "cerebras")
+ * @param keyIndex - 0-based index of the key in the pool
+ * @param dailyLimit - Daily token limit (default 1M for Cerebras)
+ * @returns Number of tokens remaining before hitting limit
+ */
+export async function getRemainingDailyTokens(
+  providerName: string,
+  keyIndex: number,
+  dailyLimit: number = 1000000
+): Promise<number> {
+  const today = new Date().toISOString().split('T')[0];
+  const key = `${providerName.toLowerCase()}:${keyIndex}:tokens:${today}`;
+
+  const current = await redis.get(key);
+  const used = current ? parseInt(current) : 0;
+
+  return Math.max(0, dailyLimit - used);
+}
