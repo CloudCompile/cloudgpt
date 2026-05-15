@@ -15,12 +15,12 @@ export async function GET() {
   const isAdmin = await checkAdmin(userId);
   if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  let analytics;
+  let analytics = { requestsToday: 0, topModels: [], providerBreakdown: {}, tokensToday: 0 };
   try {
     analytics = await getSystemAnalytics();
   } catch (e) {
     console.error('getSystemAnalytics failed:', e);
-    return NextResponse.json({ error: 'Analytics unavailable' }, { status: 500 });
+    // Use default zero values — don't crash the whole endpoint
   }
   const today = new Date().toISOString().split('T')[0];
 
