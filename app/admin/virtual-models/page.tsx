@@ -1,0 +1,209 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface VirtualModel {
+  id: string;
+  providers: Array<{ provider: string; modelId: string; type: string }>;
+}
+
+const AVAILABLE_MODELS: Record<string, string[]> = {
+  groq: ['groq/llama-3.3-70b-versatile', 'groq/llama-3.1-8b-instant', 'groq/qwen/qwen3-32b'],
+  pollinations: ['pollinations/openai', 'pollinations/claude-fast', 'pollinations/gemini-fast', 'pollinations/mistral-large'],
+  aihorde: ['aihorde/aphrodite-Skyfall-31B-v4.1', 'aihorde/gpt-4-turbo', 'aihorde/claude-3-sonnet'],
+  voidai: ['voidai/gpt-4o-mini', 'voidai/claude-3-sonnet'],
+  airforce: ['airforce/gpt-4o', 'airforce/claude-3-sonnet'],
+  cerebras: ['cerebras/llama-3.3-70b', 'cerebras/llama-4-scout'],
+};
+
+export default function VirtualModelsPage() {
+  const [models, setModels] = useState<VirtualModel[]>([]);
+  const [newModelName, setNewModelName] = useState('');
+  const [selectedProviders, setSelectedProviders] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => { fetchModels(); }, []);
+
+  async function fetchModels() {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/virtual-models');
+      const d = await res.json();
+      if (d.error) setError(d.error);
+      else setModels(d.models || []);
+    } catch {
+      setError('Failed to load virtual models');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleProviderSelect(provider: string, modelId: string) {
+    setSelectedProviders(prev => ({
+      ...prev,
+      [provider]: modelId
+    }));
+  }
+
+  async function createModel() {
+    if (!newModelName.trim()) {
+      setError('Model name is required');
+      return;
+    }
+    if (Object.keys(selectedProviders).length === 0) {
+      setError('Select at least one provider');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const res = await fetch('/api/admin/virtual-models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newModelName.toLowerCase().replace(/\s+/g, '-'),
+          providers: Object.entries(selectedProviders).map(([provider, modelId]) => ({
+            provider,
+            modelId,
+            type: 'text'
+          }))
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setError(d.error || 'Failed to create model');
+        return;
+      }
+      setSuccess(`Virtual model "${newModelName}" created!`);
+      setNewModelName('');
+      setSelectedProviders({});
+      await fetchModels();
+    } catch {
+      setError('Network error');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteModel(id: string) {
+    if (!confirm('Delete this virtual model?')) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/virtual-models?id=${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setSuccess('Model deleted');
+        await fetchModels();
+      } else {
+        setError('Failed to delete model');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <main className="container" style={{ paddingTop: '50px', paddingBottom: '80px', maxWidth: '1100px' }}>
+      <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Virtual Models</h1>
+      <p style={{ color: 'var(--text-secondary)', marginBottom: '40px', fontSize: '0.95rem' }}>
+        Create virtual models that route across multiple providers with automatic fallback.
+      </p>
+
+      {error && <div className="error">{error}</div>}
+      {success && <div className="success">{success}</div>}
+
+      {/* Create Model Form */}
+      <section style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px 16px 20px 22px', padding: '28px', marginBottom: '32px' }}>
+        <h2 style={{ fontSize: '1.1rem', marginBottom: '20px' }}>Create Virtual Model</h2>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.9rem', fontWeight: '600' }}>Model Name</label>
+          <input
+            type="text"
+            placeholder="e.g., gpt-5, claude-ultra"
+            value={newModelName}
+            onChange={(e) => setNewModelName(e.target.value)}
+            style={{ width: '100%', maxWidth: '400px', borderRadius: '16px 12px 14px 18px' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600' }}>Select Providers</label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+            {Object.entries(AVAILABLE_MODELS).map(([provider, modelList]) => (
+              <div key={provider} style={{ padding: '12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '12px' }}>
+                <div style={{ fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  {provider}
+                </div>
+                <select
+                  value={selectedProviders[provider] || ''}
+                  onChange={(e) => handleProviderSelect(provider, e.target.value)}
+                  style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--fg)' }}
+                >
+                  <option value="">Select model...</option>
+                  {modelList.map(model => (
+                    <option key={model} value={model}>{model.split('/')[1]}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button onClick={createModel} disabled={loading} className="button">
+          {loading ? 'Creating…' : 'Create Virtual Model'}
+        </button>
+      </section>
+
+      {/* Models List */}
+      {loading ? (
+        <p style={{ color: 'var(--text-secondary)' }}>Loading…</p>
+      ) : models.length === 0 ? (
+        <div style={{ padding: '40px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '20px 14px 18px 22px', textAlign: 'center' }}>
+          <p style={{ color: 'var(--text-secondary)' }}>No virtual models created yet.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gap: '16px' }}>
+          {models.map((model) => (
+            <div key={model.id} style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '12px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '600' }}>{model.id}</h3>
+                <button
+                  onClick={() => deleteModel(model.id)}
+                  style={{
+                    background: 'rgba(239,68,68,0.1)',
+                    border: '1px solid rgba(239,68,68,0.3)',
+                    color: '#fca5a5',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {model.providers.map((p, i) => (
+                  <span key={i} style={{
+                    fontSize: '0.8rem',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    background: 'rgba(124,58,237,0.15)',
+                    color: 'var(--accent-light)',
+                    border: '1px solid rgba(124,58,237,0.3)',
+                  }}>
+                    {p.provider}: {p.modelId.split('/')[1]}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </main>
+  );
+}

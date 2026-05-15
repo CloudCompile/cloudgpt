@@ -149,6 +149,7 @@ export default function AdminPage() {
 
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <a href="/admin/keys" className="button">Manage Provider Keys</a>
+            <a href="/admin/virtual-models" className="button">Virtual Models</a>
             <a href="/admin/users" className="button secondary">Manage Users</a>
           </div>
         </>
