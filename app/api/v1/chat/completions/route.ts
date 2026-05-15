@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractApiKey, validateApiKey, checkRateLimit } from '@/lib/api-keys';
 import { routeChat, getDynamicRateLimit } from '@/lib/providers';
+import { trackRequest, trackUserRequest } from '@/lib/analytics';
 
 export const runtime = 'nodejs';
 
@@ -53,6 +54,11 @@ export async function POST(request: NextRequest) {
         { status: response.status }
       );
     }
+
+    // Fire-and-forget analytics (never blocks or throws)
+    const model = (body as any)?.model || 'unknown';
+    trackRequest(model).catch(() => {});
+    trackUserRequest(keyData.userId, model).catch(() => {});
 
     // Handle streaming
     if (streaming && response.body) {
