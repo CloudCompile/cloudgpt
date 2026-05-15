@@ -93,7 +93,7 @@ const response = await client.chat.completions.create({
 
 console.log(response.choices[0].message.content);`}</div>
 
-          <div style={{ marginTop: '40px', padding: '20px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+          <div style={{ marginTop: '40px', padding: '20px', background: 'rgba(124, 58, 237, 0.06)', borderRadius: '22px 14px 18px 24px', border: '1px solid rgba(124, 58, 237, 0.25)' }}>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '12px' }}>
               💡 <strong style={{ color: 'var(--fg)' }}>Tip:</strong> Use any model from the <a href="/models">models list</a>. Replace model names in your requests to access different providers and capabilities.
             </p>
@@ -102,7 +102,7 @@ console.log(response.choices[0].message.content);`}</div>
       </section>
 
       <section className="quick-links container">
-        <div style={{ paddingTop: '60px', paddingBottom: '60px', borderRadius: '16px', padding: '60px 40px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(30, 64, 175, 0.05) 100%)', border: '1px solid rgba(59, 130, 246, 0.2)', textAlign: 'center' }}>
+        <div style={{ paddingTop: '60px', paddingBottom: '60px', borderRadius: '32px 20px 28px 24px', padding: '60px 40px', background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(79, 70, 229, 0.06) 50%, rgba(59, 130, 246, 0.04) 100%)', border: '1px solid rgba(124, 58, 237, 0.25)', textAlign: 'center' }}>
           <h2 style={{ marginBottom: '30px', fontSize: '2rem' }}>Ready to Build?</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '40px', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto 40px' }}>
             Get access to 100+ free AI models and start building with OpenAI-compatible API endpoints.
