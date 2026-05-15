@@ -11,7 +11,7 @@ export default function VirtualModelsPage() {
   const [models, setModels] = useState<VirtualModel[]>([]);
   const [availableModels, setAvailableModels] = useState<Record<string, any[]>>({});
   const [newModelName, setNewModelName] = useState('');
-  const [selectedProviders, setSelectedProviders] = useState<Record<string, string>>({});
+  const [selectedProviders, setSelectedProviders] = useState<Record<string, string[]>>({});;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -33,11 +33,15 @@ export default function VirtualModelsPage() {
     }
   }
 
-  function handleProviderSelect(provider: string, modelId: string) {
-    setSelectedProviders(prev => ({
-      ...prev,
-      [provider]: modelId
-    }));
+  function handleProviderSelect(provider: string, modelId: string, checked: boolean) {
+    setSelectedProviders(prev => {
+      const current = prev[provider] || [];
+      if (checked) {
+        return { ...prev, [provider]: [...current, modelId] };
+      } else {
+        return { ...prev, [provider]: current.filter(m => m !== modelId) };
+      }
+    });
   }
 
   async function createModel() {
@@ -45,8 +49,9 @@ export default function VirtualModelsPage() {
       setError('Model name is required');
       return;
     }
-    if (Object.keys(selectedProviders).length === 0) {
-      setError('Select at least one provider');
+    const hasSelection = Object.values(selectedProviders).some(models => models.length > 0);
+    if (!hasSelection) {
+      setError('Select at least one model from a provider');
       return;
     }
 
@@ -59,11 +64,13 @@ export default function VirtualModelsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: newModelName.toLowerCase().replace(/\s+/g, '-'),
-          providers: Object.entries(selectedProviders).map(([provider, modelId]) => ({
-            provider,
-            modelId,
-            type: 'text'
-          }))
+          providers: Object.entries(selectedProviders).flatMap(([provider, modelIds]) =>
+            modelIds.map(modelId => ({
+              provider,
+              modelId,
+              type: 'text'
+            }))
+          )
         }),
       });
       const d = await res.json();
@@ -125,22 +132,25 @@ export default function VirtualModelsPage() {
 
         <div style={{ marginBottom: '20px' }}>
           <label style={{ display: 'block', marginBottom: '12px', fontSize: '0.9rem', fontWeight: '600' }}>Select Providers</label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
             {Object.entries(availableModels).map(([provider, modelList]) => (
-              <div key={provider} style={{ padding: '12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '12px' }}>
-                <div style={{ fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              <div key={provider} style={{ padding: '16px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '12px' }}>
+                <div style={{ fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase', fontSize: '0.75rem', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>
                   {provider} ({modelList.length})
                 </div>
-                <select
-                  value={selectedProviders[provider] || ''}
-                  onChange={(e) => handleProviderSelect(provider, e.target.value)}
-                  style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--fg)', fontSize: '0.85rem' }}
-                >
-                  <option value="">Select model...</option>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
                   {modelList.map((model: any) => (
-                    <option key={model.id} value={model.id}>{model.id.split('/').pop()}</option>
+                    <label key={model.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem', padding: '4px 0' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedProviders[provider]?.includes(model.id) || false}
+                        onChange={(e) => handleProviderSelect(provider, model.id, e.target.checked)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <span style={{ color: 'var(--fg-secondary)' }}>{model.id.split('/').pop()}</span>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
             ))}
           </div>
