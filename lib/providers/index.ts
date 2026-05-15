@@ -1,4 +1,5 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
+import { redis } from '../redis';
 import { forwardPollinations, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
@@ -51,7 +52,7 @@ export async function routeChat(
   const model = (body as any)?.model || 'gpt-4o-free';
 
   // Check if this is a virtual model with multiple providers
-  const virtualProviders = getVirtualModelProviders(model);
+  const virtualProviders = await getVirtualModelProviders(model);
   if (virtualProviders && virtualProviders.length > 0) {
     return routeVirtualChat(body, virtualProviders, options);
   }
@@ -140,7 +141,7 @@ export async function routeImages(
   const model = (body as any)?.model || 'gpt-image-2-free';
 
   // Check if this is a virtual model with multiple providers
-  const virtualProviders = getVirtualModelProviders(model);
+  const virtualProviders = await getVirtualModelProviders(model);
   if (virtualProviders && virtualProviders.some(p => p.type === 'image')) {
     return routeVirtualImages(body, virtualProviders.filter(p => p.type === 'image'), options);
   }
@@ -704,17 +705,41 @@ const VIRTUAL_MODELS_MAP: Record<string, Array<{ provider: string; modelId: stri
   ],
 };
 
-function isVirtualModel(modelId: string): boolean {
-  return Object.keys(VIRTUAL_MODELS_MAP).some(base =>
-    modelId === base || modelId.startsWith(base + '-') || modelId.startsWith('virtual/')
-  );
+
+// Cache user virtual models in module scope to avoid Redis hit on every request
+let _userVirtualModelsCache: Record<string, Array<{ provider: string; modelId: string; type: string }>> | null = null;
+let _userVirtualModelsCacheTime = 0;
+const USER_VIRTUAL_MODELS_TTL = 30_000; // 30 seconds
+
+async function getUserVirtualModels(): Promise<Record<string, Array<{ provider: string; modelId: string; type: string }>>> {
+  const now = Date.now();
+  if (_userVirtualModelsCache && now - _userVirtualModelsCacheTime < USER_VIRTUAL_MODELS_TTL) {
+    return _userVirtualModelsCache;
+  }
+  try {
+    const stored = await redis.get('virtual_models');
+    if (stored) {
+      const list: Array<{ id: string; providers: Array<{ provider: string; modelId: string; type: string }> }> = JSON.parse(stored);
+      _userVirtualModelsCache = Object.fromEntries(list.map(vm => [vm.id, vm.providers]));
+      _userVirtualModelsCacheTime = now;
+      return _userVirtualModelsCache;
+    }
+  } catch (e) {
+    console.warn('Could not load user virtual models:', e);
+  }
+  return {};
 }
 
-function getVirtualModelProviders(modelId: string): Array<{ provider: string; modelId: string; type: string }> | null {
+async function getVirtualModelProviders(modelId: string): Promise<Array<{ provider: string; modelId: string; type: string }> | null> {
+  // Check hardcoded map first
   const base = Object.keys(VIRTUAL_MODELS_MAP).find(key =>
     modelId === key || modelId.startsWith(key + '-') || modelId === `virtual/${key}`
   );
-  return base ? VIRTUAL_MODELS_MAP[base] : null;
+  if (base) return VIRTUAL_MODELS_MAP[base];
+
+  // Check user-created virtual models from Redis
+  const userModels = await getUserVirtualModels();
+  return userModels[modelId] ?? null;
 }
 
 export async function routeVirtualChat(
@@ -874,7 +899,7 @@ export async function routeModels() {
   // AI Horde — decentralized volunteer network with 160+ image + 26+ text models
   models.push(...AIHORDE_FREE_MODELS);
 
-  // Virtual models - add auto-routing models for multi-provider availability
+  // Built-in virtual models (hardcoded multi-provider routing)
   Object.entries(VIRTUAL_MODELS_MAP).forEach(([baseName, providers]) => {
     if (providers.length > 1) {
       const firstProvider = providers[0];
@@ -887,6 +912,28 @@ export async function routeModels() {
       });
     }
   });
+
+  // User-created virtual models from Redis
+  try {
+    const stored = await redis.get('virtual_models');
+    if (stored) {
+      const userVirtualModels: Array<{ id: string; providers: Array<{ provider: string; modelId: string; type: string }> }> = JSON.parse(stored);
+      userVirtualModels.forEach((vm) => {
+        if (vm.id && vm.providers?.length > 0) {
+          const firstType = vm.providers[0].type || 'text';
+          models.push({
+            id: vm.id,
+            object: 'model',
+            owned_by: 'OpenRelay',
+            provider: 'OpenRelay Virtual',
+            type: firstType,
+          });
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('Could not load user virtual models from Redis:', e);
+  }
 
   // Deduplicate by id
   const seen = new Set<string>();
