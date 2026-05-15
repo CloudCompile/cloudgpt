@@ -65,7 +65,7 @@ export default function ModelsPage() {
           AI Models
         </h1>
         <p style={{ textAlign: 'center', color: 'var(--text-secondary)', marginBottom: '50px', fontSize: '1.05rem' }}>
-          {models.length} free models across 5 providers
+          {models.length} free models across 6 providers
         </p>
 
         {/* Search */}
@@ -157,7 +157,7 @@ export default function ModelsPage() {
 
         <div className="info-box">
           <p>
-            <strong>How to use:</strong> Copy any model ID and pass it as the <code>model</code> parameter in your API request.
+            <strong>How to use:</strong> Copy any model ID and pass it as the <code>model</code> parameter in your API request. Learn more in our <a href="/docs">documentation</a>.
           </p>
         </div>
       </section>
