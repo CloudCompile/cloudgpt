@@ -49,7 +49,7 @@ export async function routeChat(
 
   // Determine which provider to use
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/chat/completions', 'POST', body, options);
+    return forwardPollinations('/v1/chat/completions', 'POST', body, options);
   }
 
   if (model.startsWith('voidai/')) {
@@ -66,7 +66,7 @@ export async function routeChat(
   } catch (error) {
     if (options?.autoFallback) {
       try {
-        return await forwardPollinations('/chat/completions', 'POST', body, options);
+        return await forwardPollinations('/v1/chat/completions', 'POST', body, options);
       } catch (pollinationsError) {
         try {
           return await forwardVoidAI('/chat/completions', 'POST', body, options);
@@ -92,7 +92,7 @@ export async function routeImages(
   }
 
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/images/generations', 'POST', body);
+    return forwardPollinations('/v1/images/generations', 'POST', body);
   }
 
   if (model.startsWith('voidai/')) {
@@ -109,7 +109,7 @@ export async function routeImages(
   } catch (error) {
     if (options?.autoFallback) {
       try {
-        return await forwardPollinations('/images/generations', 'POST', body);
+        return await forwardPollinations('/v1/images/generations', 'POST', body);
       } catch (pollinationsError) {
         try {
           return await forwardVoidAI('/images/generations', 'POST', body);
@@ -135,10 +135,10 @@ export async function routeVideo(
 
   // Default: Pollinations for video
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/videos/generations', 'POST', body);
+    return forwardPollinations('/v1/videos/generations', 'POST', body);
   }
 
-  return forwardPollinations('/videos/generations', 'POST', body);
+  return forwardPollinations('/v1/videos/generations', 'POST', body);
 }
 
 export async function routeAudio(
@@ -148,7 +148,7 @@ export async function routeAudio(
   const model = (body as any)?.model || 'tts-1';
 
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/audio/speech', 'POST', body);
+    return forwardPollinations('/v1/audio/speech', 'POST', body);
   }
 
   if (model.startsWith('voidai/')) {
@@ -165,7 +165,7 @@ export async function routeAudio(
   } catch (error) {
     if (options?.autoFallback) {
       try {
-        return await forwardPollinations('/audio/speech', 'POST', body);
+        return await forwardPollinations('/v1/audio/speech', 'POST', body);
       } catch (pollinationsError) {
         try {
           return await forwardVoidAI('/audio/speech', 'POST', body);
@@ -201,7 +201,7 @@ export async function routeEmbeddings(
   const model = (body as any)?.model || 'text-embedding-ada-002';
 
   if (model.startsWith('pollinations/')) {
-    return forwardPollinations('/embeddings', 'POST', body);
+    return forwardPollinations('/v1/embeddings', 'POST', body);
   }
 
   if (model.startsWith('voidai/')) {
@@ -218,7 +218,7 @@ export async function routeEmbeddings(
   } catch (error) {
     if (options?.autoFallback) {
       try {
-        return await forwardPollinations('/embeddings', 'POST', body);
+        return await forwardPollinations('/v1/embeddings', 'POST', body);
       } catch (pollinationsError) {
         try {
           return await forwardVoidAI('/embeddings', 'POST', body);
@@ -284,7 +284,7 @@ export async function routeModels() {
 
   // Fetch Pollinations models
   try {
-    const pollinationsResponse = await forwardPollinations('/models', 'GET');
+    const pollinationsResponse = await forwardPollinations('/v1/models', 'GET');
     if (pollinationsResponse.ok) {
       const data = await pollinationsResponse.json();
       if (data.data && Array.isArray(data.data)) {
