@@ -285,6 +285,11 @@ export default function Home() {
                 <img src="https://console.groq.com/powered-by-groq-dark.svg" alt="Powered by Groq for fast inference." />
               </a>
 
+              {/* Pollinations Badge */}
+              <a href="https://pollinations.ai" target="_blank" rel="noopener noreferrer">
+                <img src="https://pollinations.ai/favicon.ico" alt="Powered by Pollinations AI" height="32" />
+              </a>
+
               {/* Other Providers */}
               {['AIHubMix', 'Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'AI Horde'].map((provider) => (
                 <div key={provider} style={{
