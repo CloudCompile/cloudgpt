@@ -15,7 +15,7 @@ export async function GET() {
   const isAdmin = await checkAdmin(userId);
   if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  let analytics = { requestsToday: 0, topModels: [], providerBreakdown: {}, tokensToday: 0 };
+  let analytics: { requestsToday: number; topModels: Array<{ model: string; count: number }>; providerBreakdown: Record<string, number>; tokensToday: number } = { requestsToday: 0, topModels: [], providerBreakdown: {}, tokensToday: 0 };
   try {
     analytics = await getSystemAnalytics();
   } catch (e) {
