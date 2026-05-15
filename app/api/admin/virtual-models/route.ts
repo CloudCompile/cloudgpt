@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
+import { checkAdmin } from '@/lib/admin';
 import { redis } from '@/lib/redis';
 import { routeModels } from '@/lib/providers';
 
 const VIRTUAL_MODELS_KEY = 'virtual_models';
 
+async function requireAdmin(): Promise<{ userId: string } | NextResponse> {
+  const { userId } = await auth();
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const isAdmin = await checkAdmin(userId);
+  if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  return { userId };
+}
+
 export async function GET() {
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
   try {
     const allModels = await routeModels();
 
@@ -41,6 +53,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
+
   try {
     const body = await request.json();
     const { id, providers } = body;
@@ -82,6 +97,9 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

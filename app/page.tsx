@@ -2,6 +2,8 @@
 
 import { SignedIn, SignedOut, SignUpButton } from '@clerk/nextjs';
 
+const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 export default function Home() {
   return (
     <main>
@@ -34,27 +36,26 @@ export default function Home() {
           </p>
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <SignedOut>
-              <SignUpButton>
-                <button className="button" style={{
-                  padding: '14px 40px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                }}>
-                  Get Started Free
-                </button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <a href="/dashboard" className="button" style={{
-                padding: '14px 40px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                display: 'inline-block',
-              }}>
-                Go to Dashboard
+            {isClerkConfigured ? (
+              <>
+                <SignedOut>
+                  <SignUpButton>
+                    <button className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600' }}>
+                      Get Started Free
+                    </button>
+                  </SignUpButton>
+                </SignedOut>
+                <SignedIn>
+                  <a href="/dashboard" className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-block' }}>
+                    Go to Dashboard
+                  </a>
+                </SignedIn>
+              </>
+            ) : (
+              <a href="/dashboard" className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-block' }}>
+                Get Started Free
               </a>
-            </SignedIn>
+            )}
             <a href="/docs" className="button secondary" style={{
               padding: '14px 40px',
               fontSize: '1rem',
@@ -254,27 +255,26 @@ export default function Home() {
             Get instant access to 200+ AI models from 8 providers. No credit card, no setup fees, no limits.
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <SignedIn>
-              <a href="/dashboard" className="button" style={{
-                padding: '14px 40px',
-                fontSize: '1rem',
-                fontWeight: '600',
-                display: 'inline-block',
-              }}>
-                Go to Dashboard
+            {isClerkConfigured ? (
+              <>
+                <SignedIn>
+                  <a href="/dashboard" className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-block' }}>
+                    Go to Dashboard
+                  </a>
+                </SignedIn>
+                <SignedOut>
+                  <SignUpButton>
+                    <button className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600' }}>
+                      Sign Up Free
+                    </button>
+                  </SignUpButton>
+                </SignedOut>
+              </>
+            ) : (
+              <a href="/dashboard" className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-block' }}>
+                Sign Up Free
               </a>
-            </SignedIn>
-            <SignedOut>
-              <SignUpButton>
-                <button className="button" style={{
-                  padding: '14px 40px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                }}>
-                  Sign Up Free
-                </button>
-              </SignUpButton>
-            </SignedOut>
+            )}
             <a href="/docs" className="button secondary" style={{
               padding: '14px 40px',
               fontSize: '1rem',

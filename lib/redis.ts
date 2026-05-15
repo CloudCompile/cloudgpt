@@ -49,6 +49,7 @@ export const redis = {
   setEx: async (key: string, seconds: number, value: string) => (await getRedis()).setEx(key, seconds, value),
   del: async (key: string) => (await getRedis()).del(key),
   incr: async (key: string) => (await getRedis()).incr(key),
+  incrBy: async (key: string, increment: number) => (await getRedis()).incrBy(key, increment),
   expire: async (key: string, seconds: number) => (await getRedis()).expire(key, seconds),
   exists: async (key: string) => (await getRedis()).exists(key),
   keys: async (pattern: string) => (await getRedis()).keys(pattern),

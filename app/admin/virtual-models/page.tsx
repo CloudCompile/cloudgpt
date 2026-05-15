@@ -65,7 +65,7 @@ export default function VirtualModelsPage() {
           modelIds.map(modelId => ({
             provider,
             modelId,
-            type: 'text'
+            type: availableModels[provider]?.find((m: any) => m.id === modelId)?.type ?? 'text'
           }))
         )
       };
