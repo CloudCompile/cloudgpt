@@ -49,7 +49,7 @@ export default function Home() {
         <div className="container">
           <h2>Simple & Powerful</h2>
           <p style={{ marginBottom: '40px', color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
-            OpenRelay is fully OpenAI-compatible. Works with any client that supports the OpenAI API. Access models from <strong style={{ color: 'var(--fg)' }}>AIHubMix, Pollinations, VoidAI, and Airforce</strong>.
+            OpenRelay is fully OpenAI-compatible. Works with any client that supports the OpenAI API. Access models from <strong style={{ color: 'var(--fg)' }}>AIHubMix, Pollinations, VoidAI, Airforce, and Cerebras</strong>.
           </p>
 
           <h3>cURL</h3>

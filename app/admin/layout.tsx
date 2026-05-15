@@ -23,6 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="container" style={{ display: 'flex', gap: '0', alignItems: 'center' }}>
           {[
             { href: '/admin', label: 'Overview' },
+            { href: '/admin/playground', label: 'Playground' },
             { href: '/admin/keys', label: 'Provider Keys' },
             { href: '/admin/users', label: 'Users' },
           ].map(({ href, label }) => (
