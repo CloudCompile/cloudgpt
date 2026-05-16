@@ -131,6 +131,26 @@ export const GlyphNagaAI = (p: GlyphProps) => (
   </GlyphBase>
 );
 
+// TokenReply — speech bubble with return arrow (reply/message routing)
+export const GlyphTokenReply = (p: GlyphProps) => (
+  <GlyphBase {...p}>
+    <path d="M7 8 h18 a2 2 0 0 1 2 2 v9 a2 2 0 0 1 -2 2 H7 a2 2 0 0 1 -2 -2 V10 a2 2 0 0 1 2 -2z" />
+    <path d="M9 25 V21 h5" />
+    <path d="M11.5 14 H20.5" />
+    <path d="M11.5 14 L14.5 11 M11.5 14 L14.5 17" />
+  </GlyphBase>
+);
+
+// Happupy — simple smiley (community / happy to help)
+export const GlyphHappupy = (p: GlyphProps) => (
+  <GlyphBase {...p}>
+    <circle cx="16" cy="15" r="9" />
+    <path d="M11.5 17.5 Q16 22 20.5 17.5" />
+    <circle cx="13" cy="12.5" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="19" cy="12.5" r="1.3" fill="currentColor" stroke="none" />
+  </GlyphBase>
+);
+
 // Lookup keyed by the provider name as used in app/page.tsx + app/providers/page.tsx
 export const PROVIDER_GLYPHS: Record<
   string,
@@ -144,4 +164,6 @@ export const PROVIDER_GLYPHS: Record<
   Groq:           { Glyph: GlyphGroq,         color: '#00d084' },
   'AI Horde':     { Glyph: GlyphAIHorde,      color: '#ec4899' },
   NagaAI:         { Glyph: GlyphNagaAI,       color: '#10b981' },
+  TokenReply:     { Glyph: GlyphTokenReply,   color: '#7c3aed' },
+  Happupy:        { Glyph: GlyphHappupy,      color: '#f472b6' },
 };
