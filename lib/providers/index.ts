@@ -1,7 +1,7 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
 import { redis } from '../redis';
 import { logError } from '../analytics';
-import { forwardPollinations, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
+import { forwardPollinations, forwardPollinationsVideo, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
 import { forwardCerebras } from './cerebras';
@@ -222,19 +222,26 @@ export async function routeVideo(
 ) {
   const model = (body as any)?.model || 'pollinations/text-to-video';
 
+  const virtualProviders = await getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.some(p => p.type === 'video')) {
+    return routeVirtualVideo(body, virtualProviders.filter(p => p.type === 'video'), options);
+  }
+
   // Airforce video endpoint
   if (model.startsWith('airforce/')) {
     const fwdBody = { ...(body as any), model: model.replace('airforce/', '') };
     return forwardAirforce('/video/generations', 'POST', fwdBody);
   }
 
-  // Default: Pollinations for video
+  // Default: Pollinations for video (uses GET /video/{prompt})
   if (model.startsWith('pollinations/')) {
-    const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
-    return forwardPollinations('/v1/videos/generations', 'POST', fwdBody);
+    const prompt = (body as any)?.prompt || '';
+    const modelId = model.replace('pollinations/', '');
+    return forwardPollinationsVideo(prompt, modelId);
   }
 
-  return forwardPollinations('/v1/videos/generations', 'POST', body);
+  const prompt = (body as any)?.prompt || '';
+  return forwardPollinationsVideo(prompt);
 }
 
 export async function routeAudio(
@@ -242,6 +249,11 @@ export async function routeAudio(
   options?: RouteOptions
 ) {
   const model = (body as any)?.model || 'tts-1';
+
+  const virtualProviders = await getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.some(p => p.type === 'audio')) {
+    return routeVirtualAudio(body, virtualProviders.filter(p => p.type === 'audio'), options);
+  }
 
   if (model.startsWith('pollinations/')) {
     const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
@@ -305,6 +317,11 @@ export async function routeEmbeddings(
 ) {
   const model = (body as any)?.model || 'text-embedding-ada-002';
 
+  const virtualProviders = await getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.some(p => p.type === 'embedding')) {
+    return routeVirtualEmbeddings(body, virtualProviders.filter(p => p.type === 'embedding'), options);
+  }
+
   if (model.startsWith('pollinations/')) {
     const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
     return forwardPollinations('/v1/embeddings', 'POST', fwdBody);
@@ -338,6 +355,11 @@ export async function routeTranscription(
   options?: RouteOptions
 ) {
   const model = (body as any)?.model || 'whisper-1';
+
+  const virtualProviders = await getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.some(p => p.type === 'transcription')) {
+    return routeVirtualTranscription(body, virtualProviders.filter(p => p.type === 'transcription'), options);
+  }
 
   if (model.startsWith('voidai/')) {
     const fwdBody = { ...(body as any), model: model.replace('voidai/', '') };
@@ -746,6 +768,11 @@ async function getVirtualModelProviders(modelId: string): Promise<Array<{ provid
   return userModels[modelId] ?? null;
 }
 
+function stripProviderPrefix(modelId: string): string {
+  const slash = modelId.indexOf('/');
+  return slash >= 0 ? modelId.slice(slash + 1) : modelId;
+}
+
 export async function routeVirtualChat(
   body: unknown,
   providers: Array<{ provider: string; modelId: string; type: string }>,
@@ -753,30 +780,34 @@ export async function routeVirtualChat(
 ): Promise<Response> {
   let lastError: any;
 
-  for (const provider of providers) {
+  for (const entry of providers) {
     try {
-      const fwdBody = { ...(body as any), model: provider.modelId };
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const p = entry.provider.toLowerCase();
 
-      if (provider.provider === 'groq') {
+      if (p === 'groq') {
         return await forwardGroq('/chat/completions', 'POST', fwdBody, options);
-      } else if (provider.provider === 'pollinations') {
+      } else if (p === 'pollinations') {
         return await forwardPollinations('/v1/chat/completions', 'POST', fwdBody, options);
-      } else if (provider.provider === 'aihorde') {
-        const messages = fwdBody.messages || [];
+      } else if (p === 'ai horde' || p === 'aihorde') {
+        const messages = (body as any).messages || [];
         const prompt = messages.map((m: any) => m.content).join('\n') || '';
-        const hordeBody = {
-          prompt,
-          params: {
-            max_length: fwdBody.max_tokens || 80,
-          },
-        };
-        return await forwardAIHorde('/generate/text/async', 'POST', hordeBody, options);
-      } else if (provider.provider === 'voidai') {
+        return await forwardAIHorde('/generate/text/async', 'POST', { prompt, params: { max_length: (body as any).max_tokens || 80 } }, options);
+      } else if (p === 'voidai') {
         return await forwardVoidAI('/chat/completions', 'POST', fwdBody, options);
-      } else if (provider.provider === 'airforce') {
+      } else if (p === 'airforce') {
         return await forwardAirforce('/chat/completions', 'POST', fwdBody, options);
-      } else if (provider.provider === 'cerebras') {
+      } else if (p === 'cerebras') {
         return await forwardCerebras('/chat/completions', 'POST', fwdBody, options);
+      } else if (p === 'aihubmix') {
+        return await forwardAIHubMix('/chat/completions', 'POST', fwdBody);
+      } else if (p === 'tokenreply') {
+        return await forwardTokenReply('/chat/completions', 'POST', fwdBody, options);
+      } else if (p === 'nagaai') {
+        return await forwardNagaAI('/chat/completions', 'POST', fwdBody, options);
+      } else if (p === 'happupy') {
+        return await forwardHappupy('/v1/chat/completions', 'POST', fwdBody, options);
       }
     } catch (error) {
       lastError = error;
@@ -794,32 +825,25 @@ export async function routeVirtualImages(
 ): Promise<Response> {
   let lastError: any;
 
-  for (const provider of providers) {
+  for (const entry of providers) {
     try {
-      const fwdBody = { ...(body as any), model: provider.modelId };
-      const prompt = fwdBody.prompt || '';
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const prompt = (body as any).prompt || '';
+      const p = entry.provider.toLowerCase();
 
-      if (provider.provider === 'pollinations') {
-        if (provider.modelId === 'pollinations/image-simple') {
-          return forwardSimpleImage(prompt);
-        }
+      if (p === 'pollinations') {
+        if (modelId === 'image-simple') return forwardSimpleImage(prompt);
         return await forwardPollinations('/v1/images/generations', 'POST', fwdBody);
-      } else if (provider.provider === 'aihorde') {
-        const hordeBody = {
-          prompt,
-          models: [provider.modelId.replace('aihorde/', '')],
-          params: {
-            sampler_name: 'k_euler',
-            cfg_scale: 7,
-            denoise: 1.0,
-            steps: 20,
-          },
-        };
+      } else if (p === 'ai horde' || p === 'aihorde') {
+        const hordeBody = { prompt, models: [modelId], params: { sampler_name: 'k_euler', cfg_scale: 7, denoise: 1.0, steps: 20 } };
         return await forwardAIHorde('/generate/async', 'POST', hordeBody);
-      } else if (provider.provider === 'voidai') {
+      } else if (p === 'voidai') {
         return await forwardVoidAI('/images/generations', 'POST', fwdBody);
-      } else if (provider.provider === 'airforce') {
+      } else if (p === 'airforce') {
         return await forwardAirforce('/images/generations', 'POST', fwdBody);
+      } else if (p === 'aihubmix') {
+        return await forwardAIHubMix('/images/generations', 'POST', fwdBody);
       }
     } catch (error) {
       lastError = error;
@@ -827,7 +851,133 @@ export async function routeVirtualImages(
     }
   }
 
-  throw lastError || new Error('All virtual model providers failed');
+  throw lastError || new Error('All virtual image model providers failed');
+}
+
+export async function routeVirtualVideo(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const entry of providers) {
+    try {
+      const modelId = stripProviderPrefix(entry.modelId);
+      const p = entry.provider.toLowerCase();
+
+      if (p === 'pollinations') {
+        const prompt = (body as any)?.prompt || '';
+        return await forwardPollinationsVideo(prompt, modelId);
+      } else if (p === 'airforce') {
+        return await forwardAirforce('/video/generations', 'POST', { ...(body as any), model: modelId });
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual video model providers failed');
+}
+
+export async function routeVirtualAudio(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const entry of providers) {
+    try {
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const p = entry.provider.toLowerCase();
+
+      if (p === 'aihubmix') {
+        return await forwardAIHubMix('/audio/speech', 'POST', fwdBody);
+      } else if (p === 'pollinations') {
+        return await forwardPollinations('/v1/audio/speech', 'POST', fwdBody);
+      } else if (p === 'voidai') {
+        return await forwardVoidAI('/audio/speech', 'POST', fwdBody);
+      } else if (p === 'airforce') {
+        return await forwardAirforce('/audio/speech', 'POST', fwdBody);
+      } else if (p === 'groq') {
+        return await forwardGroq('/audio/speech', 'POST', fwdBody, options);
+      } else if (p === 'nagaai') {
+        return await forwardNagaAI('/audio/speech', 'POST', fwdBody);
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual audio model providers failed');
+}
+
+export async function routeVirtualEmbeddings(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const entry of providers) {
+    try {
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const p = entry.provider.toLowerCase();
+
+      if (p === 'aihubmix') {
+        return await forwardAIHubMix('/embeddings', 'POST', fwdBody);
+      } else if (p === 'pollinations') {
+        return await forwardPollinations('/v1/embeddings', 'POST', fwdBody);
+      } else if (p === 'voidai') {
+        return await forwardVoidAI('/embeddings', 'POST', fwdBody);
+      } else if (p === 'airforce') {
+        return await forwardAirforce('/embeddings', 'POST', fwdBody);
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual embedding model providers failed');
+}
+
+export async function routeVirtualTranscription(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const entry of providers) {
+    try {
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const p = entry.provider.toLowerCase();
+
+      if (p === 'pollinations') {
+        return await forwardPollinations('/v1/audio/transcriptions', 'POST', fwdBody);
+      } else if (p === 'voidai') {
+        return await forwardVoidAI('/audio/transcriptions', 'POST', fwdBody);
+      } else if (p === 'airforce') {
+        return await forwardAirforce('/audio/transcriptions', 'POST', fwdBody);
+      } else if (p === 'groq') {
+        return await forwardGroq('/audio/transcriptions', 'POST', fwdBody, options);
+      } else if (p === 'nagaai') {
+        return await forwardNagaAI('/audio/transcriptions', 'POST', fwdBody);
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual transcription model providers failed');
 }
 
 export async function routeModels() {

@@ -25,12 +25,13 @@ const providers = [
   { name: 'AIHubMix',    desc: '50+ models',   color: '#6366f1', modelCount: 50 },
   { name: 'Pollinations', desc: '40+ models',  color: '#a855f7', modelCount: 40 },
   { name: 'VoidAI',      desc: '15+ models',   color: '#06b6d4', modelCount: 15 },
-  { name: 'Airforce',    desc: '20+ models',   color: '#f59e0b', modelCount: 20 },
+  { name: 'Airforce',    desc: '53+ models',   color: '#f59e0b', modelCount: 53 },
   { name: 'Cerebras',    desc: '3 models',     color: '#8b5cf6', modelCount: 3 },
   { name: 'Groq',        desc: '16+ models',   color: '#00d084', modelCount: 16 },
   { name: 'AI Horde',    desc: '186+ models',  color: '#ec4899', modelCount: 186 },
   { name: 'TokenReply',  desc: '14+ models',   color: '#7c3aed', modelCount: 14 },
-  { name: 'NagaAI',     desc: '13 models',    color: '#10b981', modelCount: 13 },
+  { name: 'NagaAI',      desc: '13 models',    color: '#10b981', modelCount: 13 },
+  { name: 'Happupy',     desc: '5+ models',    color: '#f472b6', modelCount: 5 },
 ];
 
 const totalModelCount = providers.reduce((sum, p) => sum + p.modelCount, 0);
@@ -120,7 +121,7 @@ export default function Home() {
                   key={provider.name}
                   style={{
                     padding: '28px',
-                    borderRadius: '16px 12px 14px 18px',
+                    borderRadius: 'var(--radius-lg)',
                     border: `1px solid ${provider.color}30`,
                     background: 'var(--bg)',
                     textAlign: 'center',
@@ -142,7 +143,7 @@ export default function Home() {
                   {entry ? (
                     <div style={{
                       width: 52, height: 52, margin: '0 auto 14px',
-                      borderRadius: '14px 10px 12px 11px',
+                      borderRadius: 'var(--radius)',
                       background: `${entry.color}18`,
                       border: `1px solid ${entry.color}55`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -153,7 +154,7 @@ export default function Home() {
                   ) : (
                     <div style={{
                       width: 52, height: 52, margin: '0 auto 14px',
-                      borderRadius: '14px 10px 12px 11px',
+                      borderRadius: 'var(--radius)',
                       background: `${provider.color}18`,
                       border: `1px solid ${provider.color}55`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -240,7 +241,7 @@ export default function Home() {
                 key={idx}
                 style={{
                   padding: '32px',
-                  borderRadius: '16px 12px 14px 18px',
+                  borderRadius: 'var(--radius-lg)',
                   border: '1px solid var(--border)',
                   background: 'var(--bg-secondary)',
                   transition: 'all 0.3s ease',
@@ -328,7 +329,7 @@ export default function Home() {
                 return (
                   <a key={provider.name} href="/providers" style={{
                     display: 'flex', alignItems: 'center', gap: '10px',
-                    padding: '12px 16px', borderRadius: '12px 8px 10px 14px',
+                    padding: '12px 16px', borderRadius: 'var(--radius)',
                     border: '1px solid var(--border)', backgroundColor: 'var(--bg)',
                     textDecoration: 'none', transition: 'all 0.2s ease', color: provider.color,
                   }}

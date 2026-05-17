@@ -145,7 +145,7 @@ export default function KeysPage() {
               onClick={() => { setActiveProvider(p); setAddError(''); setAddSuccess(''); setNewKey(''); }}
               style={{
                 padding: '8px 18px',
-                borderRadius: '14px 10px 12px 16px',
+                borderRadius: 'var(--radius)',
                 cursor: 'pointer',
                 fontSize: '0.9rem',
                 fontWeight: '500',
@@ -162,7 +162,7 @@ export default function KeysPage() {
       </div>
 
       {/* Add key form */}
-      <section style={{ background: 'var(--bg-secondary)', border: `1px solid ${color}30`, borderRadius: '24px 16px 20px 22px', padding: '28px', marginBottom: '32px' }}>
+      <section style={{ background: 'var(--bg-secondary)', border: `1px solid ${color}30`, borderRadius: 'var(--radius-xl)', padding: '28px', marginBottom: '32px' }}>
         <h2 style={{ fontSize: '1.1rem', marginBottom: '6px' }}>Add New {activeProvider} Key</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '20px' }}>
           Key will be validated against {activeProvider}'s API before storing.
@@ -176,7 +176,7 @@ export default function KeysPage() {
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addKey()}
-            style={{ flex: 1, borderRadius: '16px 12px 14px 18px' }}
+            style={{ flex: 1, borderRadius: 'var(--radius-lg)' }}
           />
           <button onClick={addKey} disabled={adding} className="button">
             {adding ? 'Validating…' : 'Add Key'}
@@ -188,7 +188,7 @@ export default function KeysPage() {
       {loading ? (
         <p style={{ color: 'var(--text-secondary)' }}>Loading…</p>
       ) : keys.length === 0 ? (
-        <div style={{ padding: '40px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '20px 14px 18px 22px', textAlign: 'center' }}>
+        <div style={{ padding: '40px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', textAlign: 'center' }}>
           <p style={{ color: 'var(--text-secondary)' }}>No keys configured for {activeProvider}.</p>
         </div>
       ) : (
@@ -212,7 +212,7 @@ export default function KeysPage() {
                     <td>
                       <span style={{
                         display: 'inline-block', padding: '3px 8px',
-                        borderRadius: '8px 5px 6px 10px', fontSize: '0.75rem', fontWeight: '700',
+                        borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', fontWeight: '700',
                         background: key.source === 'env' ? 'rgba(99,102,241,0.15)' : 'rgba(124,58,237,0.15)',
                         color: key.source === 'env' ? '#818cf8' : '#a78bfa',
                         letterSpacing: '0.5px',
@@ -223,7 +223,7 @@ export default function KeysPage() {
                     <td>
                       <span style={{
                         display: 'inline-block', padding: '3px 10px',
-                        borderRadius: '8px 5px 6px 10px', fontSize: '0.8rem', fontWeight: '600',
+                        borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', fontWeight: '600',
                         background: `${sm.color}18`, color: sm.color, border: `1px solid ${sm.color}35`,
                       }}>
                         {sm.label}
@@ -239,7 +239,7 @@ export default function KeysPage() {
                           disabled={refreshing === key.id}
                           style={{
                             background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)',
-                            color: '#93c5fd', padding: '5px 12px', borderRadius: '8px 5px 6px 10px',
+                            color: '#93c5fd', padding: '5px 12px', borderRadius: 'var(--radius-sm)',
                             cursor: 'pointer', fontSize: '0.8rem', fontWeight: '500',
                           }}
                         >
@@ -251,7 +251,7 @@ export default function KeysPage() {
                             disabled={deleting === key.id}
                             style={{
                               background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                              color: '#fca5a5', padding: '5px 12px', borderRadius: '8px 5px 6px 10px',
+                              color: '#fca5a5', padding: '5px 12px', borderRadius: 'var(--radius-sm)',
                               cursor: 'pointer', fontSize: '0.8rem', fontWeight: '500',
                             }}
                           >

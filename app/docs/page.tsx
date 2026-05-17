@@ -578,7 +578,7 @@ curl https://www.cjhauser.me/v1/embeddings \\
     <main className="container" style={{ paddingTop: '60px', paddingBottom: '80px', maxWidth: '1200px' }}>
       <h1 style={{ fontSize: '2.5rem', marginBottom: '12px' }}>Documentation</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '40px', fontSize: '1.05rem' }}>
-        Complete guide to using OpenRelay's free AI API with 357+ models from 9 providers
+        Complete guide to using OpenRelay's free AI API with 357+ models from 10 providers
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', gap: '32px', minHeight: '500px' }}>
@@ -597,7 +597,7 @@ curl https://www.cjhauser.me/v1/embeddings \\
                 width: '100%',
                 padding: '12px 16px',
                 marginBottom: '8px',
-                borderRadius: '12px 8px 10px 14px',
+                borderRadius: 'var(--radius)',
                 border: expandedSection === section.id ? '2px solid var(--accent)' : '1px solid var(--border)',
                 background: expandedSection === section.id ? 'rgba(124, 58, 237, 0.1)' : 'transparent',
                 color: expandedSection === section.id ? 'var(--accent)' : 'var(--text-secondary)',
@@ -621,86 +621,13 @@ curl https://www.cjhauser.me/v1/embeddings \\
               style={{ display: expandedSection === section.id ? 'block' : 'none' }}
             >
               <div
+                className="docs-content"
                 dangerouslySetInnerHTML={{ __html: section.content }}
                 style={{
                   color: 'var(--text-secondary)',
                   lineHeight: '1.8',
                 }}
               />
-              <style>{`
-                h3 {
-                  color: var(--fg);
-                  font-size: 1.25rem;
-                  margin-top: 28px;
-                  margin-bottom: 14px;
-                  font-weight: 600;
-                }
-                h3:first-child {
-                  margin-top: 0;
-                }
-                h4 {
-                  color: var(--accent-light);
-                  font-size: 1rem;
-                  margin-top: 20px;
-                  margin-bottom: 10px;
-                  font-weight: 600;
-                }
-                p {
-                  margin-bottom: 16px;
-                }
-                ol, ul {
-                  margin-left: 24px;
-                  margin-bottom: 16px;
-                }
-                li {
-                  margin-bottom: 10px;
-                  line-height: 1.7;
-                }
-                code {
-                  background: var(--bg-secondary);
-                  padding: 3px 8px;
-                  border-radius: 4px;
-                  font-family: var(--font-mono);
-                  font-size: 0.9em;
-                  color: var(--accent);
-                  border: 1px solid var(--border);
-                }
-                pre {
-                  background: var(--bg-secondary);
-                  padding: 18px;
-                  border-radius: 12px;
-                  border: 1px solid var(--border);
-                  overflow-x: auto;
-                  margin-bottom: 16px;
-                  font-size: 0.85rem;
-                  line-height: 1.6;
-                  font-family: var(--font-mono);
-                  color: var(--accent-light);
-                }
-                pre::-webkit-scrollbar {
-                  height: 6px;
-                }
-                pre::-webkit-scrollbar-track {
-                  background: var(--bg);
-                }
-                pre::-webkit-scrollbar-thumb {
-                  background: var(--border-light);
-                  border-radius: 3px;
-                }
-                a {
-                  color: var(--accent);
-                  text-decoration: none;
-                  border-bottom: 1px solid transparent;
-                  transition: all 0.2s ease;
-                }
-                a:hover {
-                  color: var(--accent-light);
-                  border-bottom-color: var(--accent-light);
-                }
-                ol {
-                  list-style-type: decimal;
-                }
-              `}</style>
             </div>
           ))}
         </div>

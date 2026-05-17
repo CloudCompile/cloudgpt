@@ -47,7 +47,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <span style={{
             marginLeft: 'auto',
             padding: '4px 12px',
-            borderRadius: '8px 6px 10px 8px',
+            borderRadius: 'var(--radius-sm)',
             background: 'rgba(124, 58, 237, 0.15)',
             color: 'var(--accent-light)',
             fontSize: '0.75rem',

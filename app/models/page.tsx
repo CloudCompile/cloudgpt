@@ -120,7 +120,7 @@ export default function ModelsPage() {
             style={{
               width: '100%',
               padding: '14px 20px',
-              borderRadius: '16px 12px 14px 18px',
+              borderRadius: 'var(--radius-lg)',
               fontSize: '1rem',
               border: '1px solid var(--border)',
               background: 'var(--bg-secondary)',
@@ -346,7 +346,7 @@ function FilterChip({ label, active, color, onClick }: { label: string; active: 
       onClick={onClick}
       style={{
         padding: '8px 16px',
-        borderRadius: '14px 10px 12px 16px',
+        borderRadius: 'var(--radius)',
         cursor: 'pointer',
         fontSize: '0.9rem',
         fontWeight: '500',

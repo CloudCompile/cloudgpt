@@ -17,7 +17,7 @@ interface NewKeyResponse {
   createdAt: number;
 }
 
-const BASE_URL = 'https://www.cjhauser.me';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://openrelay.dev';
 
 export default function Dashboard() {
   const { userId, isSignedIn } = useAuth();
@@ -117,21 +117,21 @@ export default function Dashboard() {
       {/* Donate Banner */}
       <div style={{
         marginBottom: '40px',
-        padding: '20px 24px',
-        borderRadius: '18px 14px 16px 20px',
-        background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(79,70,229,0.08) 100%)',
-        border: '1px solid rgba(124,58,237,0.35)',
+        padding: '18px 22px',
+        borderRadius: 'var(--radius-lg)',
+        background: 'rgba(124,58,237,0.07)',
+        border: '1px solid rgba(124,58,237,0.28)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap',
       }}>
         <div>
-          <p style={{ fontWeight: '700', fontSize: '0.95rem', marginBottom: '4px' }}>
-            🔑 Keep OpenRelay free — donate an API key
+          <p style={{ fontWeight: '700', fontSize: '0.9rem', marginBottom: '3px' }}>
+            Keep OpenRelay free — donate an API key
           </p>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
-            Got a free API key from Groq, Cerebras, Happupy, or others? Donate it to power the network for everyone.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.83rem', margin: 0 }}>
+            Got a free key from Groq, Cerebras, Happupy, or others? Donate it in 30 seconds.
           </p>
         </div>
-        <a href="/donate" className="button" style={{ padding: '9px 22px', fontSize: '0.9rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
+        <a href="/donate" className="button" style={{ padding: '9px 20px', fontSize: '0.88rem', whiteSpace: 'nowrap', flexShrink: 0 }}>
           Donate a Key
         </a>
       </div>
@@ -147,7 +147,7 @@ export default function Dashboard() {
         <div className="success" style={{ marginBottom: '40px' }}>
           <p style={{ marginBottom: '12px', fontWeight: '600' }}>Key created — save it now, it won't be shown again.</p>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <code style={{ flex: 1, background: 'rgba(0,0,0,0.4)', padding: '12px 16px', borderRadius: '16px 10px 12px 14px', wordBreak: 'break-all', fontSize: '0.9rem' }}>
+            <code style={{ flex: 1, background: 'rgba(0,0,0,0.4)', padding: '12px 16px', borderRadius: 'var(--radius)', wordBreak: 'break-all', fontSize: '0.9rem' }}>
               {createdKey.key}
             </code>
             <button
@@ -168,7 +168,7 @@ export default function Dashboard() {
       )}
 
       {/* Create Key */}
-      <section style={{ marginBottom: '60px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '28px 18px 24px 22px', padding: '32px' }}>
+      <section style={{ marginBottom: '60px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '28px' }}>
         <h2 style={{ marginBottom: '8px', fontSize: '1.25rem' }}>Create a New Key</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>Up to 5 keys per account.</p>
         <div style={{ display: 'flex', gap: '12px' }}>
@@ -190,7 +190,7 @@ export default function Dashboard() {
         {loading ? (
           <p style={{ color: 'var(--text-secondary)' }}>Loading...</p>
         ) : keys.length === 0 ? (
-          <div style={{ padding: '40px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px 16px 20px 26px', textAlign: 'center' }}>
+          <div style={{ padding: '40px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', textAlign: 'center' }}>
             <p style={{ color: 'var(--text-secondary)' }}>No API keys yet — create one above.</p>
           </div>
         ) : (
@@ -240,7 +240,7 @@ export default function Dashboard() {
         <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
           Use this base URL with any OpenAI-compatible client.
         </p>
-        <div style={{ background: 'rgba(124, 58, 237, 0.08)', border: '1px solid rgba(124, 58, 237, 0.28)', borderRadius: '22px 14px 18px 24px', padding: '20px 24px' }}>
+        <div style={{ background: 'rgba(124, 58, 237, 0.07)', border: '1px solid rgba(124, 58, 237, 0.22)', borderRadius: 'var(--radius-lg)', padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Base URL</p>
@@ -248,7 +248,7 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => copyToClipboard(`${BASE_URL}/v1`, 'baseurl')}
-              style={{ background: 'rgba(124, 58, 237, 0.15)', border: '1px solid rgba(124, 58, 237, 0.35)', color: 'var(--accent-light)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500', transition: 'all 0.2s ease', whiteSpace: 'nowrap' }}
+              style={{ background: 'rgba(124, 58, 237, 0.1)', border: '1px solid rgba(124, 58, 237, 0.3)', color: 'var(--accent-light)', padding: '8px 16px', borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.88rem', fontWeight: '600', transition: 'opacity 0.2s', whiteSpace: 'nowrap' }}
             >
               {copying === 'baseurl' ? '✓ Copied' : 'Copy URL'}
             </button>
@@ -306,19 +306,19 @@ print(response.choices[0].message.content)`}</div>
       <section>
         <h2 style={{ marginBottom: '8px', fontSize: '1.25rem' }}>Available Models</h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
-          100+ free models across 5 providers. Use any model ID in your requests.
+          357+ free models across 10 providers. Use any model ID in your requests.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>
           {[
-            { name: 'AIHubMix', color: '#3b82f6', models: 'GPT-4o, Claude 3.5, Gemini 2.0, DeepSeek' },
-            { name: 'Pollinations', color: '#8b5cf6', models: 'Image, text, and specialized generation' },
-            { name: 'VoidAI', color: '#06b6d4', models: 'Free-tier models from major providers' },
+            { name: 'AIHubMix', color: '#6366f1', models: 'GPT-4o, Claude 3.5, Gemini 2.0, DeepSeek' },
+            { name: 'Pollinations', color: '#a855f7', models: 'Text, images, video, and audio generation' },
             { name: 'Airforce', color: '#f59e0b', models: '53 models: OpenAI, Anthropic, Meta, xAI' },
-            { name: 'Cerebras', color: '#a855f7', models: 'Llama 3.3, Llama 4 Scout, DeepSeek R1 (1M tokens/day)' },
+            { name: 'Groq', color: '#00d084', models: 'Ultra-fast Llama, Gemma, and Whisper models' },
+            { name: 'Cerebras', color: '#8b5cf6', models: 'Llama 3.3, Llama 4, DeepSeek R1 (1M/day)' },
           ].map(({ name, color, models }) => (
-            <div key={name} style={{ background: 'var(--bg-secondary)', border: `1px solid ${color}30`, borderRadius: '24px 16px 20px 22px', padding: '18px' }}>
-              <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: '600', background: `${color}20`, color, marginBottom: '10px' }}>{name}</span>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', lineHeight: '1.5' }}>{models}</p>
+            <div key={name} style={{ background: 'var(--bg-secondary)', border: `1px solid ${color}28`, borderRadius: 'var(--radius-lg)', padding: '16px' }}>
+              <span style={{ display: 'inline-block', padding: '3px 9px', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', fontWeight: '600', background: `${color}18`, color, marginBottom: '8px' }}>{name}</span>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.83rem', lineHeight: '1.5' }}>{models}</p>
             </div>
           ))}
         </div>

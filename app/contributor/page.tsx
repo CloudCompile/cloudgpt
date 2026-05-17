@@ -152,7 +152,7 @@ export default function ContributorPage() {
           {keys.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)' }}>No active keys found.</p>
           ) : (
-            <div style={{ overflowX: 'auto', borderRadius: '16px 12px 14px 18px', border: '1px solid var(--border)' }}>
+            <div style={{ overflowX: 'auto', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
               <table style={{ margin: 0, border: 'none', borderRadius: 0 }}>
                 <thead>
                   <tr>
@@ -207,7 +207,7 @@ export default function ContributorPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
                   {stats.contributedProviders.map(prov => (
                     <div key={prov} style={{
-                      padding: '22px', borderRadius: '16px 12px 14px 18px',
+                      padding: '22px', borderRadius: 'var(--radius-lg)',
                       border: '1px solid var(--border)', background: 'var(--bg-secondary)',
                     }}>
                       <div style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>{prov}</div>
@@ -226,7 +226,7 @@ export default function ContributorPage() {
               <h2 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '20px' }}>Recent Errors</h2>
               {stats.recentErrors.length === 0 ? (
                 <div style={{
-                  padding: '18px 22px', borderRadius: '14px 10px 12px 16px',
+                  padding: '18px 22px', borderRadius: 'var(--radius)',
                   border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.06)',
                   color: '#86efac', fontSize: '0.95rem',
                 }}>
@@ -236,7 +236,7 @@ export default function ContributorPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   {stats.recentErrors.map((err, i) => (
                     <div key={i} style={{
-                      padding: '14px 18px', borderRadius: '12px 8px 10px 14px',
+                      padding: '14px 18px', borderRadius: 'var(--radius)',
                       border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.05)',
                       display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px',
                     }}>
@@ -261,7 +261,7 @@ export default function ContributorPage() {
             <section>
               <h2 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '20px' }}>Discord Role</h2>
               <div style={{
-                padding: '24px 28px', borderRadius: '18px 14px 16px 20px',
+                padding: '24px 28px', borderRadius: 'var(--radius-lg)',
                 border: `1px solid ${stats.discordRoleAssigned ? 'rgba(34,197,94,0.3)' : 'rgba(124,58,237,0.3)'}`,
                 background: stats.discordRoleAssigned ? 'rgba(34,197,94,0.06)' : 'rgba(124,58,237,0.06)',
               }}>
