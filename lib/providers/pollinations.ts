@@ -65,6 +65,32 @@ export async function forwardSimpleText(prompt: string) {
   return response;
 }
 
+// Video endpoint: gen.pollinations.ai/video/{prompt} (GET, prompt in URL)
+export async function forwardPollinationsVideo(
+  prompt: string,
+  model?: string,
+  extra?: Record<string, string | number | undefined>
+) {
+  const apiKey = await getNextKey('POLLINATIONS');
+  if (!apiKey) throw new Error('No Pollinations API keys configured');
+
+  const params = new URLSearchParams();
+  if (model) params.set('model', model);
+  if (extra) {
+    for (const [k, v] of Object.entries(extra)) {
+      if (v !== undefined) params.set(k, String(v));
+    }
+  }
+
+  const qs = params.toString() ? `?${params.toString()}` : '';
+  const url = `https://gen.pollinations.ai/video/${encodeURIComponent(prompt)}${qs}`;
+
+  return fetch(url, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+  });
+}
+
 // Parse model ID to determine which endpoint to use
 export function getPollModel(modelId: string): { type: string; id?: string } {
   if (modelId === 'pollinations/image-simple') {

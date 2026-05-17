@@ -135,7 +135,7 @@ export const GlyphNagaAI = (p: GlyphProps) => (
 export const GlyphTokenReply = (p: GlyphProps) => (
   <GlyphBase {...p}>
     <path d="M7 8 h18 a2 2 0 0 1 2 2 v9 a2 2 0 0 1 -2 2 H7 a2 2 0 0 1 -2 -2 V10 a2 2 0 0 1 2 -2z" />
-    <path d="M9 25 V21 h5" />
+    <path d="M9 25 V21 L14 21" />
     <path d="M11.5 14 H20.5" />
     <path d="M11.5 14 L14.5 11 M11.5 14 L14.5 17" />
   </GlyphBase>

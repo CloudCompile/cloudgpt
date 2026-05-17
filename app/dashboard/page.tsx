@@ -17,7 +17,7 @@ interface NewKeyResponse {
   createdAt: number;
 }
 
-const BASE_URL = 'https://www.cjhauser.me';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://openrelay.dev';
 
 export default function Dashboard() {
   const { userId, isSignedIn } = useAuth();

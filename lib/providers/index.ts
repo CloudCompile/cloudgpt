@@ -1,7 +1,7 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
 import { redis } from '../redis';
 import { logError } from '../analytics';
-import { forwardPollinations, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
+import { forwardPollinations, forwardPollinationsVideo, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
 import { forwardCerebras } from './cerebras';
@@ -233,13 +233,15 @@ export async function routeVideo(
     return forwardAirforce('/video/generations', 'POST', fwdBody);
   }
 
-  // Default: Pollinations for video
+  // Default: Pollinations for video (uses GET /video/{prompt})
   if (model.startsWith('pollinations/')) {
-    const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
-    return forwardPollinations('/v1/videos/generations', 'POST', fwdBody);
+    const prompt = (body as any)?.prompt || '';
+    const modelId = model.replace('pollinations/', '');
+    return forwardPollinationsVideo(prompt, modelId);
   }
 
-  return forwardPollinations('/v1/videos/generations', 'POST', body);
+  const prompt = (body as any)?.prompt || '';
+  return forwardPollinationsVideo(prompt);
 }
 
 export async function routeAudio(
@@ -862,13 +864,13 @@ export async function routeVirtualVideo(
   for (const entry of providers) {
     try {
       const modelId = stripProviderPrefix(entry.modelId);
-      const fwdBody = { ...(body as any), model: modelId };
       const p = entry.provider.toLowerCase();
 
       if (p === 'pollinations') {
-        return await forwardPollinations('/v1/videos/generations', 'POST', fwdBody);
+        const prompt = (body as any)?.prompt || '';
+        return await forwardPollinationsVideo(prompt, modelId);
       } else if (p === 'airforce') {
-        return await forwardAirforce('/video/generations', 'POST', fwdBody);
+        return await forwardAirforce('/video/generations', 'POST', { ...(body as any), model: modelId });
       }
     } catch (error) {
       lastError = error;

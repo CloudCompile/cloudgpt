@@ -69,7 +69,7 @@ export default function AdminPage() {
                     padding: '12px 16px',
                     background: 'rgba(239, 68, 68, 0.08)',
                     border: '1px solid rgba(239, 68, 68, 0.25)',
-                    borderRadius: '14px 10px 12px 16px',
+                    borderRadius: 'var(--radius)',
                     color: '#fca5a5',
                     fontSize: '0.9rem',
                   }}>
@@ -83,7 +83,7 @@ export default function AdminPage() {
           {/* Two-column: top models + provider breakdown */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '48px' }}>
             {/* Top models */}
-            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px 16px 20px 22px', padding: '28px' }}>
+            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '28px' }}>
               <h2 style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '20px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Top Models Today
               </h2>
@@ -106,7 +106,7 @@ export default function AdminPage() {
             </div>
 
             {/* Provider breakdown */}
-            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px 16px 20px 22px', padding: '28px' }}>
+            <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '28px' }}>
               <h2 style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '20px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Provider Breakdown Today
               </h2>
@@ -132,13 +132,13 @@ export default function AdminPage() {
           </div>
 
           {/* Provider key counts */}
-          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '24px 16px 20px 22px', padding: '28px', marginBottom: '32px' }}>
+          <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: '28px', marginBottom: '32px' }}>
             <h2 style={{ fontSize: '0.8rem', fontWeight: '600', marginBottom: '20px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Provider Key Capacity
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px' }}>
               {Object.entries(analytics.keyCountsByProvider).map(([provider, count]) => (
-                <div key={provider} style={{ textAlign: 'center', padding: '16px', background: 'var(--bg-tertiary)', borderRadius: '16px 10px 14px 12px', border: `1px solid ${(PROVIDER_COLORS[provider] || '#444')}30` }}>
+                <div key={provider} style={{ textAlign: 'center', padding: '16px', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius)', border: `1px solid ${(PROVIDER_COLORS[provider] || '#444')}30` }}>
                   <div style={{ fontSize: '1.8rem', fontWeight: '700', color: PROVIDER_COLORS[provider] || 'var(--fg)', marginBottom: '4px' }}>{count}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>{provider}</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{count * 60} req/min</div>
@@ -163,7 +163,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
     <div style={{
       background: 'var(--bg-secondary)',
       border: `1px solid ${color}30`,
-      borderRadius: '24px 16px 20px 22px',
+      borderRadius: 'var(--radius-xl)',
       padding: '24px',
     }}>
       <div style={{ fontSize: '2rem', fontWeight: '700', color, marginBottom: '6px' }}>{value}</div>
