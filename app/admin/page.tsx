@@ -255,7 +255,6 @@ export default function AdminPage() {
             <a href="/admin/keys" className="button">Provider Keys</a>
             <a href="/admin/virtual-models" className="button">Virtual Models</a>
             <a href="/admin/users" className="button secondary">Users</a>
-            <a href="/admin/analytics" className="button secondary">Full Analytics</a>
           </div>
         </>
       ) : null}
