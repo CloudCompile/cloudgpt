@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       console.error('Provider error:', response.status, await response.text());
       return NextResponse.json(
         { error: 'Provider error' },
-        { status: response.status }
+        { status: response.status >= 300 && response.status < 400 ? 502 : response.status }
       );
     }
 

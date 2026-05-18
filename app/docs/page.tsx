@@ -46,7 +46,7 @@ export default function DocsPage() {
 
         <h3>Include in Requests</h3>
         <p>Add the header to every request you make:</p>
-        <pre>curl https://www.cjhauser.me/v1/chat/completions \\
+        <pre>curl https://cjhauser.me/v1/chat/completions \\
   -H "Authorization: Bearer or_abc123..." \\
   -H "Content-Type: application/json" \\
   -d '{"model": "gpt-4", "messages": [...]}'</pre>
@@ -73,7 +73,7 @@ export default function DocsPage() {
       title: 'API Reference',
       content: `
         <h3>Base URL</h3>
-        <pre>https://www.cjhauser.me/v1</pre>
+        <pre>https://cjhauser.me/v1</pre>
 
         <h3>Available Endpoints</h3>
         <ul>
@@ -157,7 +157,7 @@ export default function DocsPage() {
         </ul>
 
         <h3>Streaming Example</h3>
-        <pre>const response = await fetch('https://www.cjhauser.me/v1/chat/completions', {
+        <pre>const response = await fetch('https://cjhauser.me/v1/chat/completions', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer or_YOUR_KEY',
@@ -229,7 +229,7 @@ while (true) {
   "created": 1234567890,
   "data": [
     {
-      "url": "https://images.openrelay.dev/image-xyz.png"
+      "url": "https://cjhauser.me/image-xyz.png"
     }
   ]
 }</pre>
@@ -337,7 +337,7 @@ while (true) {
 
   while (retries < maxRetries) {
     try {
-      const response = await fetch(\`https://www.cjhauser.me/v1\${endpoint}\`, {
+      const response = await fetch(\`https://cjhauser.me/v1\${endpoint}\`, {
         method: 'POST',
         headers: {
           'Authorization': \`Bearer \${process.env.OPENRELAY_API_KEY}\`,
@@ -377,7 +377,7 @@ while (true) {
 
 client = OpenAI(
     api_key="or_YOUR_API_KEY",
-    base_url="https://www.cjhauser.me/v1"
+    base_url="https://cjhauser.me/v1"
 )
 
 # Simple chat
@@ -417,7 +417,7 @@ print(image_response.data[0].url)</pre>
 
 const client = new OpenAI({
   apiKey: process.env.OPENRELAY_API_KEY,
-  baseURL: "https://www.cjhauser.me/v1"
+  baseURL: "https://cjhauser.me/v1"
 });
 
 // Simple chat
@@ -455,7 +455,7 @@ const image = await client.images.generate({
 console.log(image.data[0].url);</pre>
 
         <h3>cURL</h3>
-        <pre>curl https://www.cjhauser.me/v1/chat/completions \\
+        <pre>curl https://cjhauser.me/v1/chat/completions \\
   -H "Authorization: Bearer or_YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -468,7 +468,7 @@ console.log(image.data[0].url);</pre>
   }'
 
 # Image generation
-curl https://www.cjhauser.me/v1/images/generations \\
+curl https://cjhauser.me/v1/images/generations \\
   -H "Authorization: Bearer or_YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -479,7 +479,7 @@ curl https://www.cjhauser.me/v1/images/generations \\
   }'
 
 # Get embeddings
-curl https://www.cjhauser.me/v1/embeddings \\
+curl https://cjhauser.me/v1/embeddings \\
   -H "Authorization: Bearer or_YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -511,7 +511,7 @@ curl https://www.cjhauser.me/v1/embeddings \\
         <h4>Pollinations</h4>
         <p>40+ models for text, images, and more. High rate limits with automatic fallback.</p>
 
-        <h4>Others (AIHubMix, VoidAI, Airforce, AIHorde)</h4>
+        <h4>Others (VoidAI, Airforce, AIHorde)</h4>
         <p>Rate limits scale with the number of API keys you configure. More keys = higher throughput.</p>
 
         <h3>Increasing Limits</h3>
@@ -578,7 +578,7 @@ curl https://www.cjhauser.me/v1/embeddings \\
     <main className="container" style={{ paddingTop: '60px', paddingBottom: '80px', maxWidth: '1200px' }}>
       <h1 style={{ fontSize: '2.5rem', marginBottom: '12px' }}>Documentation</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '40px', fontSize: '1.05rem' }}>
-        Complete guide to using OpenRelay's free AI API with 357+ models from 9 providers
+        Complete guide to using OpenRelay's free AI API with 357+ models from 10 providers
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', gap: '32px', minHeight: '500px' }}>
@@ -597,7 +597,7 @@ curl https://www.cjhauser.me/v1/embeddings \\
                 width: '100%',
                 padding: '12px 16px',
                 marginBottom: '8px',
-                borderRadius: '12px 8px 10px 14px',
+                borderRadius: 'var(--radius)',
                 border: expandedSection === section.id ? '2px solid var(--accent)' : '1px solid var(--border)',
                 background: expandedSection === section.id ? 'rgba(124, 58, 237, 0.1)' : 'transparent',
                 color: expandedSection === section.id ? 'var(--accent)' : 'var(--text-secondary)',
@@ -621,86 +621,13 @@ curl https://www.cjhauser.me/v1/embeddings \\
               style={{ display: expandedSection === section.id ? 'block' : 'none' }}
             >
               <div
+                className="docs-content"
                 dangerouslySetInnerHTML={{ __html: section.content }}
                 style={{
                   color: 'var(--text-secondary)',
                   lineHeight: '1.8',
                 }}
               />
-              <style>{`
-                h3 {
-                  color: var(--fg);
-                  font-size: 1.25rem;
-                  margin-top: 28px;
-                  margin-bottom: 14px;
-                  font-weight: 600;
-                }
-                h3:first-child {
-                  margin-top: 0;
-                }
-                h4 {
-                  color: var(--accent-light);
-                  font-size: 1rem;
-                  margin-top: 20px;
-                  margin-bottom: 10px;
-                  font-weight: 600;
-                }
-                p {
-                  margin-bottom: 16px;
-                }
-                ol, ul {
-                  margin-left: 24px;
-                  margin-bottom: 16px;
-                }
-                li {
-                  margin-bottom: 10px;
-                  line-height: 1.7;
-                }
-                code {
-                  background: var(--bg-secondary);
-                  padding: 3px 8px;
-                  border-radius: 4px;
-                  font-family: var(--font-mono);
-                  font-size: 0.9em;
-                  color: var(--accent);
-                  border: 1px solid var(--border);
-                }
-                pre {
-                  background: var(--bg-secondary);
-                  padding: 18px;
-                  border-radius: 12px;
-                  border: 1px solid var(--border);
-                  overflow-x: auto;
-                  margin-bottom: 16px;
-                  font-size: 0.85rem;
-                  line-height: 1.6;
-                  font-family: var(--font-mono);
-                  color: var(--accent-light);
-                }
-                pre::-webkit-scrollbar {
-                  height: 6px;
-                }
-                pre::-webkit-scrollbar-track {
-                  background: var(--bg);
-                }
-                pre::-webkit-scrollbar-thumb {
-                  background: var(--border-light);
-                  border-radius: 3px;
-                }
-                a {
-                  color: var(--accent);
-                  text-decoration: none;
-                  border-bottom: 1px solid transparent;
-                  transition: all 0.2s ease;
-                }
-                a:hover {
-                  color: var(--accent-light);
-                  border-bottom-color: var(--accent-light);
-                }
-                ol {
-                  list-style-type: decimal;
-                }
-              `}</style>
             </div>
           ))}
         </div>

@@ -8,7 +8,6 @@ import type { ProviderKeyEntry } from '@/lib/providers/keypool';
 export const runtime = 'nodejs';
 
 const PROVIDER_TEST_URLS: Record<string, string> = {
-  AIHubMix:    'https://aihubmix.com/v1/models',
   Pollinations: 'https://gen.pollinations.ai/v1/models',
   VoidAI:      'https://api.voidai.app/v1/models',
   Airforce:    'https://api.airforce/v1/models',

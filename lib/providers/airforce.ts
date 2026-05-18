@@ -25,6 +25,7 @@ export async function forwardAirforce(
 
   const response = await fetch(url, {
     method,
+    redirect: 'follow',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',

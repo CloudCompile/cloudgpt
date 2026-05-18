@@ -88,7 +88,7 @@ export default function UsersPage() {
         placeholder="Search by email or name…"
         value={search}
         onChange={handleSearch}
-        style={{ width: '100%', marginBottom: '28px', borderRadius: '16px 12px 14px 18px' }}
+        style={{ width: '100%', marginBottom: '28px', borderRadius: 'var(--radius-lg)' }}
       />
 
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px', fontWeight: '500' }}>
@@ -98,7 +98,7 @@ export default function UsersPage() {
       {loading ? (
         <p style={{ color: 'var(--text-secondary)' }}>Loading…</p>
       ) : users.length === 0 ? (
-        <div style={{ padding: '40px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '20px 14px 18px 22px', textAlign: 'center' }}>
+        <div style={{ padding: '40px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', textAlign: 'center' }}>
           <p style={{ color: 'var(--text-secondary)' }}>No users found.</p>
         </div>
       ) : (
@@ -128,7 +128,7 @@ export default function UsersPage() {
                   <td>
                     <span style={{
                       display: 'inline-block', padding: '3px 10px',
-                      borderRadius: '8px 5px 6px 10px', fontSize: '0.8rem', fontWeight: '600',
+                      borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', fontWeight: '600',
                       background: user.apiKeyCount > 0 ? 'rgba(124,58,237,0.15)' : 'rgba(107,114,128,0.15)',
                       color: user.apiKeyCount > 0 ? '#a78bfa' : '#9ca3af',
                     }}>
@@ -145,7 +145,7 @@ export default function UsersPage() {
                         disabled={revoking === user.id}
                         style={{
                           background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                          color: '#fca5a5', padding: '5px 12px', borderRadius: '8px 5px 6px 10px',
+                          color: '#fca5a5', padding: '5px 12px', borderRadius: 'var(--radius-sm)',
                           cursor: 'pointer', fontSize: '0.8rem', fontWeight: '500',
                         }}
                       >

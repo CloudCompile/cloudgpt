@@ -1,4 +1,5 @@
 import { redis } from '@/lib/redis';
+import { getNextKey } from './keypool';
 
 /**
  * Happupy provider - free AI API gateway
@@ -20,9 +21,9 @@ export async function forwardHappupy(
   body?: unknown,
   options?: HappupyOptions
 ) {
-  const apiKey = process.env.HAPPUPY_API_KEY;
+  const apiKey = await getNextKey('happupy');
   if (!apiKey) {
-    throw new Error('Happupy API key not configured');
+    throw new Error('No Happupy API key configured');
   }
 
   const url = `${HAPPUPY_URL}${endpoint}`;

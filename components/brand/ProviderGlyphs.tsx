@@ -34,17 +34,6 @@ function GlyphBase({
   );
 }
 
-// AIHubMix — concentric arcs converging on a hub
-export const GlyphAIHubMix = (p: GlyphProps) => (
-  <GlyphBase {...p}>
-    <circle cx="16" cy="16" r="2.5" fill="currentColor" stroke="none" />
-    <path d="M7 16 a9 9 0 0 1 18 0" />
-    <path d="M10.5 16 a5.5 5.5 0 0 1 11 0" />
-    <circle cx="7" cy="16" r="1.4" fill="currentColor" stroke="none" />
-    <circle cx="25" cy="16" r="1.4" fill="currentColor" stroke="none" />
-  </GlyphBase>
-);
-
 // Pollinations — petal / spore burst
 export const GlyphPollinations = (p: GlyphProps) => (
   <GlyphBase {...p}>
@@ -131,12 +120,31 @@ export const GlyphNagaAI = (p: GlyphProps) => (
   </GlyphBase>
 );
 
+// TokenReply — speech bubble with return arrow (reply/message routing)
+export const GlyphTokenReply = (p: GlyphProps) => (
+  <GlyphBase {...p}>
+    <path d="M7 8 h18 a2 2 0 0 1 2 2 v9 a2 2 0 0 1 -2 2 H7 a2 2 0 0 1 -2 -2 V10 a2 2 0 0 1 2 -2z" />
+    <path d="M9 25 V21 L14 21" />
+    <path d="M11.5 14 H20.5" />
+    <path d="M11.5 14 L14.5 11 M11.5 14 L14.5 17" />
+  </GlyphBase>
+);
+
+// Happupy — simple smiley (community / happy to help)
+export const GlyphHappupy = (p: GlyphProps) => (
+  <GlyphBase {...p}>
+    <circle cx="16" cy="15" r="9" />
+    <path d="M11.5 17.5 Q16 22 20.5 17.5" />
+    <circle cx="13" cy="12.5" r="1.3" fill="currentColor" stroke="none" />
+    <circle cx="19" cy="12.5" r="1.3" fill="currentColor" stroke="none" />
+  </GlyphBase>
+);
+
 // Lookup keyed by the provider name as used in app/page.tsx + app/providers/page.tsx
 export const PROVIDER_GLYPHS: Record<
   string,
   { Glyph: ComponentType<GlyphProps>; color: string }
 > = {
-  AIHubMix:       { Glyph: GlyphAIHubMix,     color: '#6366f1' },
   Pollinations:   { Glyph: GlyphPollinations, color: '#a855f7' },
   VoidAI:         { Glyph: GlyphVoidAI,       color: '#06b6d4' },
   Airforce:       { Glyph: GlyphAirforce,     color: '#f59e0b' },
@@ -144,4 +152,6 @@ export const PROVIDER_GLYPHS: Record<
   Groq:           { Glyph: GlyphGroq,         color: '#00d084' },
   'AI Horde':     { Glyph: GlyphAIHorde,      color: '#ec4899' },
   NagaAI:         { Glyph: GlyphNagaAI,       color: '#10b981' },
+  TokenReply:     { Glyph: GlyphTokenReply,   color: '#7c3aed' },
+  Happupy:        { Glyph: GlyphHappupy,      color: '#f472b6' },
 };

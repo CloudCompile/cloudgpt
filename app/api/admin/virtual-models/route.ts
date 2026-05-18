@@ -35,7 +35,6 @@ export async function GET() {
         virtualModels = JSON.parse(stored);
       }
     } catch (redisError) {
-      console.warn('Redis read failed, returning empty models:', redisError);
     }
 
     return NextResponse.json({
@@ -43,7 +42,6 @@ export async function GET() {
       availableModels: modelsByProvider
     });
   } catch (error) {
-    console.error('Error fetching models:', error);
     return NextResponse.json({
       models: [],
       availableModels: {},
@@ -60,10 +58,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { id, providers } = body;
 
-    console.log('[POST /api/admin/virtual-models] Received:', { id, providers });
-
     if (!id || !providers || providers.length === 0) {
-      console.error('[POST /api/admin/virtual-models] Validation failed:', { id, providers });
       return NextResponse.json({ error: 'Invalid model data' }, { status: 400 });
     }
 
@@ -76,7 +71,6 @@ export async function POST(request: NextRequest) {
         models = JSON.parse(stored);
       }
     } catch (redisError) {
-      console.warn('Redis read failed, starting with empty array:', redisError);
     }
 
     const existingIndex = models.findIndex((m: any) => m.id === id);
@@ -87,7 +81,6 @@ export async function POST(request: NextRequest) {
     }
 
     await redis.set(VIRTUAL_MODELS_KEY, JSON.stringify(models));
-    console.log('[POST /api/admin/virtual-models] Model saved successfully:', newModel);
 
     return NextResponse.json({ success: true, model: newModel });
   } catch (error) {
@@ -104,8 +97,6 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    console.log('[DELETE /api/admin/virtual-models] Deleting model:', id);
-
     if (!id) {
       return NextResponse.json({ error: 'Model ID required' }, { status: 400 });
     }
@@ -117,7 +108,6 @@ export async function DELETE(request: NextRequest) {
         models = JSON.parse(stored);
       }
     } catch (redisError) {
-      console.warn('Redis read failed:', redisError);
       return NextResponse.json({ error: 'Failed to delete model' }, { status: 500 });
     }
 
@@ -128,11 +118,9 @@ export async function DELETE(request: NextRequest) {
     }
 
     await redis.set(VIRTUAL_MODELS_KEY, JSON.stringify(filtered));
-    console.log('[DELETE /api/admin/virtual-models] Model deleted successfully:', id);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[DELETE /api/admin/virtual-models] Error:', error);
     return NextResponse.json({ error: 'Failed to delete model' }, { status: 500 });
   }
 }

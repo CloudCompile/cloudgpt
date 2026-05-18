@@ -11,13 +11,15 @@ interface Model {
 }
 
 const PROVIDER_COLORS: Record<string, string> = {
-  AIHubMix: '#6366f1',
   Pollinations: '#a855f7',
   VoidAI: '#06b6d4',
   Airforce: '#f59e0b',
   Cerebras: '#8b5cf6',
   Groq: '#00d084',
   AIHorde: '#ec4899',
+  TokenReply: '#7c3aed',
+  NagaAI: '#10b981',
+  Happupy: '#f472b6',
 };
 
 const TYPE_META: Record<string, { color: string; label: string; icon: string }> = {
@@ -120,7 +122,7 @@ export default function ModelsPage() {
             style={{
               width: '100%',
               padding: '14px 20px',
-              borderRadius: '16px 12px 14px 18px',
+              borderRadius: 'var(--radius-lg)',
               fontSize: '1rem',
               border: '1px solid var(--border)',
               background: 'var(--bg-secondary)',
@@ -346,7 +348,7 @@ function FilterChip({ label, active, color, onClick }: { label: string; active: 
       onClick={onClick}
       style={{
         padding: '8px 16px',
-        borderRadius: '14px 10px 12px 16px',
+        borderRadius: 'var(--radius)',
         cursor: 'pointer',
         fontSize: '0.9rem',
         fontWeight: '500',

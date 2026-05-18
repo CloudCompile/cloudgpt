@@ -1,7 +1,7 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
 import { redis } from '../redis';
 import { logError } from '../analytics';
-import { forwardPollinations, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
+import { forwardPollinations, forwardPollinationsVideo, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
 import { forwardCerebras } from './cerebras';
@@ -14,22 +14,6 @@ import { forwardHappupy } from './happupy';
 export interface RouteOptions {
   streaming?: boolean;
   autoFallback?: boolean;
-}
-
-async function forwardAIHubMix(endpoint: string, method: string, body?: unknown) {
-  const apiKey = await getNextKey('aihubmix');
-  if (!apiKey) throw new Error('No AIHubMix API key configured');
-
-  const response = await fetch(`https://aihubmix.com/v1${endpoint}`, {
-    method,
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-
-  return response;
 }
 
 async function tryProviders(
@@ -125,16 +109,15 @@ export async function routeChat(
     return forwardHappupy('/v1/chat/completions', 'POST', fwdBody, options);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde → TokenReply → NagaAI → Happupy
+  // Default: try Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde → TokenReply → NagaAI → Happupy
   if (!options?.autoFallback) {
-    return forwardAIHubMix('/chat/completions', 'POST', body);
+    return forwardPollinations('/v1/chat/completions', 'POST', body, options);
   }
 
   const messages = (body as any).messages || [];
   const prompt = messages.map((m: any) => m.content).join('\n') || '';
 
   return tryProviders([
-    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/chat/completions', 'POST', body) },
     { name: 'Pollinations', fn: () => forwardPollinations('/v1/chat/completions', 'POST', body, options) },
     { name: 'VoidAI',      fn: () => forwardVoidAI('/chat/completions', 'POST', body, options) },
     { name: 'Airforce',    fn: () => forwardAirforce('/chat/completions', 'POST', body, options) },
@@ -205,14 +188,13 @@ export async function routeImages(
     return forwardHappupy('/v1/images/generations', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → AIHorde → NagaAI → Happupy
+  // Default: try Pollinations → VoidAI → Airforce → AIHorde → NagaAI → Happupy
   if (!options?.autoFallback) {
-    return forwardAIHubMix('/images/generations', 'POST', body);
+    return forwardPollinations('/v1/images/generations', 'POST', body);
   }
 
   const prompt = (body as any)?.prompt || '';
   return tryProviders([
-    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/images/generations', 'POST', body) },
     { name: 'Pollinations', fn: () => forwardPollinations('/v1/images/generations', 'POST', body) },
     { name: 'VoidAI',      fn: () => forwardVoidAI('/images/generations', 'POST', body) },
     { name: 'Airforce',    fn: () => forwardAirforce('/images/generations', 'POST', body) },
@@ -232,19 +214,26 @@ export async function routeVideo(
 ) {
   const model = (body as any)?.model || 'pollinations/text-to-video';
 
+  const virtualProviders = await getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.some(p => p.type === 'video')) {
+    return routeVirtualVideo(body, virtualProviders.filter(p => p.type === 'video'), options);
+  }
+
   // Airforce video endpoint
   if (model.startsWith('airforce/')) {
     const fwdBody = { ...(body as any), model: model.replace('airforce/', '') };
     return forwardAirforce('/video/generations', 'POST', fwdBody);
   }
 
-  // Default: Pollinations for video
+  // Default: Pollinations for video (uses GET /video/{prompt})
   if (model.startsWith('pollinations/')) {
-    const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
-    return forwardPollinations('/v1/videos/generations', 'POST', fwdBody);
+    const prompt = (body as any)?.prompt || '';
+    const modelId = model.replace('pollinations/', '');
+    return forwardPollinationsVideo(prompt, modelId);
   }
 
-  return forwardPollinations('/v1/videos/generations', 'POST', body);
+  const prompt = (body as any)?.prompt || '';
+  return forwardPollinationsVideo(prompt);
 }
 
 export async function routeAudio(
@@ -252,6 +241,11 @@ export async function routeAudio(
   options?: RouteOptions
 ) {
   const model = (body as any)?.model || 'tts-1';
+
+  const virtualProviders = await getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.some(p => p.type === 'audio')) {
+    return routeVirtualAudio(body, virtualProviders.filter(p => p.type === 'audio'), options);
+  }
 
   if (model.startsWith('pollinations/')) {
     const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
@@ -278,13 +272,12 @@ export async function routeAudio(
     return forwardNagaAI('/audio/speech', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Groq → NagaAI
+  // Default: try Pollinations → VoidAI → Airforce → Groq → NagaAI
   if (!options?.autoFallback) {
-    return forwardAIHubMix('/audio/speech', 'POST', body);
+    return forwardPollinations('/v1/audio/speech', 'POST', body);
   }
 
   return tryProviders([
-    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/audio/speech', 'POST', body) },
     { name: 'Pollinations', fn: () => forwardPollinations('/v1/audio/speech', 'POST', body) },
     { name: 'VoidAI',      fn: () => forwardVoidAI('/audio/speech', 'POST', body) },
     { name: 'Airforce',    fn: () => forwardAirforce('/audio/speech', 'POST', body) },
@@ -315,6 +308,11 @@ export async function routeEmbeddings(
 ) {
   const model = (body as any)?.model || 'text-embedding-ada-002';
 
+  const virtualProviders = await getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.some(p => p.type === 'embedding')) {
+    return routeVirtualEmbeddings(body, virtualProviders.filter(p => p.type === 'embedding'), options);
+  }
+
   if (model.startsWith('pollinations/')) {
     const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
     return forwardPollinations('/v1/embeddings', 'POST', fwdBody);
@@ -330,13 +328,12 @@ export async function routeEmbeddings(
     return forwardAirforce('/embeddings', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce
+  // Default: try Pollinations → VoidAI → Airforce
   if (!options?.autoFallback) {
-    return forwardAIHubMix('/embeddings', 'POST', body);
+    return forwardPollinations('/v1/embeddings', 'POST', body);
   }
 
   return tryProviders([
-    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/embeddings', 'POST', body) },
     { name: 'Pollinations', fn: () => forwardPollinations('/v1/embeddings', 'POST', body) },
     { name: 'VoidAI',      fn: () => forwardVoidAI('/embeddings', 'POST', body) },
     { name: 'Airforce',    fn: () => forwardAirforce('/embeddings', 'POST', body) },
@@ -348,6 +345,11 @@ export async function routeTranscription(
   options?: RouteOptions
 ) {
   const model = (body as any)?.model || 'whisper-1';
+
+  const virtualProviders = await getVirtualModelProviders(model);
+  if (virtualProviders && virtualProviders.some(p => p.type === 'transcription')) {
+    return routeVirtualTranscription(body, virtualProviders.filter(p => p.type === 'transcription'), options);
+  }
 
   if (model.startsWith('voidai/')) {
     const fwdBody = { ...(body as any), model: model.replace('voidai/', '') };
@@ -384,7 +386,7 @@ export async function routeTranscription(
 
 function inferType(id: string): string {
   const s = id.toLowerCase();
-  if (/imagen|image|flux|dall-e|gptimage|wan-image|zimage|klein|kontext|suno/.test(s)) return 'image';
+  if (/imagen|image|flux|dall-e|gptimage|zimage|klein|kontext|suno/.test(s)) return 'image';
   if (/video|reel|ltx/.test(s)) return 'video';
   if (/\btts\b|openai-audio|qwen-tts|acestep|elevenlabs-music/.test(s)) return 'audio';
   if (/whisper|scribe|transcri|universal-2/.test(s)) return 'transcription';
@@ -405,54 +407,56 @@ function inferAirforceType(m: any): string {
 }
 
 const POLLINATIONS_FREE_MODELS = [
-  // Text / Chat
-  { id: 'pollinations/openai',               object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/openai-fast',          object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/openai-large',         object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/claude-fast',          object: 'model', owned_by: 'Anthropic',        provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/gemini-fast',          object: 'model', owned_by: 'Google',           provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/gemini-search',        object: 'model', owned_by: 'Google',           provider: 'Pollinations', type: 'text' },
+  // Text / Chat (free tier only)
+  { id: 'pollinations/nova-fast',            object: 'model', owned_by: 'Amazon',           provider: 'Pollinations', type: 'text' },
   { id: 'pollinations/mistral',              object: 'model', owned_by: 'Mistral',          provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/mistral-large',        object: 'model', owned_by: 'Mistral',          provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/llama',                object: 'model', owned_by: 'Meta',             provider: 'Pollinations', type: 'text' },
   { id: 'pollinations/llama-scout',          object: 'model', owned_by: 'Meta',             provider: 'Pollinations', type: 'text' },
   { id: 'pollinations/qwen-coder',           object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/qwen-coder-large',     object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/qwen-large',           object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/llama',                object: 'model', owned_by: 'Meta',             provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/gemini-fast',          object: 'model', owned_by: 'Google',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/mistral-4',            object: 'model', owned_by: 'Mistral',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/openai',               object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
   { id: 'pollinations/qwen-vision',          object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/qwen-safety',          object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/grok',                 object: 'model', owned_by: 'xAI',              provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/kimi',                 object: 'model', owned_by: 'Moonshot',         provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/kimi-k2.6',            object: 'model', owned_by: 'Moonshot',         provider: 'Pollinations', type: 'text' },
   { id: 'pollinations/perplexity-fast',      object: 'model', owned_by: 'Perplexity',       provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/perplexity-reasoning', object: 'model', owned_by: 'Perplexity',       provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/nova-fast',            object: 'model', owned_by: 'Amazon',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/gemini-search',        object: 'model', owned_by: 'Google',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/qwen-safety',          object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
   { id: 'pollinations/nova',                 object: 'model', owned_by: 'Amazon',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/openai-fast',          object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/deepseek',             object: 'model', owned_by: 'DeepSeek',         provider: 'Pollinations', type: 'text' },
   { id: 'pollinations/minimax',              object: 'model', owned_by: 'MiniMax',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/openai-audio',         object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
   { id: 'pollinations/midijourney',          object: 'model', owned_by: 'MIDIjourney',      provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/qwen-vision-pro',      object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/kimi',                 object: 'model', owned_by: 'Moonshot',         provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/mistral-large',        object: 'model', owned_by: 'Mistral',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/qwen-coder-large',     object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/claude-fast',          object: 'model', owned_by: 'Anthropic',        provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/perplexity-reasoning', object: 'model', owned_by: 'Perplexity',       provider: 'Pollinations', type: 'text' },
   { id: 'pollinations/glm',                  object: 'model', owned_by: 'Z.ai',             provider: 'Pollinations', type: 'text' },
-  { id: 'pollinations/text-simple',          object: 'model', owned_by: 'Pollinations',     provider: 'Pollinations', type: 'text' },
-  // Image
+  { id: 'pollinations/grok',                 object: 'model', owned_by: 'xAI',              provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/kimi-k2.6',            object: 'model', owned_by: 'Moonshot',         provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/qwen-large',           object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/openai-large',         object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'text' },
+  { id: 'pollinations/polly',                object: 'model', owned_by: '@Itachi-1824',     provider: 'Pollinations', type: 'text' },
+  // Image (free tier only)
   { id: 'pollinations/flux',                 object: 'model', owned_by: 'Black Forest Labs', provider: 'Pollinations', type: 'image' },
   { id: 'pollinations/zimage',               object: 'model', owned_by: 'ZImage',           provider: 'Pollinations', type: 'image' },
   { id: 'pollinations/klein',                object: 'model', owned_by: 'Black Forest Labs', provider: 'Pollinations', type: 'image' },
   { id: 'pollinations/gptimage',             object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'image' },
   { id: 'pollinations/kontext',              object: 'model', owned_by: 'Black Forest Labs', provider: 'Pollinations', type: 'image' },
-  { id: 'pollinations/gptimage-large',       object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'image' },
-  { id: 'pollinations/wan-image',            object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'image' },
-  { id: 'pollinations/qwen-image',           object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'image' },
   { id: 'pollinations/image-simple',         object: 'model', owned_by: 'Pollinations',     provider: 'Pollinations', type: 'image' },
-  // Video
+  // Video (free tier only)
   { id: 'pollinations/nova-reel',            object: 'model', owned_by: 'Amazon',           provider: 'Pollinations', type: 'video' },
-  { id: 'pollinations/ltx-2',               object: 'model', owned_by: 'LightTricks',       provider: 'Pollinations', type: 'video' },
-  // Audio / TTS
-  { id: 'pollinations/openai-audio',         object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'audio' },
+  // Audio / TTS (free tier only)
   { id: 'pollinations/qwen-tts',             object: 'model', owned_by: 'Alibaba',          provider: 'Pollinations', type: 'audio' },
   { id: 'pollinations/acestep',              object: 'model', owned_by: 'ACE',              provider: 'Pollinations', type: 'audio' },
-  // Transcription
-  { id: 'pollinations/universal-2',          object: 'model', owned_by: 'AssemblyAI',       provider: 'Pollinations', type: 'transcription' },
+  // Transcription (free tier only)
   { id: 'pollinations/whisper',              object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'transcription' },
+  { id: 'pollinations/universal-2',          object: 'model', owned_by: 'AssemblyAI',       provider: 'Pollinations', type: 'transcription' },
   { id: 'pollinations/scribe',               object: 'model', owned_by: 'ElevenLabs',       provider: 'Pollinations', type: 'transcription' },
+  // Embeddings (free tier only)
+  { id: 'pollinations/openai-3-small',       object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'embedding' },
+  { id: 'pollinations/openai-3-large',       object: 'model', owned_by: 'OpenAI',           provider: 'Pollinations', type: 'embedding' },
 ];
 
 const GROQ_FREE_MODELS = [
@@ -756,6 +760,11 @@ async function getVirtualModelProviders(modelId: string): Promise<Array<{ provid
   return userModels[modelId] ?? null;
 }
 
+function stripProviderPrefix(modelId: string): string {
+  const slash = modelId.indexOf('/');
+  return slash >= 0 ? modelId.slice(slash + 1) : modelId;
+}
+
 export async function routeVirtualChat(
   body: unknown,
   providers: Array<{ provider: string; modelId: string; type: string }>,
@@ -763,30 +772,32 @@ export async function routeVirtualChat(
 ): Promise<Response> {
   let lastError: any;
 
-  for (const provider of providers) {
+  for (const entry of providers) {
     try {
-      const fwdBody = { ...(body as any), model: provider.modelId };
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const p = entry.provider.toLowerCase();
 
-      if (provider.provider === 'groq') {
+      if (p === 'groq') {
         return await forwardGroq('/chat/completions', 'POST', fwdBody, options);
-      } else if (provider.provider === 'pollinations') {
+      } else if (p === 'pollinations') {
         return await forwardPollinations('/v1/chat/completions', 'POST', fwdBody, options);
-      } else if (provider.provider === 'aihorde') {
-        const messages = fwdBody.messages || [];
+      } else if (p === 'ai horde' || p === 'aihorde') {
+        const messages = (body as any).messages || [];
         const prompt = messages.map((m: any) => m.content).join('\n') || '';
-        const hordeBody = {
-          prompt,
-          params: {
-            max_length: fwdBody.max_tokens || 80,
-          },
-        };
-        return await forwardAIHorde('/generate/text/async', 'POST', hordeBody, options);
-      } else if (provider.provider === 'voidai') {
+        return await forwardAIHorde('/generate/text/async', 'POST', { prompt, params: { max_length: (body as any).max_tokens || 80 } }, options);
+      } else if (p === 'voidai') {
         return await forwardVoidAI('/chat/completions', 'POST', fwdBody, options);
-      } else if (provider.provider === 'airforce') {
+      } else if (p === 'airforce') {
         return await forwardAirforce('/chat/completions', 'POST', fwdBody, options);
-      } else if (provider.provider === 'cerebras') {
+      } else if (p === 'cerebras') {
         return await forwardCerebras('/chat/completions', 'POST', fwdBody, options);
+      } else if (p === 'tokenreply') {
+        return await forwardTokenReply('/chat/completions', 'POST', fwdBody, options);
+      } else if (p === 'nagaai') {
+        return await forwardNagaAI('/chat/completions', 'POST', fwdBody, options);
+      } else if (p === 'happupy') {
+        return await forwardHappupy('/v1/chat/completions', 'POST', fwdBody, options);
       }
     } catch (error) {
       lastError = error;
@@ -804,31 +815,22 @@ export async function routeVirtualImages(
 ): Promise<Response> {
   let lastError: any;
 
-  for (const provider of providers) {
+  for (const entry of providers) {
     try {
-      const fwdBody = { ...(body as any), model: provider.modelId };
-      const prompt = fwdBody.prompt || '';
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const prompt = (body as any).prompt || '';
+      const p = entry.provider.toLowerCase();
 
-      if (provider.provider === 'pollinations') {
-        if (provider.modelId === 'pollinations/image-simple') {
-          return forwardSimpleImage(prompt);
-        }
+      if (p === 'pollinations') {
+        if (modelId === 'image-simple') return forwardSimpleImage(prompt);
         return await forwardPollinations('/v1/images/generations', 'POST', fwdBody);
-      } else if (provider.provider === 'aihorde') {
-        const hordeBody = {
-          prompt,
-          models: [provider.modelId.replace('aihorde/', '')],
-          params: {
-            sampler_name: 'k_euler',
-            cfg_scale: 7,
-            denoise: 1.0,
-            steps: 20,
-          },
-        };
+      } else if (p === 'ai horde' || p === 'aihorde') {
+        const hordeBody = { prompt, models: [modelId], params: { sampler_name: 'k_euler', cfg_scale: 7, denoise: 1.0, steps: 20 } };
         return await forwardAIHorde('/generate/async', 'POST', hordeBody);
-      } else if (provider.provider === 'voidai') {
+      } else if (p === 'voidai') {
         return await forwardVoidAI('/images/generations', 'POST', fwdBody);
-      } else if (provider.provider === 'airforce') {
+      } else if (p === 'airforce') {
         return await forwardAirforce('/images/generations', 'POST', fwdBody);
       }
     } catch (error) {
@@ -837,26 +839,133 @@ export async function routeVirtualImages(
     }
   }
 
-  throw lastError || new Error('All virtual model providers failed');
+  throw lastError || new Error('All virtual image model providers failed');
+}
+
+export async function routeVirtualVideo(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const entry of providers) {
+    try {
+      const modelId = stripProviderPrefix(entry.modelId);
+      const p = entry.provider.toLowerCase();
+
+      if (p === 'pollinations') {
+        const prompt = (body as any)?.prompt || '';
+        return await forwardPollinationsVideo(prompt, modelId);
+      } else if (p === 'airforce') {
+        return await forwardAirforce('/video/generations', 'POST', { ...(body as any), model: modelId });
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual video model providers failed');
+}
+
+export async function routeVirtualAudio(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const entry of providers) {
+    try {
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const p = entry.provider.toLowerCase();
+
+      if (p === 'pollinations') {
+        return await forwardPollinations('/v1/audio/speech', 'POST', fwdBody);
+      } else if (p === 'voidai') {
+        return await forwardVoidAI('/audio/speech', 'POST', fwdBody);
+      } else if (p === 'airforce') {
+        return await forwardAirforce('/audio/speech', 'POST', fwdBody);
+      } else if (p === 'groq') {
+        return await forwardGroq('/audio/speech', 'POST', fwdBody, options);
+      } else if (p === 'nagaai') {
+        return await forwardNagaAI('/audio/speech', 'POST', fwdBody);
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual audio model providers failed');
+}
+
+export async function routeVirtualEmbeddings(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const entry of providers) {
+    try {
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const p = entry.provider.toLowerCase();
+
+      if (p === 'pollinations') {
+        return await forwardPollinations('/v1/embeddings', 'POST', fwdBody);
+      } else if (p === 'voidai') {
+        return await forwardVoidAI('/embeddings', 'POST', fwdBody);
+      } else if (p === 'airforce') {
+        return await forwardAirforce('/embeddings', 'POST', fwdBody);
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual embedding model providers failed');
+}
+
+export async function routeVirtualTranscription(
+  body: unknown,
+  providers: Array<{ provider: string; modelId: string; type: string }>,
+  options?: RouteOptions
+): Promise<Response> {
+  let lastError: any;
+
+  for (const entry of providers) {
+    try {
+      const modelId = stripProviderPrefix(entry.modelId);
+      const fwdBody = { ...(body as any), model: modelId };
+      const p = entry.provider.toLowerCase();
+
+      if (p === 'pollinations') {
+        return await forwardPollinations('/v1/audio/transcriptions', 'POST', fwdBody);
+      } else if (p === 'voidai') {
+        return await forwardVoidAI('/audio/transcriptions', 'POST', fwdBody);
+      } else if (p === 'airforce') {
+        return await forwardAirforce('/audio/transcriptions', 'POST', fwdBody);
+      } else if (p === 'groq') {
+        return await forwardGroq('/audio/transcriptions', 'POST', fwdBody, options);
+      } else if (p === 'nagaai') {
+        return await forwardNagaAI('/audio/transcriptions', 'POST', fwdBody);
+      }
+    } catch (error) {
+      lastError = error;
+      continue;
+    }
+  }
+
+  throw lastError || new Error('All virtual transcription model providers failed');
 }
 
 export async function routeModels() {
   const models: any[] = [];
-
-  // AIHubMix — free tier only (model IDs ending in -free)
-  try {
-    const r = await forwardAIHubMix('/models', 'GET');
-    if (r.ok) {
-      const data = await r.json();
-      if (data.data && Array.isArray(data.data)) {
-        models.push(
-          ...data.data
-            .filter((m: any) => m.id.endsWith('-free'))
-            .map((m: any) => ({ ...m, provider: 'AIHubMix', type: inferType(m.id) }))
-        );
-      }
-    }
-  } catch (e) { console.error('AIHubMix models error:', e); }
 
   // Pollinations — hardcoded free model list
   models.push(...POLLINATIONS_FREE_MODELS);
@@ -988,10 +1097,6 @@ export async function getDynamicRateLimit(userModel?: string): Promise<number> {
     return getRateLimitForProvider('CEREBRAS');
   }
 
-  if (userModel?.startsWith('aihubmix/') || !userModel) {
-    return getRateLimitForProvider('AIHUBMIX');
-  }
-
   if (userModel?.startsWith('tokenreply/')) {
     return getRateLimitForProvider('TOKENREPLY');
   }
@@ -1000,14 +1105,28 @@ export async function getDynamicRateLimit(userModel?: string): Promise<number> {
     return getRateLimitForProvider('NAGAAI');
   }
 
-  const [pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit, tokenreplyLimit, nagaaiLimit] = await Promise.all([
+  if (userModel?.startsWith('groq/')) {
+    return getRateLimitForProvider('GROQ');
+  }
+
+  if (userModel?.startsWith('aihorde/')) {
+    return getRateLimitForProvider('AIHORDE');
+  }
+
+  if (userModel?.startsWith('happupy/')) {
+    return getRateLimitForProvider('HAPPUPY');
+  }
+
+  const [pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, groqLimit, tokenreplyLimit, nagaaiLimit, aihorderLimit, happupyLimit] = await Promise.all([
     getRateLimitForProvider('POLLINATIONS'),
     getRateLimitForProvider('VOIDAI'),
     getRateLimitForProvider('AIRFORCE'),
     getRateLimitForProvider('CEREBRAS'),
-    getRateLimitForProvider('AIHUBMIX'),
+    getRateLimitForProvider('GROQ'),
     getRateLimitForProvider('TOKENREPLY'),
     getRateLimitForProvider('NAGAAI'),
+    getRateLimitForProvider('AIHORDE'),
+    getRateLimitForProvider('HAPPUPY'),
   ]);
-  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit, tokenreplyLimit, nagaaiLimit);
+  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, groqLimit, tokenreplyLimit, nagaaiLimit, aihorderLimit, happupyLimit);
 }

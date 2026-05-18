@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractApiKey, validateApiKey, checkRateLimit } from '@/lib/api-keys';
 import { routeChat, getDynamicRateLimit } from '@/lib/providers';
 import { trackRequest, trackUserRequest } from '@/lib/analytics';
+import { getPluginConfig, runPluginPipeline } from '@/lib/plugins';
 
 export const runtime = 'nodejs';
 
@@ -43,16 +44,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Run plugin pipeline (silently transforms messages)
+    let processedBody = body;
+    if (Array.isArray((body as any)?.messages)) {
+      try {
+        const pluginConfig = await getPluginConfig(apiKey);
+        const transformed = await runPluginPipeline((body as any).messages, pluginConfig, apiKey);
+        processedBody = { ...(body as any), messages: transformed };
+      } catch (e) {
+        console.warn('Plugin pipeline error:', e);
+      }
+    }
+
     // Check if streaming is requested
     const streaming = (body as any)?.stream || false;
 
-    const response = await routeChat(body, { streaming, autoFallback: true });
+    const response = await routeChat(processedBody, { streaming, autoFallback: true });
 
     if (!response.ok) {
-      console.error('Provider error:', response.status, await response.text());
+      const text = await response.text();
+      console.error('Provider error:', response.status, text);
+      // Never forward 3xx to clients — they have no Location header to follow
+      const status = response.status >= 300 && response.status < 400 ? 502 : response.status;
       return NextResponse.json(
         { error: 'Provider error' },
-        { status: response.status }
+        { status }
       );
     }
 

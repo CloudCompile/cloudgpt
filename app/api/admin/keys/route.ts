@@ -7,10 +7,9 @@ import type { ProviderKeyEntry } from '@/lib/providers/keypool';
 
 export const runtime = 'nodejs';
 
-const PROVIDERS = ['AIHubMix', 'Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI'] as const;
+const PROVIDERS = ['Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI', 'Happupy'] as const;
 
 const PROVIDER_TEST_URLS: Record<string, string> = {
-  AIHubMix:    'https://aihubmix.com/v1/models',
   Pollinations: 'https://gen.pollinations.ai/v1/models',
   VoidAI:      'https://api.voidai.app/v1/models',
   Airforce:    'https://api.airforce/v1/models',
@@ -19,6 +18,7 @@ const PROVIDER_TEST_URLS: Record<string, string> = {
   AIHorde:     'https://aihorde.net/api/v2/status/heartbeat',
   TokenReply:  'https://api.tokenreply.com/v1beta/models',
   NagaAI:      'https://api.naga.ac/v1/models',
+  Happupy:     'https://beta.hapuppy.com/v1/models',
 };
 
 function keyPreview(rawKey: string): string {
