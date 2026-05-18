@@ -17,11 +17,17 @@ interface NewKeyResponse {
   createdAt: number;
 }
 
+interface Analytics {
+  requests: { today: number; week: number; total: number };
+  topModels: Array<{ model: string; count: number }>;
+}
+
 const BASE_URL = 'https://www.cjhauser.me';
 
 export default function Dashboard() {
   const { userId, isSignedIn } = useAuth();
   const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState('');
   const [createdKey, setCreatedKey] = useState<NewKeyResponse | null>(null);
@@ -31,7 +37,19 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isSignedIn) return;
     fetchKeys();
+    fetchAnalytics();
   }, [isSignedIn, userId]);
+
+  async function fetchAnalytics() {
+    try {
+      const response = await fetch('/api/user/analytics');
+      if (!response.ok) throw new Error('Failed to fetch analytics');
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (e) {
+      console.warn('Failed to load analytics:', e);
+    }
+  }
 
   async function fetchKeys() {
     try {
@@ -135,6 +153,75 @@ export default function Dashboard() {
           Donate a Key
         </a>
       </div>
+
+      {/* Usage Stats */}
+      {analytics && (
+        <div style={{
+          marginBottom: '50px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: '20px',
+        }}>
+          <div style={{
+            padding: '20px 24px',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: '18px 14px 16px 20px',
+          }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Today</p>
+            <p style={{ fontSize: '2rem', fontWeight: '700', margin: 0 }}>{analytics.requests.today}</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: '4px 0 0 0' }}>requests</p>
+          </div>
+          <div style={{
+            padding: '20px 24px',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: '18px 14px 16px 20px',
+          }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>This Week</p>
+            <p style={{ fontSize: '2rem', fontWeight: '700', margin: 0 }}>{analytics.requests.week}</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: '4px 0 0 0' }}>requests</p>
+          </div>
+          <div style={{
+            padding: '20px 24px',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border)',
+            borderRadius: '18px 14px 16px 20px',
+          }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total</p>
+            <p style={{ fontSize: '2rem', fontWeight: '700', margin: 0 }}>{analytics.requests.total}</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: '4px 0 0 0' }}>requests</p>
+          </div>
+        </div>
+      )}
+
+      {analytics?.topModels && analytics.topModels.length > 0 && (
+        <div style={{
+          marginBottom: '50px',
+          padding: '20px 24px',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border)',
+          borderRadius: '18px 14px 16px 20px',
+        }}>
+          <h3 style={{ marginBottom: '16px', fontSize: '1rem' }}>Most Used Models</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {analytics.topModels.map((model, idx) => (
+              <div key={idx} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 12px',
+                background: 'rgba(124,58,237,0.05)',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+              }}>
+                <code style={{ fontSize: '0.85rem' }}>{model.model}</code>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{model.count} {model.count === 1 ? 'request' : 'requests'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <h1 style={{ marginBottom: '8px', fontSize: '2rem' }}>API Keys</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '50px' }}>

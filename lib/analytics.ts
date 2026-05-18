@@ -31,6 +31,11 @@ export async function trackUserRequest(userId: string, model: string): Promise<v
   await redis.incr(`analytics:user:req:${userId}:${today}`);
   await redis.expire(`analytics:user:req:${userId}:${today}`, 172800);
   await redis.incr(`analytics:user:req:${userId}:total`);
+  // Track model usage for this user
+  if (model) {
+    await redis.hIncrBy(`analytics:user:model:${userId}:${today}`, model, 1);
+    await redis.expire(`analytics:user:model:${userId}:${today}`, 172800);
+  }
 }
 
 export async function getUserRequestStats(userId: string): Promise<{
@@ -56,6 +61,25 @@ export async function getUserRequestStats(userId: string): Promise<{
   const total = totalStr ? (parseInt(totalStr, 10) || 0) : 0;
 
   return { today: todayCount, week: weekCount, total };
+}
+
+export async function getUserAnalytics(userId: string): Promise<{
+  requests: { today: number; week: number; total: number };
+  topModels: Array<{ model: string; count: number }>;
+}> {
+  const today = new Date().toISOString().split('T')[0];
+  const requests = await getUserRequestStats(userId);
+
+  let topModels: Array<{ model: string; count: number }> = [];
+  try {
+    const modelHash = (await redis.hGetAll(`analytics:user:model:${userId}:${today}`)) ?? {};
+    topModels = Object.entries(modelHash)
+      .map(([model, count]) => ({ model, count: parseInt(count as string, 10) || 0 }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  } catch { /* key type mismatch — skip */ }
+
+  return { requests, topModels };
 }
 
 export async function getSystemAnalytics(): Promise<{
