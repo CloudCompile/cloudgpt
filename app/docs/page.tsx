@@ -340,7 +340,7 @@ while (true) {
       const response = await fetch(\`https://www.cjhauser.me/v1\${endpoint}\`, {
         method: 'POST',
         headers: {
-          'Authorization': \`Bearer \${process.env.CLOUDGPT_API_KEY}\`,
+          'Authorization': \`Bearer \${process.env.OPENRELAY_API_KEY}\`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -416,7 +416,7 @@ print(image_response.data[0].url)</pre>
         <pre>import OpenAI from "openai";
 
 const client = new OpenAI({
-  apiKey: process.env.CLOUDGPT_API_KEY,
+  apiKey: process.env.OPENRELAY_API_KEY,
   baseURL: "https://www.cjhauser.me/v1"
 });
 

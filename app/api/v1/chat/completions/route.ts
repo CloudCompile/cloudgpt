@@ -61,10 +61,13 @@ export async function POST(request: NextRequest) {
     const response = await routeChat(processedBody, { streaming, autoFallback: true });
 
     if (!response.ok) {
-      console.error('Provider error:', response.status, await response.text());
+      const text = await response.text();
+      console.error('Provider error:', response.status, text);
+      // Never forward 3xx to clients — they have no Location header to follow
+      const status = response.status >= 300 && response.status < 400 ? 502 : response.status;
       return NextResponse.json(
         { error: 'Provider error' },
-        { status: response.status }
+        { status }
       );
     }
 
