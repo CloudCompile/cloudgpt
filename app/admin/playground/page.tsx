@@ -19,7 +19,6 @@ interface ApiKey {
 }
 
 export default function PlaygroundPage() {
-  const { getToken } = useAuth();
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [selectedKey, setSelectedKey] = useState('');
   const [models, setModels] = useState<Model[]>([]);
@@ -80,7 +79,7 @@ export default function PlaygroundPage() {
 
     const userMessage = input.trim();
     setInput('');
-    const newMessages = [...messages, { role: 'user', content: userMessage }];
+    const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
     setMessages(newMessages);
     setLoading(true);
     setError('');
