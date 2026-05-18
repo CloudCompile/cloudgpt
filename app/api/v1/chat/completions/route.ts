@@ -10,6 +10,7 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+  let body: any;
   try {
     const apiKey = extractApiKey(request.headers);
 
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    body = await request.json();
     const userModel = (body as any)?.model;
 
     // Get dynamic rate limit based on model
@@ -74,7 +75,21 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
     console.error('Chat API error:', error);
+
+    // Provide helpful guidance for model-related errors
+    if (errorMsg.includes('All providers failed') || errorMsg.includes('model')) {
+      const model = body?.model || 'unknown';
+      return NextResponse.json(
+        {
+          error: `Model "${model}" is not available or failed on all providers`,
+          hint: 'Call GET /v1/models to see available models. Use format "provider/model-name" (e.g., "pollinations/claude-fast") or a bare model name for automatic provider selection.',
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
