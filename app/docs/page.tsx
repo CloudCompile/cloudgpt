@@ -46,7 +46,7 @@ export default function DocsPage() {
 
         <h3>Include in Requests</h3>
         <p>Add the header to every request you make:</p>
-        <pre>curl https://www.cjhauser.me/v1/chat/completions \\
+        <pre>curl https://cjhauser.me/v1/chat/completions \\
   -H "Authorization: Bearer or_abc123..." \\
   -H "Content-Type: application/json" \\
   -d '{"model": "gpt-4", "messages": [...]}'</pre>
@@ -73,7 +73,7 @@ export default function DocsPage() {
       title: 'API Reference',
       content: `
         <h3>Base URL</h3>
-        <pre>https://www.cjhauser.me/v1</pre>
+        <pre>https://cjhauser.me/v1</pre>
 
         <h3>Available Endpoints</h3>
         <ul>
@@ -157,7 +157,7 @@ export default function DocsPage() {
         </ul>
 
         <h3>Streaming Example</h3>
-        <pre>const response = await fetch('https://www.cjhauser.me/v1/chat/completions', {
+        <pre>const response = await fetch('https://cjhauser.me/v1/chat/completions', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer or_YOUR_KEY',
@@ -337,7 +337,7 @@ while (true) {
 
   while (retries < maxRetries) {
     try {
-      const response = await fetch(\`https://www.cjhauser.me/v1\${endpoint}\`, {
+      const response = await fetch(\`https://cjhauser.me/v1\${endpoint}\`, {
         method: 'POST',
         headers: {
           'Authorization': \`Bearer \${process.env.OPENRELAY_API_KEY}\`,
@@ -377,7 +377,7 @@ while (true) {
 
 client = OpenAI(
     api_key="or_YOUR_API_KEY",
-    base_url="https://www.cjhauser.me/v1"
+    base_url="https://cjhauser.me/v1"
 )
 
 # Simple chat
@@ -417,7 +417,7 @@ print(image_response.data[0].url)</pre>
 
 const client = new OpenAI({
   apiKey: process.env.OPENRELAY_API_KEY,
-  baseURL: "https://www.cjhauser.me/v1"
+  baseURL: "https://cjhauser.me/v1"
 });
 
 // Simple chat
@@ -455,7 +455,7 @@ const image = await client.images.generate({
 console.log(image.data[0].url);</pre>
 
         <h3>cURL</h3>
-        <pre>curl https://www.cjhauser.me/v1/chat/completions \\
+        <pre>curl https://cjhauser.me/v1/chat/completions \\
   -H "Authorization: Bearer or_YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -468,7 +468,7 @@ console.log(image.data[0].url);</pre>
   }'
 
 # Image generation
-curl https://www.cjhauser.me/v1/images/generations \\
+curl https://cjhauser.me/v1/images/generations \\
   -H "Authorization: Bearer or_YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -479,7 +479,7 @@ curl https://www.cjhauser.me/v1/images/generations \\
   }'
 
 # Get embeddings
-curl https://www.cjhauser.me/v1/embeddings \\
+curl https://cjhauser.me/v1/embeddings \\
   -H "Authorization: Bearer or_YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
