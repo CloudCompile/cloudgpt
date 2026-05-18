@@ -19,14 +19,24 @@ export interface RouteOptions {
 async function tryProviders(
   providers: Array<{ name: string; fn: () => Promise<Response> }>
 ): Promise<Response> {
+  let lastResponse: Response | undefined;
   let lastError: unknown;
   for (const { name, fn } of providers) {
     try {
-      return await fn();
+      const response = await fn();
+      if (response.ok) {
+        return response;
+      }
+      console.warn(`[fallback] ${name}: HTTP ${response.status}`);
+      lastResponse = response;
     } catch (e) {
       console.warn(`[fallback] ${name}: ${e instanceof Error ? e.message : e}`);
       lastError = e;
     }
+  }
+  // If we have a response, return it (even if not ok) for proper error handling
+  if (lastResponse) {
+    return lastResponse;
   }
   const msg = lastError instanceof Error ? lastError.message : String(lastError);
   logError(providers.map(p => p.name).join('→'), msg).catch(() => {});
