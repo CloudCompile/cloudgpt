@@ -13,15 +13,42 @@ interface Model {
   type?: string;
 }
 
+interface ApiKey {
+  id: string;
+  name: string;
+}
+
 export default function PlaygroundPage() {
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [selectedKey, setSelectedKey] = useState('');
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingModels, setLoadingModels] = useState(true);
+  const [loadingKeys, setLoadingKeys] = useState(true);
   const [error, setError] = useState('');
+  const [debugInfo, setDebugInfo] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load API keys on mount
+  useEffect(() => {
+    async function loadApiKeys() {
+      try {
+        const res = await fetch('/api/user/keys');
+        if (!res.ok) throw new Error('Failed to load API keys');
+        const data = await res.json();
+        setApiKeys(data.keys || []);
+        if (data.keys?.length > 0) setSelectedKey(data.keys[0].id);
+      } catch (err) {
+        setError('Failed to load API keys. Make sure you have at least one API key created.');
+      } finally {
+        setLoadingKeys(false);
+      }
+    }
+    loadApiKeys();
+  }, []);
 
   // Load models on mount
   useEffect(() => {
@@ -48,40 +75,55 @@ export default function PlaygroundPage() {
   }, [messages]);
 
   async function handleSendMessage() {
-    if (!input.trim() || !selectedModel || loading) return;
+    if (!input.trim() || !selectedModel || !selectedKey || loading) return;
 
     const userMessage = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
+    setMessages(newMessages);
     setLoading(true);
     setError('');
+    setDebugInfo('');
 
     try {
+      const requestBody = {
+        model: selectedModel,
+        messages: newMessages,
+        temperature: 0.7,
+        max_tokens: 1000,
+      };
+
+      setDebugInfo(`Sending request to /api/v1/chat/completions with model: ${selectedModel}`);
+
       const response = await fetch('/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer test-admin-key',
+          'Authorization': `Bearer ${selectedKey}`,
         },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [...messages, { role: 'user', content: userMessage }],
-          temperature: 0.7,
-          max_tokens: 1000,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'API request failed');
+        const responseText = await response.text();
+        let errorMessage = `API Error (${response.status})`;
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error?.message || errorData.error || errorMessage;
+        } catch {
+          errorMessage = responseText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       const assistantMessage = data.choices[0]?.message?.content || 'No response';
       setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+      setDebugInfo('');
     } catch (err) {
-      setError(String(err));
-      setMessages(prev => prev.slice(0, -1)); // Remove the user message if request failed
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      setError(`Error: ${errorMsg}`);
+      setMessages(prev => prev.slice(0, -1));
     } finally {
       setLoading(false);
     }
@@ -90,6 +132,7 @@ export default function PlaygroundPage() {
   function handleClearChat() {
     setMessages([]);
     setError('');
+    setDebugInfo('');
   }
 
   return (
@@ -99,35 +142,75 @@ export default function PlaygroundPage() {
         Test and chat with available AI models in real-time.
       </p>
 
-      {/* Model selector */}
-      <div style={{ marginBottom: '32px' }}>
-        <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}>
-          Select Model
-        </label>
-        <select
-          value={selectedModel}
-          onChange={(e) => {
-            setSelectedModel(e.target.value);
-            setMessages([]);
-            setError('');
-          }}
-          style={{
-            width: '100%',
-            padding: '10px 12px',
-            borderRadius: '12px',
-            border: '1px solid var(--border)',
-            background: 'var(--bg)',
-            color: 'var(--fg)',
-            fontSize: '0.95rem',
-          }}
-        >
-          <option value="">Choose a model...</option>
-          {models.map((model) => (
-            <option key={model.id} value={model.id}>
-              {model.id} ({model.provider || 'Unknown'})
-            </option>
-          ))}
-        </select>
+      {/* Selectors */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+        {/* API Key selector */}
+        <div>
+          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+            API Key
+          </label>
+          <select
+            value={selectedKey}
+            onChange={(e) => {
+              setSelectedKey(e.target.value);
+              setMessages([]);
+              setError('');
+            }}
+            disabled={loadingKeys}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              borderRadius: '12px',
+              border: '1px solid var(--border)',
+              background: 'var(--bg)',
+              color: 'var(--fg)',
+              fontSize: '0.95rem',
+              cursor: loadingKeys ? 'not-allowed' : 'pointer',
+              opacity: loadingKeys ? 0.6 : 1,
+            }}
+          >
+            <option value="">{loadingKeys ? 'Loading keys...' : 'Choose a key...'}</option>
+            {apiKeys.map((key) => (
+              <option key={key.id} value={key.id}>
+                {key.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Model selector */}
+        <div>
+          <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', marginBottom: '8px', color: 'var(--text-secondary)' }}>
+            Model
+          </label>
+          <select
+            value={selectedModel}
+            onChange={(e) => {
+              setSelectedModel(e.target.value);
+              setMessages([]);
+              setError('');
+            }}
+            disabled={loadingModels}
+            style={{
+              width: '100%',
+              padding: '10px 12px',
+              borderRadius: '12px',
+              border: '1px solid var(--border)',
+              background: 'var(--bg)',
+              color: 'var(--fg)',
+              fontSize: '0.95rem',
+              cursor: loadingModels ? 'not-allowed' : 'pointer',
+              opacity: loadingModels ? 0.6 : 1,
+            }}
+          >
+            <option value="">{loadingModels ? 'Loading models...' : 'Choose a model...'}</option>
+            {models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.id} ({model.provider || 'Unknown'})
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Chat container */}
@@ -205,7 +288,7 @@ export default function PlaygroundPage() {
               }
             }}
             placeholder="Type a message..."
-            disabled={!selectedModel || loading || loadingModels}
+            disabled={!selectedModel || !selectedKey || loading || loadingModels || loadingKeys}
             style={{
               flex: 1,
               padding: '10px 12px',
@@ -218,23 +301,30 @@ export default function PlaygroundPage() {
           />
           <button
             onClick={handleSendMessage}
-            disabled={!selectedModel || loading || !input.trim() || loadingModels}
+            disabled={!selectedModel || !selectedKey || loading || !input.trim() || loadingModels || loadingKeys}
             style={{
               padding: '10px 20px',
               borderRadius: '10px',
-              background: selectedModel && !loading && input.trim() ? 'var(--accent)' : 'var(--border)',
-              color: selectedModel && !loading && input.trim() ? 'white' : 'var(--text-tertiary)',
+              background: selectedModel && selectedKey && !loading && input.trim() ? 'var(--accent)' : 'var(--border)',
+              color: selectedModel && selectedKey && !loading && input.trim() ? 'white' : 'var(--text-tertiary)',
               border: 'none',
-              cursor: selectedModel && !loading && input.trim() ? 'pointer' : 'not-allowed',
+              cursor: selectedModel && selectedKey && !loading && input.trim() ? 'pointer' : 'not-allowed',
               fontSize: '0.9rem',
               fontWeight: '600',
               transition: 'all 0.2s ease',
             }}
           >
-            Send
+            {loading ? 'Sending...' : 'Send'}
           </button>
         </div>
       </div>
+
+      {/* Debug info */}
+      {debugInfo && (
+        <div style={{ marginBottom: '20px', padding: '12px', borderRadius: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+          {debugInfo}
+        </div>
+      )}
 
       {/* Error message */}
       {error && (
@@ -263,8 +353,14 @@ export default function PlaygroundPage() {
 
       <div className="info-box" style={{ marginTop: '32px' }}>
         <p>
-          <strong>Note:</strong> This playground is for testing and development. Authentication is handled by the admin session.
+          <strong>Playground Tips:</strong>
         </p>
+        <ul style={{ margin: '8px 0 0 20px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+          <li>Select an API key and model to start testing</li>
+          <li>Messages are sent with temperature 0.7 and max 1000 tokens</li>
+          <li>Each conversation starts fresh - clear chat to reset</li>
+          <li>Debug info shows the API endpoint being called</li>
+        </ul>
       </div>
     </main>
   );
