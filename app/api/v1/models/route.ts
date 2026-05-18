@@ -22,6 +22,8 @@ export async function GET() {
         headers: {
           'X-Available-Models': modelCount.toString(),
           'X-Available-Providers': '9',
+          // Cache at CDN edge for 5 min; clients may serve stale for 1 min while revalidating
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
         }
       }
     );

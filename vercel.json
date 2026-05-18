@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "app/api/v1/chat/completions/route.ts": { "maxDuration": 30 },
+    "app/api/v1/images/generations/route.ts": { "maxDuration": 30 },
+    "app/api/v1/videos/generations/route.ts": { "maxDuration": 60 },
+    "app/api/v1/audio/speech/route.ts": { "maxDuration": 30 },
+    "app/api/v1/responses/route.ts": { "maxDuration": 30 },
+    "app/api/**": { "maxDuration": 15 }
+  }
+}

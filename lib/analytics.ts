@@ -17,26 +17,28 @@ export async function trackRequest(model: string): Promise<void> {
   const today = new Date().toISOString().split('T')[0];
   const provider = inferProvider(model);
 
-  await redis.incr(`analytics:req:total:${today}`);
-  await redis.expire(`analytics:req:total:${today}`, 172800);
-
-  await redis.hIncrBy(`analytics:req:model:${today}`, model, 1);
-  await redis.expire(`analytics:req:model:${today}`, 172800);
-
-  await redis.hIncrBy(`analytics:req:provider:${today}`, provider, 1);
-  await redis.expire(`analytics:req:provider:${today}`, 172800);
+  const pipeline = await redis.multi();
+  pipeline.incr(`analytics:req:total:${today}`);
+  pipeline.expire(`analytics:req:total:${today}`, 172800);
+  pipeline.hIncrBy(`analytics:req:model:${today}`, model, 1);
+  pipeline.expire(`analytics:req:model:${today}`, 172800);
+  pipeline.hIncrBy(`analytics:req:provider:${today}`, provider, 1);
+  pipeline.expire(`analytics:req:provider:${today}`, 172800);
+  await pipeline.exec();
 }
 
 export async function trackUserRequest(userId: string, model: string): Promise<void> {
   const today = new Date().toISOString().split('T')[0];
-  await redis.incr(`analytics:user:req:${userId}:${today}`);
-  await redis.expire(`analytics:user:req:${userId}:${today}`, 172800);
-  await redis.incr(`analytics:user:req:${userId}:total`);
-  // Track model usage for this user
+
+  const pipeline = await redis.multi();
+  pipeline.incr(`analytics:user:req:${userId}:${today}`);
+  pipeline.expire(`analytics:user:req:${userId}:${today}`, 172800);
+  pipeline.incr(`analytics:user:req:${userId}:total`);
   if (model) {
-    await redis.hIncrBy(`analytics:user:model:${userId}:${today}`, model, 1);
-    await redis.expire(`analytics:user:model:${userId}:${today}`, 172800);
+    pipeline.hIncrBy(`analytics:user:model:${userId}:${today}`, model, 1);
+    pipeline.expire(`analytics:user:model:${userId}:${today}`, 172800);
   }
+  await pipeline.exec();
 }
 
 export async function getUserRequestStats(userId: string): Promise<{
