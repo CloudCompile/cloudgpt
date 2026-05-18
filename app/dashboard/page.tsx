@@ -38,7 +38,7 @@ const DEFAULT_CONFIG: PluginConfig = {
   webSearch: { enabled: false, mode: 'auto', provider: 'ddg' },
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://openrelay.dev';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://cjhauser.me';
 
 export default function Dashboard() {
   const { userId, isSignedIn } = useAuth();
