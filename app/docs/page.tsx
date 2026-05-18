@@ -511,7 +511,7 @@ curl https://www.cjhauser.me/v1/embeddings \\
         <h4>Pollinations</h4>
         <p>40+ models for text, images, and more. High rate limits with automatic fallback.</p>
 
-        <h4>Others (AIHubMix, VoidAI, Airforce, AIHorde)</h4>
+        <h4>Others (VoidAI, Airforce, AIHorde)</h4>
         <p>Rate limits scale with the number of API keys you configure. More keys = higher throughput.</p>
 
         <h3>Increasing Limits</h3>

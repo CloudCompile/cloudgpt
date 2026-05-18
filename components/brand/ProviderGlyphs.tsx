@@ -34,17 +34,6 @@ function GlyphBase({
   );
 }
 
-// AIHubMix — concentric arcs converging on a hub
-export const GlyphAIHubMix = (p: GlyphProps) => (
-  <GlyphBase {...p}>
-    <circle cx="16" cy="16" r="2.5" fill="currentColor" stroke="none" />
-    <path d="M7 16 a9 9 0 0 1 18 0" />
-    <path d="M10.5 16 a5.5 5.5 0 0 1 11 0" />
-    <circle cx="7" cy="16" r="1.4" fill="currentColor" stroke="none" />
-    <circle cx="25" cy="16" r="1.4" fill="currentColor" stroke="none" />
-  </GlyphBase>
-);
-
 // Pollinations — petal / spore burst
 export const GlyphPollinations = (p: GlyphProps) => (
   <GlyphBase {...p}>
@@ -156,7 +145,6 @@ export const PROVIDER_GLYPHS: Record<
   string,
   { Glyph: ComponentType<GlyphProps>; color: string }
 > = {
-  AIHubMix:       { Glyph: GlyphAIHubMix,     color: '#6366f1' },
   Pollinations:   { Glyph: GlyphPollinations, color: '#a855f7' },
   VoidAI:         { Glyph: GlyphVoidAI,       color: '#06b6d4' },
   Airforce:       { Glyph: GlyphAirforce,     color: '#f59e0b' },

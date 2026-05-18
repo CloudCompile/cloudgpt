@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 
-const PROVIDERS = ['AIHubMix', 'Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI', 'Happupy'] as const;
+const PROVIDERS = ['Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI', 'Happupy'] as const;
 type Provider = typeof PROVIDERS[number];
 
 const PROVIDER_COLORS: Record<string, string> = {
-  AIHubMix: '#6366f1',
   Pollinations: '#a855f7',
   VoidAI: '#06b6d4',
   Airforce: '#f59e0b',

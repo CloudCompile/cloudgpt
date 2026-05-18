@@ -16,22 +16,6 @@ export interface RouteOptions {
   autoFallback?: boolean;
 }
 
-async function forwardAIHubMix(endpoint: string, method: string, body?: unknown) {
-  const apiKey = await getNextKey('aihubmix');
-  if (!apiKey) throw new Error('No AIHubMix API key configured');
-
-  const response = await fetch(`https://aihubmix.com/v1${endpoint}`, {
-    method,
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-
-  return response;
-}
-
 async function tryProviders(
   providers: Array<{ name: string; fn: () => Promise<Response> }>
 ): Promise<Response> {
@@ -115,16 +99,15 @@ export async function routeChat(
     return forwardHappupy('/v1/chat/completions', 'POST', fwdBody, options);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde → TokenReply → NagaAI → Happupy
+  // Default: try Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde → TokenReply → NagaAI → Happupy
   if (!options?.autoFallback) {
-    return forwardAIHubMix('/chat/completions', 'POST', body);
+    return forwardPollinations('/v1/chat/completions', 'POST', body, options);
   }
 
   const messages = (body as any).messages || [];
   const prompt = messages.map((m: any) => m.content).join('\n') || '';
 
   return tryProviders([
-    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/chat/completions', 'POST', body) },
     { name: 'Pollinations', fn: () => forwardPollinations('/v1/chat/completions', 'POST', body, options) },
     { name: 'VoidAI',      fn: () => forwardVoidAI('/chat/completions', 'POST', body, options) },
     { name: 'Airforce',    fn: () => forwardAirforce('/chat/completions', 'POST', body, options) },
@@ -195,14 +178,13 @@ export async function routeImages(
     return forwardHappupy('/v1/images/generations', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → AIHorde → NagaAI → Happupy
+  // Default: try Pollinations → VoidAI → Airforce → AIHorde → NagaAI → Happupy
   if (!options?.autoFallback) {
-    return forwardAIHubMix('/images/generations', 'POST', body);
+    return forwardPollinations('/v1/images/generations', 'POST', body);
   }
 
   const prompt = (body as any)?.prompt || '';
   return tryProviders([
-    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/images/generations', 'POST', body) },
     { name: 'Pollinations', fn: () => forwardPollinations('/v1/images/generations', 'POST', body) },
     { name: 'VoidAI',      fn: () => forwardVoidAI('/images/generations', 'POST', body) },
     { name: 'Airforce',    fn: () => forwardAirforce('/images/generations', 'POST', body) },
@@ -280,13 +262,12 @@ export async function routeAudio(
     return forwardNagaAI('/audio/speech', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce → Groq → NagaAI
+  // Default: try Pollinations → VoidAI → Airforce → Groq → NagaAI
   if (!options?.autoFallback) {
-    return forwardAIHubMix('/audio/speech', 'POST', body);
+    return forwardPollinations('/v1/audio/speech', 'POST', body);
   }
 
   return tryProviders([
-    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/audio/speech', 'POST', body) },
     { name: 'Pollinations', fn: () => forwardPollinations('/v1/audio/speech', 'POST', body) },
     { name: 'VoidAI',      fn: () => forwardVoidAI('/audio/speech', 'POST', body) },
     { name: 'Airforce',    fn: () => forwardAirforce('/audio/speech', 'POST', body) },
@@ -337,13 +318,12 @@ export async function routeEmbeddings(
     return forwardAirforce('/embeddings', 'POST', fwdBody);
   }
 
-  // Default: try AIHubMix → Pollinations → VoidAI → Airforce
+  // Default: try Pollinations → VoidAI → Airforce
   if (!options?.autoFallback) {
-    return forwardAIHubMix('/embeddings', 'POST', body);
+    return forwardPollinations('/v1/embeddings', 'POST', body);
   }
 
   return tryProviders([
-    { name: 'AIHubMix',    fn: () => forwardAIHubMix('/embeddings', 'POST', body) },
     { name: 'Pollinations', fn: () => forwardPollinations('/v1/embeddings', 'POST', body) },
     { name: 'VoidAI',      fn: () => forwardVoidAI('/embeddings', 'POST', body) },
     { name: 'Airforce',    fn: () => forwardAirforce('/embeddings', 'POST', body) },
@@ -802,8 +782,6 @@ export async function routeVirtualChat(
         return await forwardAirforce('/chat/completions', 'POST', fwdBody, options);
       } else if (p === 'cerebras') {
         return await forwardCerebras('/chat/completions', 'POST', fwdBody, options);
-      } else if (p === 'aihubmix') {
-        return await forwardAIHubMix('/chat/completions', 'POST', fwdBody);
       } else if (p === 'tokenreply') {
         return await forwardTokenReply('/chat/completions', 'POST', fwdBody, options);
       } else if (p === 'nagaai') {
@@ -844,8 +822,6 @@ export async function routeVirtualImages(
         return await forwardVoidAI('/images/generations', 'POST', fwdBody);
       } else if (p === 'airforce') {
         return await forwardAirforce('/images/generations', 'POST', fwdBody);
-      } else if (p === 'aihubmix') {
-        return await forwardAIHubMix('/images/generations', 'POST', fwdBody);
       }
     } catch (error) {
       lastError = error;
@@ -896,9 +872,7 @@ export async function routeVirtualAudio(
       const fwdBody = { ...(body as any), model: modelId };
       const p = entry.provider.toLowerCase();
 
-      if (p === 'aihubmix') {
-        return await forwardAIHubMix('/audio/speech', 'POST', fwdBody);
-      } else if (p === 'pollinations') {
+      if (p === 'pollinations') {
         return await forwardPollinations('/v1/audio/speech', 'POST', fwdBody);
       } else if (p === 'voidai') {
         return await forwardVoidAI('/audio/speech', 'POST', fwdBody);
@@ -931,9 +905,7 @@ export async function routeVirtualEmbeddings(
       const fwdBody = { ...(body as any), model: modelId };
       const p = entry.provider.toLowerCase();
 
-      if (p === 'aihubmix') {
-        return await forwardAIHubMix('/embeddings', 'POST', fwdBody);
-      } else if (p === 'pollinations') {
+      if (p === 'pollinations') {
         return await forwardPollinations('/v1/embeddings', 'POST', fwdBody);
       } else if (p === 'voidai') {
         return await forwardVoidAI('/embeddings', 'POST', fwdBody);
@@ -984,21 +956,6 @@ export async function routeVirtualTranscription(
 
 export async function routeModels() {
   const models: any[] = [];
-
-  // AIHubMix — free tier only (model IDs ending in -free)
-  try {
-    const r = await forwardAIHubMix('/models', 'GET');
-    if (r.ok) {
-      const data = await r.json();
-      if (data.data && Array.isArray(data.data)) {
-        models.push(
-          ...data.data
-            .filter((m: any) => m.id.endsWith('-free'))
-            .map((m: any) => ({ ...m, provider: 'AIHubMix', type: inferType(m.id) }))
-        );
-      }
-    }
-  } catch (e) { console.error('AIHubMix models error:', e); }
 
   // Pollinations — hardcoded free model list
   models.push(...POLLINATIONS_FREE_MODELS);
@@ -1130,10 +1087,6 @@ export async function getDynamicRateLimit(userModel?: string): Promise<number> {
     return getRateLimitForProvider('CEREBRAS');
   }
 
-  if (userModel?.startsWith('aihubmix/') || !userModel) {
-    return getRateLimitForProvider('AIHUBMIX');
-  }
-
   if (userModel?.startsWith('tokenreply/')) {
     return getRateLimitForProvider('TOKENREPLY');
   }
@@ -1142,14 +1095,28 @@ export async function getDynamicRateLimit(userModel?: string): Promise<number> {
     return getRateLimitForProvider('NAGAAI');
   }
 
-  const [pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit, tokenreplyLimit, nagaaiLimit] = await Promise.all([
+  if (userModel?.startsWith('groq/')) {
+    return getRateLimitForProvider('GROQ');
+  }
+
+  if (userModel?.startsWith('aihorde/')) {
+    return getRateLimitForProvider('AIHORDE');
+  }
+
+  if (userModel?.startsWith('happupy/')) {
+    return getRateLimitForProvider('HAPPUPY');
+  }
+
+  const [pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, groqLimit, tokenreplyLimit, nagaaiLimit, aihorderLimit, happupyLimit] = await Promise.all([
     getRateLimitForProvider('POLLINATIONS'),
     getRateLimitForProvider('VOIDAI'),
     getRateLimitForProvider('AIRFORCE'),
     getRateLimitForProvider('CEREBRAS'),
-    getRateLimitForProvider('AIHUBMIX'),
+    getRateLimitForProvider('GROQ'),
     getRateLimitForProvider('TOKENREPLY'),
     getRateLimitForProvider('NAGAAI'),
+    getRateLimitForProvider('AIHORDE'),
+    getRateLimitForProvider('HAPPUPY'),
   ]);
-  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, aihubmixLimit, tokenreplyLimit, nagaaiLimit);
+  return Math.max(60, pollinationsLimit, voidaiLimit, airforceLimit, cerebrasLimit, groqLimit, tokenreplyLimit, nagaaiLimit, aihorderLimit, happupyLimit);
 }

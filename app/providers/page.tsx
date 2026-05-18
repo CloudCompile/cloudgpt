@@ -5,16 +5,6 @@ import { IconArrowRight } from '@/components/brand/icons';
 
 const PROVIDERS = [
   {
-    name: 'AIHubMix',
-    tagline: 'Premium gateway',
-    desc: 'Routes to GPT-4o, Claude 3.5 Sonnet, Gemini 2.0, DeepSeek R1, and 50+ other top-tier models via a single managed key.',
-    models: '50+ models',
-    caps: ['Chat', 'Images', 'Audio'],
-    prefix: 'aihubmix',
-    note: null,
-    routeOrder: 1,
-  },
-  {
     name: 'Pollinations',
     tagline: 'Creative generation',
     desc: 'Decentralized AI network focused on generative media — text, images, video, and audio through a unified endpoint.',

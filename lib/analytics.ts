@@ -9,7 +9,8 @@ function inferProvider(model: string): string {
   if (model.startsWith('aihorde/')) return 'AIHorde';
   if (model.startsWith('tokenreply/')) return 'TokenReply';
   if (model.startsWith('nagaai/')) return 'NagaAI';
-  return 'AIHubMix';
+  if (model.startsWith('happupy/')) return 'Happupy';
+  return 'Pollinations';
 }
 
 export async function trackRequest(model: string): Promise<void> {

@@ -328,7 +328,6 @@ print(response.choices[0].message.content)`}</div>
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>
           {[
-            { name: 'AIHubMix', color: '#6366f1', models: 'GPT-4o, Claude 3.5, Gemini 2.0, DeepSeek' },
             { name: 'Pollinations', color: '#a855f7', models: 'Text, images, video, and audio generation' },
             { name: 'Airforce', color: '#f59e0b', models: '53 models: OpenAI, Anthropic, Meta, xAI' },
             { name: 'Groq', color: '#00d084', models: 'Ultra-fast Llama, Gemma, and Whisper models' },

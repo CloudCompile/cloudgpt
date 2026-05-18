@@ -22,7 +22,6 @@ const features = [
 ];
 
 const providers = [
-  { name: 'AIHubMix',    desc: '50+ models',   color: '#6366f1', modelCount: 50 },
   { name: 'Pollinations', desc: '40+ models',  color: '#a855f7', modelCount: 40 },
   { name: 'VoidAI',      desc: '15+ models',   color: '#06b6d4', modelCount: 15 },
   { name: 'Airforce',    desc: '53+ models',   color: '#f59e0b', modelCount: 53 },

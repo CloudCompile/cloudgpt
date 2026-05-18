@@ -30,12 +30,6 @@ const DONATABLE_PROVIDERS = [
     limit: null,
   },
   {
-    name: 'AIHubMix',
-    freeNote: 'Free credits on sign-up',
-    signupUrl: 'https://aihubmix.com',
-    limit: null,
-  },
-  {
     name: 'Pollinations',
     freeNote: 'Open and free creative generation network',
     signupUrl: 'https://pollinations.ai',
