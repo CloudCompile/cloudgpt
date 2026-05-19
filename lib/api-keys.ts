@@ -22,11 +22,24 @@ export function extractApiKey(headers: Headers): string | null {
   return null;
 }
 
+// In-memory cache: avoids a Redis round-trip on every single API request.
+// 60s TTL is short enough that deleted keys stop working quickly.
+const _keyCache = new Map<string, { data: ApiKeyData; expiresAt: number }>();
+const KEY_CACHE_TTL_MS = 60_000;
+
 export async function validateApiKey(key: string): Promise<ApiKeyData | null> {
+  const cached = _keyCache.get(key);
+  if (cached && Date.now() < cached.expiresAt) return cached.data;
+
   const data = await redis.get(`key:${key}`);
-  if (!data) return null;
+  if (!data) {
+    _keyCache.delete(key);
+    return null;
+  }
   try {
-    return JSON.parse(data) as ApiKeyData;
+    const parsed = JSON.parse(data) as ApiKeyData;
+    _keyCache.set(key, { data: parsed, expiresAt: Date.now() + KEY_CACHE_TTL_MS });
+    return parsed;
   } catch {
     return null;
   }
@@ -71,6 +84,7 @@ export async function deleteApiKey(key: string, userId: string): Promise<void> {
   }
 
   await redis.del(`key:${key}`);
+  _keyCache.delete(key);
 
   const userKeysKey = `user:${userId}:keys`;
   const existingKeysStr = await redis.get(userKeysKey);
