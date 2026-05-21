@@ -50,6 +50,16 @@ export async function routeChat(
   // Extract model if provided
   const model = (body as any)?.model || 'gpt-4o-free';
 
+  // Block coming-soon models with a friendly error
+  const comingSoon = COMING_SOON_MODELS.find(m => m.id === model);
+  if (comingSoon) {
+    const provider = comingSoon.provider;
+    throw Object.assign(
+      new Error(`${provider} is coming soon! This provider isn't active yet. Use /donate to contribute keys and help unlock it. Check /v1/models for available models.`),
+      { status: 503, code: 'provider_coming_soon', provider }
+    );
+  }
+
   // Check if this is a virtual model with multiple providers
   const virtualProviders = await getVirtualModelProviders(model);
   if (virtualProviders && virtualProviders.length > 0) {
@@ -706,6 +716,93 @@ const AIHORDE_FREE_MODELS = [
   { id: 'aihorde/Ultraspice',                            object: 'model', owned_by: 'Ultraspice',         provider: 'AIHorde', type: 'image' },
 ];
 
+// Coming Soon providers — shown in /v1/models but not yet routable (no keys configured)
+const COMING_SOON_MODELS = [
+  // Google AI Studio — Gemini 2.0/2.5, 1500 req/day free
+  { id: 'gemini/gemini-2.5-flash',          object: 'model', owned_by: 'Google',      provider: 'Gemini',      type: 'text',  status: 'coming_soon' },
+  { id: 'gemini/gemini-2.5-pro',            object: 'model', owned_by: 'Google',      provider: 'Gemini',      type: 'text',  status: 'coming_soon' },
+  { id: 'gemini/gemini-2.0-flash',          object: 'model', owned_by: 'Google',      provider: 'Gemini',      type: 'text',  status: 'coming_soon' },
+  { id: 'gemini/gemini-2.0-flash-lite',     object: 'model', owned_by: 'Google',      provider: 'Gemini',      type: 'text',  status: 'coming_soon' },
+
+  // OpenRouter — 30+ free models under one key
+  { id: 'openrouter/meta-llama/llama-3.3-70b-instruct:free', object: 'model', owned_by: 'Meta',    provider: 'OpenRouter', type: 'text', status: 'coming_soon' },
+  { id: 'openrouter/deepseek/deepseek-r1:free',              object: 'model', owned_by: 'DeepSeek', provider: 'OpenRouter', type: 'text', status: 'coming_soon' },
+  { id: 'openrouter/google/gemma-3-27b-it:free',             object: 'model', owned_by: 'Google',  provider: 'OpenRouter', type: 'text', status: 'coming_soon' },
+  { id: 'openrouter/mistralai/mistral-7b-instruct:free',     object: 'model', owned_by: 'Mistral', provider: 'OpenRouter', type: 'text', status: 'coming_soon' },
+  { id: 'openrouter/qwen/qwen3-8b:free',                     object: 'model', owned_by: 'Alibaba', provider: 'OpenRouter', type: 'text', status: 'coming_soon' },
+
+  // NVIDIA NIM — 91 free endpoint models
+  { id: 'nvidia/meta/llama-3.3-70b-instruct',  object: 'model', owned_by: 'Meta',     provider: 'NVIDIA NIM', type: 'text', status: 'coming_soon' },
+  { id: 'nvidia/deepseek-ai/deepseek-r1',      object: 'model', owned_by: 'DeepSeek', provider: 'NVIDIA NIM', type: 'text', status: 'coming_soon' },
+  { id: 'nvidia/nvidia/llama-3.1-nemotron-70b-instruct', object: 'model', owned_by: 'NVIDIA', provider: 'NVIDIA NIM', type: 'text', status: 'coming_soon' },
+  { id: 'nvidia/mistralai/mistral-7b-instruct', object: 'model', owned_by: 'Mistral', provider: 'NVIDIA NIM', type: 'text', status: 'coming_soon' },
+
+  // SiliconFlow — fast Chinese inference, Qwen + DeepSeek free
+  { id: 'siliconflow/Qwen/Qwen3-8B',                   object: 'model', owned_by: 'Alibaba',  provider: 'SiliconFlow', type: 'text', status: 'coming_soon' },
+  { id: 'siliconflow/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', object: 'model', owned_by: 'DeepSeek', provider: 'SiliconFlow', type: 'text', status: 'coming_soon' },
+  { id: 'siliconflow/THUDM/glm-4-9b-chat',              object: 'model', owned_by: 'THUDM',   provider: 'SiliconFlow', type: 'text', status: 'coming_soon' },
+  { id: 'siliconflow/Pro/deepseek-ai/DeepSeek-V3',      object: 'model', owned_by: 'DeepSeek', provider: 'SiliconFlow', type: 'text', status: 'coming_soon' },
+
+  // Sambanova Cloud — fastest Llama 4 inference, free
+  { id: 'sambanova/Meta-Llama-3.3-70B-Instruct',  object: 'model', owned_by: 'Meta',     provider: 'Sambanova', type: 'text', status: 'coming_soon' },
+  { id: 'sambanova/Meta-Llama-4-Scout-17B-16E-Instruct', object: 'model', owned_by: 'Meta', provider: 'Sambanova', type: 'text', status: 'coming_soon' },
+  { id: 'sambanova/DeepSeek-R1',                   object: 'model', owned_by: 'DeepSeek', provider: 'Sambanova', type: 'text', status: 'coming_soon' },
+  { id: 'sambanova/Qwen3-32B',                     object: 'model', owned_by: 'Alibaba',  provider: 'Sambanova', type: 'text', status: 'coming_soon' },
+
+  // Cloudflare Workers AI — 10k neurons/day free
+  { id: 'cloudflare/@cf/meta/llama-3.1-8b-instruct',          object: 'model', owned_by: 'Meta',    provider: 'Cloudflare', type: 'text', status: 'coming_soon' },
+  { id: 'cloudflare/@cf/deepseek-ai/deepseek-r1-distill-qwen-32b', object: 'model', owned_by: 'DeepSeek', provider: 'Cloudflare', type: 'text', status: 'coming_soon' },
+  { id: 'cloudflare/@cf/qwen/qwen1.5-14b-chat-awq',            object: 'model', owned_by: 'Alibaba', provider: 'Cloudflare', type: 'text', status: 'coming_soon' },
+
+  // Hugging Face Inference — thousands of models
+  { id: 'huggingface/meta-llama/Llama-3.3-70B-Instruct', object: 'model', owned_by: 'Meta',    provider: 'HuggingFace', type: 'text', status: 'coming_soon' },
+  { id: 'huggingface/Qwen/Qwen3-8B',                     object: 'model', owned_by: 'Alibaba', provider: 'HuggingFace', type: 'text', status: 'coming_soon' },
+  { id: 'huggingface/mistralai/Mistral-7B-Instruct-v0.3', object: 'model', owned_by: 'Mistral', provider: 'HuggingFace', type: 'text', status: 'coming_soon' },
+
+  // Mistral AI — 1B tokens/month free
+  { id: 'mistral/mistral-small-latest',   object: 'model', owned_by: 'Mistral', provider: 'Mistral AI', type: 'text', status: 'coming_soon' },
+  { id: 'mistral/open-mistral-nemo',      object: 'model', owned_by: 'Mistral', provider: 'Mistral AI', type: 'text', status: 'coming_soon' },
+  { id: 'mistral/codestral-latest',       object: 'model', owned_by: 'Mistral', provider: 'Mistral AI', type: 'text', status: 'coming_soon' },
+  { id: 'mistral/pixtral-12b-2409',       object: 'model', owned_by: 'Mistral', provider: 'Mistral AI', type: 'text', status: 'coming_soon' },
+
+  // GitHub Models — free via GitHub token
+  { id: 'github/gpt-4o',                    object: 'model', owned_by: 'OpenAI',  provider: 'GitHub Models', type: 'text', status: 'coming_soon' },
+  { id: 'github/gpt-4o-mini',               object: 'model', owned_by: 'OpenAI',  provider: 'GitHub Models', type: 'text', status: 'coming_soon' },
+  { id: 'github/meta-llama-3.3-70b-instruct', object: 'model', owned_by: 'Meta',  provider: 'GitHub Models', type: 'text', status: 'coming_soon' },
+  { id: 'github/mistral-large-2411',         object: 'model', owned_by: 'Mistral', provider: 'GitHub Models', type: 'text', status: 'coming_soon' },
+  { id: 'github/phi-4',                      object: 'model', owned_by: 'Microsoft', provider: 'GitHub Models', type: 'text', status: 'coming_soon' },
+
+  // Cohere — 1,000 calls/month free
+  { id: 'cohere/command-r-plus',  object: 'model', owned_by: 'Cohere', provider: 'Cohere', type: 'text', status: 'coming_soon' },
+  { id: 'cohere/command-r',       object: 'model', owned_by: 'Cohere', provider: 'Cohere', type: 'text', status: 'coming_soon' },
+
+  // Fireworks AI — fast serverless inference, free credits
+  { id: 'fireworks/accounts/fireworks/models/llama-v3p3-70b-instruct',   object: 'model', owned_by: 'Meta',     provider: 'Fireworks', type: 'text', status: 'coming_soon' },
+  { id: 'fireworks/accounts/fireworks/models/deepseek-r1',               object: 'model', owned_by: 'DeepSeek', provider: 'Fireworks', type: 'text', status: 'coming_soon' },
+  { id: 'fireworks/accounts/fireworks/models/qwen3-30b-a3b',             object: 'model', owned_by: 'Alibaba',  provider: 'Fireworks', type: 'text', status: 'coming_soon' },
+
+  // Featherless AI — 3,000+ open-source models
+  { id: 'featherless/meta-llama/Llama-3.3-70B-Instruct', object: 'model', owned_by: 'Meta',    provider: 'Featherless', type: 'text', status: 'coming_soon' },
+  { id: 'featherless/Qwen/Qwen3-8B',                     object: 'model', owned_by: 'Alibaba', provider: 'Featherless', type: 'text', status: 'coming_soon' },
+
+  // Scaleway — EU-based, privacy-friendly free tier
+  { id: 'scaleway/llama-3.3-70b-instruct', object: 'model', owned_by: 'Meta',    provider: 'Scaleway', type: 'text', status: 'coming_soon' },
+  { id: 'scaleway/mistral-nemo-instruct',   object: 'model', owned_by: 'Mistral', provider: 'Scaleway', type: 'text', status: 'coming_soon' },
+
+  // Hyperbolic — community GPU network, free credits
+  { id: 'hyperbolic/meta-llama/Llama-3.3-70B-Instruct', object: 'model', owned_by: 'Meta',     provider: 'Hyperbolic', type: 'text', status: 'coming_soon' },
+  { id: 'hyperbolic/deepseek-ai/DeepSeek-R1',            object: 'model', owned_by: 'DeepSeek', provider: 'Hyperbolic', type: 'text', status: 'coming_soon' },
+
+  // Novita AI — 100+ models, free credits
+  { id: 'novita/meta-llama/llama-3.3-70b-instruct', object: 'model', owned_by: 'Meta',    provider: 'Novita', type: 'text', status: 'coming_soon' },
+  { id: 'novita/deepseek/deepseek-v3',               object: 'model', owned_by: 'DeepSeek', provider: 'Novita', type: 'text', status: 'coming_soon' },
+
+  // Together AI — $100 signup credits, 200+ open-source models
+  { id: 'together/meta-llama/Llama-3.3-70B-Instruct-Turbo', object: 'model', owned_by: 'Meta',     provider: 'Together AI', type: 'text', status: 'coming_soon' },
+  { id: 'together/deepseek-ai/DeepSeek-R1',                  object: 'model', owned_by: 'DeepSeek', provider: 'Together AI', type: 'text', status: 'coming_soon' },
+  { id: 'together/Qwen/Qwen3-235B-A22B',                     object: 'model', owned_by: 'Alibaba',  provider: 'Together AI', type: 'text', status: 'coming_soon' },
+];
+
 // Virtual models map: base model name -> array of providers
 const VIRTUAL_MODELS_MAP: Record<string, Array<{ provider: string; modelId: string; type: string }>> = {
 };
@@ -1052,6 +1149,9 @@ export async function routeModels() {
   } catch (e) {
     console.warn('Could not load user virtual models from Redis:', e);
   }
+
+  // Coming soon providers — visible in model list but not yet routable
+  models.push(...COMING_SOON_MODELS);
 
   // Deduplicate by id
   const seen = new Set<string>();
