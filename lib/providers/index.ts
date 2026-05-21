@@ -11,6 +11,7 @@ import { forwardAIHorde } from './aihorde';
 import { forwardTokenReply } from './tokenreply';
 import { forwardNagaAI } from './nagaai';
 import { forwardHappupy } from './happupy';
+import { getComingSoonModels } from './coming-soon-providers';
 
 export interface RouteOptions {
   streaming?: boolean;
@@ -1283,6 +1284,9 @@ export async function routeModels() {
   }
 
   // Coming soon providers — visible in model list but not yet routable
+  // Use the canonical list from coming-soon-providers.ts (150+ providers)
+  models.push(...getComingSoonModels());
+  // Also include static hardcoded coming-soon entries (some have no overlap)
   models.push(...COMING_SOON_MODELS);
 
   // Deduplicate by id
