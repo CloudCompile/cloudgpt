@@ -641,3 +641,87 @@ select:focus {
   border-bottom-color: var(--accent-light);
 }
 .docs-content ol { list-style-type: decimal; }
+
+/* ─── Clerk Components ───────────────────────────────── */
+
+/* Style Clerk SignIn/SignUp buttons in header */
+:is(.header) :is([class*="SignInButton"], [class*="SignUpButton"]) {
+  display: inline-block !important;
+}
+
+:is(.header) :is([class*="SignInButton"], [class*="SignUpButton"]) button,
+:is(.header) :is([class*="SignInButton"], [class*="SignUpButton"]) [role="button"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px 22px !important;
+  height: auto !important;
+  background: var(--accent-gradient) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: var(--radius) !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif !important;
+  cursor: pointer !important;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s !important;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25) !important;
+}
+
+:is(.header) :is([class*="SignInButton"], [class*="SignUpButton"]) button:hover,
+:is(.header) :is([class*="SignInButton"], [class*="SignUpButton"]) [role="button"]:hover {
+  opacity: 0.92 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4) !important;
+}
+
+:is(.header) :is([class*="SignInButton"], [class*="SignUpButton"]) button:active,
+:is(.header) :is([class*="SignInButton"], [class*="SignUpButton"]) [role="button"]:active {
+  transform: translateY(0) !important;
+}
+
+/* Clerk modal/dialog theming */
+:where([class*="modal"], [class*="dialog"]) {
+  --colors-inputBorder: var(--border-light) !important;
+  --colors-inputBackground: var(--bg-secondary) !important;
+  --colors-textPrimary: var(--fg) !important;
+  --colors-textSecondary: var(--text-secondary) !important;
+  --colors-background: var(--bg) !important;
+  --colors-cardBg: var(--bg-secondary) !important;
+}
+
+/* Clerk button in modals/dialogs */
+[class*="FormButtonPrimary"],
+[class*="buttonPrimary"] {
+  background: var(--accent-gradient) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: var(--radius) !important;
+  padding: 10px 24px !important;
+  font-weight: 600 !important;
+  transition: opacity 0.2s, transform 0.2s !important;
+}
+
+[class*="FormButtonPrimary"]:hover,
+[class*="buttonPrimary"]:hover {
+  opacity: 0.92 !important;
+  transform: translateY(-1px) !important;
+}
+
+/* UserButton styling */
+[class*="UserButton"] button,
+[class*="UserButton"] [role="button"] {
+  border-radius: var(--radius) !important;
+}
+
+/* Auth card styling */
+[class*="Card"],
+[class*="FormFieldRow"],
+[class*="FormField"] {
+  color: var(--fg) !important;
+}
+
+[class*="FormField"] label {
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+}
