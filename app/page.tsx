@@ -17,7 +17,7 @@ const features = [
   { Icon: IconFallback, accent: 'indigo' as const, title: 'Auto Fallback',    desc: 'Seamless provider switching on errors or rate limits' },
   { Icon: IconLock,     accent: 'blue'   as const, title: 'Secure & Private', desc: 'Enterprise-grade encryption for all API keys and data' },
   { Icon: IconPalette,  accent: 'violet' as const, title: 'All Model Types',  desc: 'Text, images, video, audio, embeddings, and more' },
-  { Icon: IconSparkle,  accent: 'indigo' as const, title: 'Completely Free',  desc: 'No credit card needed. Unlimited free tier for developers' },
+  { Icon: IconSparkle,  accent: 'indigo' as const, title: 'Completely Free',  desc: 'No credit card needed. Community-powered and always free' },
   { Icon: IconPlug,     accent: 'blue'   as const, title: 'Drop-in Ready',    desc: 'OpenAI compatible API — switch providers with one line' },
 ];
 
@@ -61,7 +61,7 @@ export default function Home() {
             maxWidth: '700px',
             margin: '0 auto 48px'
           }}>
-            Access {totalModelCount}+ AI models from {providers.length} providers with a single API key. Fast, reliable, and completely free.
+            Access {totalModelCount}+ AI models from {providers.length} active providers — plus 100+ unlockable providers powered by the community. One API key. Always free.
           </p>
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -100,10 +100,10 @@ export default function Home() {
               Powered By
             </p>
             <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '20px' }}>
-              {totalModelCount}+ Models from {providers.length} Providers
+              {totalModelCount}+ Models, {providers.length} Active + 100 Unlockable
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>
-              We aggregate the best AI models from industry-leading providers, giving you access to the latest technology with zero setup.
+              Community-powered routing across the best free AI providers. Donate a free API key to help unlock even more providers for everyone.
             </p>
           </div>
 
@@ -194,20 +194,20 @@ export default function Home() {
             OpenRelay is free because contributors donate API keys
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '640px', margin: '0 auto 32px', lineHeight: '1.7' }}>
-            Many providers offer free API keys with generous daily limits. If you have one — from Groq, Cerebras, Happupy, AIHorde, or others — donating it takes 30 seconds and helps keep this service free for everyone.
+            100+ providers are waiting to be unlocked — each needs just 3 verified free API keys to activate. If you have a free key from Groq, Cerebras, Google AI Studio, Mistral, or any of our 100+ supported providers, donating takes 30 seconds.
           </p>
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '32px' }}>
             <a href="/donate" className="button" style={{ padding: '13px 36px', fontSize: '1rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
               🔑 Donate a Key
             </a>
-            <a href="/contributor" className="button secondary" style={{ padding: '13px 28px', fontSize: '1rem' }}>
-              View Contributor Perks
+            <a href="/providers" className="button secondary" style={{ padding: '13px 28px', fontSize: '1rem' }}>
+              Browse 100+ Providers
             </a>
           </div>
           <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' }}>
             {[
+              { label: 'Unlock providers', desc: '3 keys activates a new provider for all' },
               { label: 'Monitor your keys', desc: 'See status and uptime in real time' },
-              { label: 'System insights', desc: 'Error logs and request metrics' },
               { label: 'Discord role', desc: 'Automatic Contributor badge' },
             ].map((b, i) => (
               <div key={i} style={{ textAlign: 'left', maxWidth: '200px' }}>

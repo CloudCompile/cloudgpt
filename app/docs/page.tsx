@@ -11,8 +11,8 @@ export default function DocsPage() {
       title: 'Getting Started',
       content: `
         <h3>What is OpenRelay?</h3>
-        <p>OpenRelay is a free, open API gateway that gives you instant access to 357+ AI models from 9 leading providers. No credit card required, no rate limiting, no lock-in.</p>
-        <p>Simply authenticate with an API key and start making requests to state-of-the-art models for chat, images, video, audio, and more — all through a single OpenAI-compatible interface.</p>
+        <p>OpenRelay is a community-powered, free AI gateway giving you instant access to 350+ models from 9 active providers — plus 100+ coming-soon providers that unlock when the community donates 3 verified API keys each. No credit card required, no lock-in.</p>
+        <p>Authenticate with an API key and make requests to state-of-the-art models for chat, images, video, audio, embeddings, and more — all through a single OpenAI-compatible interface.</p>
 
         <h3>Quick Start (2 minutes)</h3>
         <ol>
@@ -22,18 +22,22 @@ export default function DocsPage() {
         </ol>
 
         <h3>Your API Key</h3>
-        <p>API keys start with <code>or_</code> and are 32 characters long. Keep them secure — never commit them to version control or expose them in client-side code.</p>
-        <p>You can create multiple keys for different applications in your dashboard. Each key is rate-limited independently.</p>
+        <p>API keys start with <code>or_</code> and are 64 hex characters long. Keep them secure — never commit them to version control or expose them in client-side code.</p>
+        <p>You can create multiple keys for different applications in your dashboard. Each key tracks usage independently.</p>
 
         <h3>Supported Models</h3>
         <p>Access models across all categories:</p>
         <ul>
-          <li><strong>Text/Chat:</strong> Llama 3.1 (70B, 8B), QwQ, Phi, Mistral, and more</li>
-          <li><strong>Images:</strong> Flux, DALL-E compatible models, Qwen</li>
-          <li><strong>Video:</strong> Fast video generation with multiple providers</li>
-          <li><strong>Audio:</strong> TTS and speech-to-text</li>
-          <li><strong>Embeddings:</strong> Text embeddings for semantic search</li>
+          <li><strong>Text/Chat:</strong> Llama 3.3 70B, Llama 3.1 8B, DeepSeek, Mistral, Gemma, and 300+ more</li>
+          <li><strong>Images:</strong> Flux, DALL-E, GPT-Image, Klein, Kontext, and more</li>
+          <li><strong>Video:</strong> Nova Reel and more from Pollinations</li>
+          <li><strong>Audio:</strong> Text-to-speech via Qwen TTS, ACE Step, and OpenAI-compatible voices</li>
+          <li><strong>Transcription:</strong> Whisper, AssemblyAI Universal-2, ElevenLabs Scribe</li>
+          <li><strong>Embeddings:</strong> OpenAI-compatible text embeddings</li>
         </ul>
+
+        <h3>Community Providers</h3>
+        <p>OpenRelay uses a community key donation model. Browse <a href="/providers">100+ coming-soon providers</a>. When 3 contributors donate verified API keys for a provider, it activates and becomes available to everyone. <a href="/donate">Donate a key</a> to help unlock more.</p>
       `
     },
     {
@@ -46,7 +50,7 @@ export default function DocsPage() {
 
         <h3>Include in Requests</h3>
         <p>Add the header to every request you make:</p>
-        <pre>curl https://cjhauser.me/v1/chat/completions \\
+        <pre>curl https://openrelay.cjhauser.me/v1/chat/completions \\
   -H "Authorization: Bearer or_abc123..." \\
   -H "Content-Type: application/json" \\
   -d '{"model": "gpt-4", "messages": [...]}'</pre>
@@ -73,7 +77,7 @@ export default function DocsPage() {
       title: 'API Reference',
       content: `
         <h3>Base URL</h3>
-        <pre>https://cjhauser.me/v1</pre>
+        <pre>https://openrelay.cjhauser.me/v1</pre>
 
         <h3>Available Endpoints</h3>
         <ul>
@@ -157,7 +161,7 @@ export default function DocsPage() {
         </ul>
 
         <h3>Streaming Example</h3>
-        <pre>const response = await fetch('https://cjhauser.me/v1/chat/completions', {
+        <pre>const response = await fetch('https://openrelay.cjhauser.me/v1/chat/completions', {
   method: 'POST',
   headers: {
     'Authorization': 'Bearer or_YOUR_KEY',
@@ -229,7 +233,7 @@ while (true) {
   "created": 1234567890,
   "data": [
     {
-      "url": "https://cjhauser.me/image-xyz.png"
+      "url": "https://openrelay.cjhauser.me/image-xyz.png"
     }
   ]
 }</pre>
@@ -337,7 +341,7 @@ while (true) {
 
   while (retries < maxRetries) {
     try {
-      const response = await fetch(\`https://cjhauser.me/v1\${endpoint}\`, {
+      const response = await fetch(\`https://openrelay.cjhauser.me/v1\${endpoint}\`, {
         method: 'POST',
         headers: {
           'Authorization': \`Bearer \${process.env.OPENRELAY_API_KEY}\`,
@@ -377,7 +381,7 @@ while (true) {
 
 client = OpenAI(
     api_key="or_YOUR_API_KEY",
-    base_url="https://cjhauser.me/v1"
+    base_url="https://openrelay.cjhauser.me/v1"
 )
 
 # Simple chat
@@ -417,7 +421,7 @@ print(image_response.data[0].url)</pre>
 
 const client = new OpenAI({
   apiKey: process.env.OPENRELAY_API_KEY,
-  baseURL: "https://cjhauser.me/v1"
+  baseURL: "https://openrelay.cjhauser.me/v1"
 });
 
 // Simple chat
@@ -455,7 +459,7 @@ const image = await client.images.generate({
 console.log(image.data[0].url);</pre>
 
         <h3>cURL</h3>
-        <pre>curl https://cjhauser.me/v1/chat/completions \\
+        <pre>curl https://openrelay.cjhauser.me/v1/chat/completions \\
   -H "Authorization: Bearer or_YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -468,7 +472,7 @@ console.log(image.data[0].url);</pre>
   }'
 
 # Image generation
-curl https://cjhauser.me/v1/images/generations \\
+curl https://openrelay.cjhauser.me/v1/images/generations \\
   -H "Authorization: Bearer or_YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -479,7 +483,7 @@ curl https://cjhauser.me/v1/images/generations \\
   }'
 
 # Get embeddings
-curl https://cjhauser.me/v1/embeddings \\
+curl https://openrelay.cjhauser.me/v1/embeddings \\
   -H "Authorization: Bearer or_YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -509,18 +513,23 @@ curl https://cjhauser.me/v1/embeddings \\
         <p>High token throughput with 1M tokens/day per key. Automatic key rotation ensures you stay within limits.</p>
 
         <h4>Pollinations</h4>
-        <p>40+ models for text, images, and more. High rate limits with automatic fallback.</p>
-
-        <h4>Others (VoidAI, Airforce, AIHorde)</h4>
-        <p>Rate limits scale with the number of API keys you configure. More keys = higher throughput.</p>
-
-        <h3>Increasing Limits</h3>
-        <p>Want higher limits? <a href="/contributor">Become a contributor</a> by donating API keys. Contributors get:</p>
+        <p>50+ models for text, images, video, audio, transcription, and embeddings. Rate limits are based on a pollen/hour system tied to your subscription tier:</p>
         <ul>
-          <li>Higher rate limits</li>
-          <li>Priority access to new providers</li>
-          <li>Visibility into system performance</li>
-          <li>Exclusive Discord role</li>
+          <li>🌱 Seed: 0.15 pollen/hour</li>
+          <li>🌸 Flower: 0.4 pollen/hour</li>
+          <li>🍄 Spore: 1.0 pollen/hour</li>
+          <li>Premium: 3.0 pollen/hour</li>
+        </ul>
+
+        <h4>Others (VoidAI, Airforce, Cerebras, Groq, AI Horde, TokenReply, NagaAI, Happupy)</h4>
+        <p>Rate limits scale with the number of donated API keys. More contributors = higher collective throughput for everyone.</p>
+
+        <h3>Unlocking More Providers</h3>
+        <p>OpenRelay has 100+ coming-soon providers that each need 3 verified community-donated keys to activate. <a href="/donate">Donate a key</a> to help unlock them. Contributors get:</p>
+        <ul>
+          <li>Access to the Contributor Dashboard showing your donations</li>
+          <li>Exclusive Discord Contributor role</li>
+          <li>Help keep the whole platform free for everyone</li>
         </ul>
       `
     },
@@ -578,7 +587,7 @@ curl https://cjhauser.me/v1/embeddings \\
     <main className="container" style={{ paddingTop: '60px', paddingBottom: '80px', maxWidth: '1200px' }}>
       <h1 style={{ fontSize: '2.5rem', marginBottom: '12px' }}>Documentation</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '40px', fontSize: '1.05rem' }}>
-        Complete guide to using OpenRelay's free AI API with 357+ models from 10 providers
+        Complete guide to using OpenRelay's free AI API — 350+ models across 9 active providers, with 100+ community-unlockable providers
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', gap: '32px', minHeight: '500px' }}>
