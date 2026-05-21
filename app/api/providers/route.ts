@@ -112,19 +112,16 @@ export async function GET() {
     );
 
     const providers = withCounts.map(p => {
-      // Base providers are always active — they have built-in routing code.
-      // Coming-soon providers need 3 donated keys to activate.
-      const status = p.isBase ? 'active' : (p.count >= KEYS_REQUIRED ? 'active' : 'coming_soon');
       const base = {
         id: p.id,
         name: p.name,
         description: p.description,
         freeLimit: p.freeLimit,
         signupUrl: p.signupUrl ?? null,
-        status,
+        status: p.count >= KEYS_REQUIRED ? 'active' : 'coming_soon',
         keyCount: p.count,
-        keysRequired: p.isBase ? 0 : KEYS_REQUIRED,
-        keysNeeded: p.isBase ? 0 : Math.max(0, KEYS_REQUIRED - p.count),
+        keysRequired: KEYS_REQUIRED,
+        keysNeeded: Math.max(0, KEYS_REQUIRED - p.count),
       };
       // Include tier info for tiered providers
       if ('tiers' in p && p.tiers) {

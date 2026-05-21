@@ -61,7 +61,7 @@ export default function Home() {
             maxWidth: '700px',
             margin: '0 auto 48px'
           }}>
-            Access {totalModelCount}+ AI models from {providers.length} active providers — plus 100+ unlockable providers powered by the community. One API key. Always free.
+            Access {totalModelCount}+ AI models across {providers.length + 100}+ providers — all powered by community-donated API keys. One key. Always free.
           </p>
 
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -100,7 +100,7 @@ export default function Home() {
               Powered By
             </p>
             <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '20px' }}>
-              {totalModelCount}+ Models, {providers.length} Active + 100 Unlockable
+              {totalModelCount}+ Models Across {providers.length + 100}+ Providers
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>
               Community-powered routing across the best free AI providers. Donate a free API key to help unlock even more providers for everyone.
