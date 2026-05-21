@@ -16,7 +16,7 @@ export const runtime = 'nodejs';
 // Coming-soon providers become active once they reach 3 verified keys.
 const PROVIDERS = [
   // Active providers
-  'Pollinations', 'VoidAI', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI',
+  'Pollinations', 'VoidAI', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI', 'Airforce', 'Happupy',
   // Coming-soon: Tier 1
   'Gemini', 'OpenRouter', 'Mistral', 'GitHub', 'Cohere', 'HuggingFace',
   'SiliconFlow', 'Sambanova', 'NVIDIA', 'Fireworks', 'Together', 'Featherless',
