@@ -30,6 +30,7 @@ interface KeyEntry {
   source: 'env' | 'kv';
   status: string;
   createdAt: number | null;
+  tier?: string;
 }
 
 interface ProvidersData {
@@ -199,6 +200,7 @@ export default function KeysPage() {
             <thead>
               <tr>
                 <th>Key Preview</th>
+                {activeProvider === 'Pollinations' && <th>Tier</th>}
                 <th>Source</th>
                 <th>Status</th>
                 <th>Created</th>
@@ -211,6 +213,21 @@ export default function KeysPage() {
                 return (
                   <tr key={key.id}>
                     <td><code>{key.preview}</code></td>
+                    {activeProvider === 'Pollinations' && (
+                      <td>
+                        {key.tier ? (
+                          <span style={{
+                            display: 'inline-block', padding: '3px 8px',
+                            borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', fontWeight: '700',
+                            background: 'rgba(168,85,247,0.15)',
+                            color: '#d8b4fe',
+                            letterSpacing: '0.5px',
+                          }}>
+                            {key.tier}
+                          </span>
+                        ) : '—'}
+                      </td>
+                    )}
                     <td>
                       <span style={{
                         display: 'inline-block', padding: '3px 8px',
@@ -273,7 +290,24 @@ export default function KeysPage() {
       {/* Capacity summary */}
       {keys.length > 0 && (
         <div className="info-box" style={{ marginTop: '24px' }}>
-          <strong>{keys.length} key{keys.length !== 1 ? 's' : ''}</strong> = {keys.length * 60} req/min capacity for {activeProvider}
+          <strong>{keys.length} key{keys.length !== 1 ? 's' : ''}</strong>
+          {activeProvider === 'Pollinations' ? (
+            <>
+              {' = '}
+              <span style={{ fontWeight: '700' }}>
+                {(() => {
+                  const tierMap: Record<string, number> = {
+                    'Seed': 0.15, 'Flower': 0.4, 'Spore': 1.0, 'Premium': 3.0,
+                  };
+                  const total = keys.reduce((sum, k) => sum + (tierMap[k.tier || 'Seed'] || 0.15), 0);
+                  return `${total.toFixed(2)} pollen/hour`;
+                })()}
+              </span>
+              {' capacity for Pollinations'}
+            </>
+          ) : (
+            <> = {keys.length * 60} req/min capacity for {activeProvider}</>
+          )}
         </div>
       )}
     </main>

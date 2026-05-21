@@ -14,6 +14,7 @@ interface Provider {
   keyCount: number;
   keysRequired: number;
   keysNeeded: number;
+  tiers?: { tier: string; pollenPerHour: number }[];
 }
 
 const CAP_COLORS: Record<string, string> = {

@@ -49,14 +49,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let body: { provider?: string; key?: string };
+  let body: { provider?: string; key?: string; tier?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { provider, key: rawKey } = body;
+  const { provider, key: rawKey, tier } = body;
 
   if (!provider || !PROVIDERS.has(provider)) {
     return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
     preview: keyPreview(trimmedKey),
     createdAt: Date.now(),
     donorId: userId,
+    ...(tier && { tier }), // Include tier if provided (for Pollinations)
   };
 
   existingList.push(entry);
@@ -127,6 +128,19 @@ export async function POST(request: NextRequest) {
   const providerKeyCount = await getProviderKeyCount(provider).catch(() => 1);
   const providerNowActive = providerKeyCount >= KEYS_REQUIRED_TO_ACTIVATE;
 
+  // For Pollinations, also calculate total pollen/hour capacity
+  let pollenPerHour = null;
+  if (provider.toLowerCase() === 'pollinations') {
+    const tierMap: Record<string, number> = {
+      'Seed': 0.15,
+      'Flower': 0.4,
+      'Spore': 1.0,
+      'Premium': 3.0,
+    };
+    const pollenList = existingList.map(entry => tierMap[entry.tier || 'Seed'] || 0.15);
+    pollenPerHour = pollenList.reduce((a, b) => a + b, 0);
+  }
+
   return NextResponse.json({
     success: true,
     id,
@@ -135,5 +149,7 @@ export async function POST(request: NextRequest) {
     providerKeyCount,
     providerNowActive,
     keysRequired: KEYS_REQUIRED_TO_ACTIVATE,
+    tier: tier || null,
+    pollenPerHour,
   });
 }

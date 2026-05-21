@@ -15,6 +15,7 @@ export interface ProviderKeyEntry {
   preview: string;
   createdAt: number;
   donorId?: string;
+  tier?: string; // For tiered providers like Pollinations (e.g., 'Seed', 'Flower')
 }
 
 // In-memory cache: provider name → { keys, timestamp, version }
