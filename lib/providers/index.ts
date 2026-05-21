@@ -1,6 +1,7 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
 import { redis } from '../redis';
 import { logError } from '../analytics';
+import { getProviderKeyCount } from '../key-validation';
 import { forwardPollinations, forwardPollinationsVideo, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
@@ -14,6 +15,61 @@ import { forwardHappupy } from './happupy';
 export interface RouteOptions {
   streaming?: boolean;
   autoFallback?: boolean;
+}
+
+const KEYS_REQUIRED = 3;
+
+// Provider name → how it maps to Redis/env key prefix
+// All providers need KEYS_REQUIRED donated keys to be routable
+const ALL_PROVIDER_PREFIXES: Record<string, string> = {
+  'pollinations': 'pollinations',
+  'voidai': 'voidai',
+  'cerebras': 'cerebras',
+  'groq': 'groq',
+  'aihorde': 'aihorde',
+  'tokenreply': 'tokenreply',
+  'nagaai': 'nagaai',
+  'happupy': 'happupy',
+};
+
+// Cache active provider status for 30s to avoid Redis hammering
+let _activeProviderCache: Set<string> | null = null;
+let _activeProviderCacheTime = 0;
+const ACTIVE_PROVIDER_TTL = 30_000;
+
+async function getActiveProviders(): Promise<Set<string>> {
+  const now = Date.now();
+  if (_activeProviderCache && now - _activeProviderCacheTime < ACTIVE_PROVIDER_TTL) {
+    return _activeProviderCache;
+  }
+
+  const active = new Set<string>();
+  await Promise.all(
+    Object.entries(ALL_PROVIDER_PREFIXES).map(async ([prefix, redisKey]) => {
+      try {
+        const count = await getProviderKeyCount(redisKey);
+        if (count >= KEYS_REQUIRED) {
+          active.add(prefix);
+        }
+      } catch {
+        // On Redis error, fail open — don't block traffic
+        active.add(prefix);
+      }
+    })
+  );
+
+  _activeProviderCache = active;
+  _activeProviderCacheTime = now;
+  return active;
+}
+
+export function invalidateActiveProviderCache() {
+  _activeProviderCache = null;
+}
+
+function makeProviderInactiveError(prefix: string): Error {
+  const count503 = `Provider "${prefix}" is not yet active. Donate 3 verified keys at /donate to unlock it.`;
+  return Object.assign(new Error(count503), { status: 503, code: 'provider_not_active', provider: prefix });
 }
 
 async function tryProviders(
@@ -50,13 +106,12 @@ export async function routeChat(
   // Extract model if provided
   const model = (body as any)?.model || 'gpt-4o-free';
 
-  // Block coming-soon models with a friendly error
+  // Block coming-soon models (future providers not yet implemented)
   const comingSoon = COMING_SOON_MODELS.find(m => m.id === model);
   if (comingSoon) {
-    const provider = comingSoon.provider;
     throw Object.assign(
-      new Error(`${provider} is coming soon! This provider isn't active yet. Use /donate to contribute keys and help unlock it. Check /v1/models for available models.`),
-      { status: 503, code: 'provider_coming_soon', provider }
+      new Error(`${comingSoon.provider} is coming soon! Donate 3 verified keys at /donate to unlock it. Check /v1/models for available models.`),
+      { status: 503, code: 'provider_coming_soon', provider: comingSoon.provider }
     );
   }
 
@@ -66,33 +121,41 @@ export async function routeChat(
     return routeVirtualChat(body, virtualProviders, options);
   }
 
-  // Determine which provider to use
+  const active = await getActiveProviders();
+
+  // Determine which provider to use and verify it's active (has 3+ donated keys)
   if (model.startsWith('pollinations/')) {
+    if (!active.has('pollinations')) throw makeProviderInactiveError('pollinations');
     const fwdBody = { ...(body as any), model: model.replace('pollinations/', '') };
     return forwardPollinations('/v1/chat/completions', 'POST', fwdBody, options);
   }
 
   if (model.startsWith('voidai/')) {
+    if (!active.has('voidai')) throw makeProviderInactiveError('voidai');
     const fwdBody = { ...(body as any), model: model.replace('voidai/', '') };
     return forwardVoidAI('/chat/completions', 'POST', fwdBody, options);
   }
 
   if (model.startsWith('airforce/')) {
+    if (!active.has('airforce')) throw makeProviderInactiveError('airforce');
     const fwdBody = { ...(body as any), model: model.replace('airforce/', '') };
     return forwardAirforce('/chat/completions', 'POST', fwdBody, options);
   }
 
   if (model.startsWith('cerebras/')) {
+    if (!active.has('cerebras')) throw makeProviderInactiveError('cerebras');
     const fwdBody = { ...(body as any), model: model.replace('cerebras/', '') };
     return forwardCerebras('/chat/completions', 'POST', fwdBody, options);
   }
 
   if (model.startsWith('groq/')) {
+    if (!active.has('groq')) throw makeProviderInactiveError('groq');
     const fwdBody = { ...(body as any), model: model.replace('groq/', '') };
     return forwardGroq('/chat/completions', 'POST', fwdBody, options);
   }
 
   if (model.startsWith('aihorde/')) {
+    if (!active.has('aihorde')) throw makeProviderInactiveError('aihorde');
     const messages = (body as any).messages || [];
     const prompt = messages.map((m: any) => m.content).join('\n') || '';
     const fwdBody = {
@@ -105,39 +168,50 @@ export async function routeChat(
   }
 
   if (model.startsWith('tokenreply/')) {
+    if (!active.has('tokenreply')) throw makeProviderInactiveError('tokenreply');
     const fwdBody = { ...(body as any), model: model.replace('tokenreply/', '') };
     return forwardTokenReply('/chat/completions', 'POST', fwdBody, options);
   }
 
   if (model.startsWith('nagaai/')) {
+    if (!active.has('nagaai')) throw makeProviderInactiveError('nagaai');
     const fwdBody = { ...(body as any), model: model.replace('nagaai/', '') };
     return forwardNagaAI('/chat/completions', 'POST', fwdBody, options);
   }
 
   if (model.startsWith('happupy/')) {
+    if (!active.has('happupy')) throw makeProviderInactiveError('happupy');
     const fwdBody = { ...(body as any), model: model.replace('happupy/', '') };
     return forwardHappupy('/v1/chat/completions', 'POST', fwdBody, options);
   }
 
-  // Default: try Pollinations → VoidAI → Airforce → Cerebras → Groq → AIHorde → TokenReply → NagaAI → Happupy
-  if (!options?.autoFallback) {
-    return forwardPollinations('/v1/chat/completions', 'POST', body, options);
-  }
-
+  // Default: auto-fallback through all active providers
   const messages = (body as any).messages || [];
   const prompt = messages.map((m: any) => m.content).join('\n') || '';
 
-  return tryProviders([
-    { name: 'Pollinations', fn: () => forwardPollinations('/v1/chat/completions', 'POST', body, options) },
-    { name: 'VoidAI',      fn: () => forwardVoidAI('/chat/completions', 'POST', body, options) },
-    { name: 'Airforce',    fn: () => forwardAirforce('/chat/completions', 'POST', body, options) },
-    { name: 'Cerebras',    fn: () => forwardCerebras('/chat/completions', 'POST', body, options) },
-    { name: 'Groq',        fn: () => forwardGroq('/chat/completions', 'POST', body, options) },
-    { name: 'AIHorde',     fn: () => forwardAIHorde('/generate/text/async', 'POST', { prompt, params: { max_length: (body as any).max_tokens || 80 } }, options) },
-    { name: 'TokenReply',  fn: () => forwardTokenReply('/chat/completions', 'POST', body, options) },
-    { name: 'NagaAI',      fn: () => forwardNagaAI('/chat/completions', 'POST', body, options) },
-    { name: 'Happupy',     fn: () => forwardHappupy('/v1/chat/completions', 'POST', body, options) },
-  ]);
+  const candidateProviders = [
+    { name: 'Pollinations', prefix: 'pollinations', fn: () => forwardPollinations('/v1/chat/completions', 'POST', body, options) },
+    { name: 'VoidAI',       prefix: 'voidai',       fn: () => forwardVoidAI('/chat/completions', 'POST', body, options) },
+    { name: 'Cerebras',     prefix: 'cerebras',     fn: () => forwardCerebras('/chat/completions', 'POST', body, options) },
+    { name: 'Groq',         prefix: 'groq',         fn: () => forwardGroq('/chat/completions', 'POST', body, options) },
+    { name: 'AIHorde',      prefix: 'aihorde',      fn: () => forwardAIHorde('/generate/text/async', 'POST', { prompt, params: { max_length: (body as any).max_tokens || 80 } }, options) },
+    { name: 'TokenReply',   prefix: 'tokenreply',   fn: () => forwardTokenReply('/chat/completions', 'POST', body, options) },
+    { name: 'NagaAI',       prefix: 'nagaai',       fn: () => forwardNagaAI('/chat/completions', 'POST', body, options) },
+    { name: 'Happupy',      prefix: 'happupy',      fn: () => forwardHappupy('/v1/chat/completions', 'POST', body, options) },
+  ].filter(p => active.has(p.prefix));
+
+  if (candidateProviders.length === 0) {
+    throw Object.assign(
+      new Error('No providers are active yet. Donate API keys at /donate to unlock providers.'),
+      { status: 503, code: 'no_active_providers' }
+    );
+  }
+
+  if (!options?.autoFallback) {
+    return candidateProviders[0].fn();
+  }
+
+  return tryProviders(candidateProviders);
 }
 
 export async function routeImages(
@@ -801,6 +875,57 @@ const COMING_SOON_MODELS = [
   { id: 'together/meta-llama/Llama-3.3-70B-Instruct-Turbo', object: 'model', owned_by: 'Meta',     provider: 'Together AI', type: 'text', status: 'coming_soon' },
   { id: 'together/deepseek-ai/DeepSeek-R1',                  object: 'model', owned_by: 'DeepSeek', provider: 'Together AI', type: 'text', status: 'coming_soon' },
   { id: 'together/Qwen/Qwen3-235B-A22B',                     object: 'model', owned_by: 'Alibaba',  provider: 'Together AI', type: 'text', status: 'coming_soon' },
+
+  // DeepSeek — standalone API
+  { id: 'deepseek/deepseek-chat',     object: 'model', owned_by: 'DeepSeek', provider: 'DeepSeek', type: 'text', status: 'coming_soon' },
+  { id: 'deepseek/deepseek-reasoner', object: 'model', owned_by: 'DeepSeek', provider: 'DeepSeek', type: 'text', status: 'coming_soon' },
+  { id: 'deepseek/deepseek-coder',    object: 'model', owned_by: 'DeepSeek', provider: 'DeepSeek', type: 'text', status: 'coming_soon' },
+
+  // Moonshot AI (Kimi) — 128k context
+  { id: 'moonshot/moonshot-v1-8k',   object: 'model', owned_by: 'Moonshot', provider: 'Moonshot AI', type: 'text', status: 'coming_soon' },
+  { id: 'moonshot/moonshot-v1-32k',  object: 'model', owned_by: 'Moonshot', provider: 'Moonshot AI', type: 'text', status: 'coming_soon' },
+  { id: 'moonshot/moonshot-v1-128k', object: 'model', owned_by: 'Moonshot', provider: 'Moonshot AI', type: 'text', status: 'coming_soon' },
+
+  // Zhipu AI (GLM) — bilingual frontier
+  { id: 'zhipu/glm-4',       object: 'model', owned_by: 'Zhipu', provider: 'Zhipu AI', type: 'text', status: 'coming_soon' },
+  { id: 'zhipu/glm-4-flash', object: 'model', owned_by: 'Zhipu', provider: 'Zhipu AI', type: 'text', status: 'coming_soon' },
+  { id: 'zhipu/glm-4v',      object: 'model', owned_by: 'Zhipu', provider: 'Zhipu AI', type: 'text', status: 'coming_soon' },
+
+  // AI21 Labs — Jamba SSM models
+  { id: 'ai21/jamba-1.5-mini',  object: 'model', owned_by: 'AI21', provider: 'AI21 Labs', type: 'text', status: 'coming_soon' },
+  { id: 'ai21/jamba-1.5-large', object: 'model', owned_by: 'AI21', provider: 'AI21 Labs', type: 'text', status: 'coming_soon' },
+
+  // DeepInfra — 200+ open-source models
+  { id: 'deepinfra/meta-llama/Meta-Llama-3.1-70B-Instruct', object: 'model', owned_by: 'Meta',     provider: 'DeepInfra', type: 'text', status: 'coming_soon' },
+  { id: 'deepinfra/deepseek-ai/DeepSeek-R1',                 object: 'model', owned_by: 'DeepSeek', provider: 'DeepInfra', type: 'text', status: 'coming_soon' },
+  { id: 'deepinfra/Qwen/Qwen2.5-72B-Instruct',               object: 'model', owned_by: 'Alibaba',  provider: 'DeepInfra', type: 'text', status: 'coming_soon' },
+
+  // Upstage — SOLAR model family
+  { id: 'upstage/solar-pro',  object: 'model', owned_by: 'Upstage', provider: 'Upstage', type: 'text', status: 'coming_soon' },
+  { id: 'upstage/solar-mini', object: 'model', owned_by: 'Upstage', provider: 'Upstage', type: 'text', status: 'coming_soon' },
+
+  // Black Forest Labs — official FLUX API
+  { id: 'bfl/flux-pro-1.1', object: 'model', owned_by: 'Black Forest Labs', provider: 'BFL', type: 'image', status: 'coming_soon' },
+  { id: 'bfl/flux-dev',     object: 'model', owned_by: 'Black Forest Labs', provider: 'BFL', type: 'image', status: 'coming_soon' },
+  { id: 'bfl/flux-schnell', object: 'model', owned_by: 'Black Forest Labs', provider: 'BFL', type: 'image', status: 'coming_soon' },
+
+  // Ideogram — AI images with great text rendering
+  { id: 'ideogram/ideogram-v3',       object: 'model', owned_by: 'Ideogram', provider: 'Ideogram', type: 'image', status: 'coming_soon' },
+  { id: 'ideogram/ideogram-v2-turbo', object: 'model', owned_by: 'Ideogram', provider: 'Ideogram', type: 'image', status: 'coming_soon' },
+
+  // Luma AI — photorealistic video
+  { id: 'luma/dream-machine', object: 'model', owned_by: 'Luma', provider: 'Luma AI', type: 'video', status: 'coming_soon' },
+
+  // Kling AI — advanced video gen
+  { id: 'kling/kling-v1',   object: 'model', owned_by: 'Kuaishou', provider: 'Kling AI', type: 'video', status: 'coming_soon' },
+  { id: 'kling/kling-v1-5', object: 'model', owned_by: 'Kuaishou', provider: 'Kling AI', type: 'video', status: 'coming_soon' },
+
+  // ElevenLabs — TTS and voice synthesis
+  { id: 'elevenlabs/eleven_multilingual_v2', object: 'model', owned_by: 'ElevenLabs', provider: 'ElevenLabs', type: 'audio', status: 'coming_soon' },
+  { id: 'elevenlabs/eleven_turbo_v2_5',      object: 'model', owned_by: 'ElevenLabs', provider: 'ElevenLabs', type: 'audio', status: 'coming_soon' },
+
+  // Fish Audio — TTS and voice cloning
+  { id: 'fishaudio/fish-speech-1.5', object: 'model', owned_by: 'Fish Audio', provider: 'Fish Audio', type: 'audio', status: 'coming_soon' },
 ];
 
 // Virtual models map: base model name -> array of providers
@@ -1064,55 +1189,62 @@ export async function routeVirtualTranscription(
 export async function routeModels() {
   const models: any[] = [];
 
+  const active = await getActiveProviders();
+
+  // Helper to stamp status on models for inactive providers
+  const withStatus = (list: any[], prefix: string) =>
+    active.has(prefix) ? list : list.map(m => ({ ...m, status: 'coming_soon' }));
+
   // Pollinations — hardcoded free model list
-  models.push(...POLLINATIONS_FREE_MODELS);
+  models.push(...withStatus(POLLINATIONS_FREE_MODELS, 'pollinations'));
 
   // VoidAI — free tier only
-  try {
-    const r = await forwardVoidAI('/models', 'GET');
-    if (r.ok) {
-      const data = await r.json();
-      if (data.data && Array.isArray(data.data)) {
-        models.push(
-          ...data.data
-            .filter((m: any) => {
-              const p = m.plan_requirements || [];
-              return p.includes('free') || p.length === 0;
-            })
-            .map((m: any) => ({ ...m, provider: 'VoidAI', type: inferType(m.id) }))
-        );
+  if (active.has('voidai')) {
+    try {
+      const r = await forwardVoidAI('/models', 'GET');
+      if (r.ok) {
+        const data = await r.json();
+        if (data.data && Array.isArray(data.data)) {
+          models.push(
+            ...data.data
+              .filter((m: any) => {
+                const p = m.plan_requirements || [];
+                return p.includes('free') || p.length === 0;
+              })
+              .map((m: any) => ({ ...m, provider: 'VoidAI', type: inferType(m.id) }))
+          );
+        }
       }
-    }
-  } catch (e) { console.error('VoidAI models error:', e); }
+    } catch (e) { console.error('VoidAI models error:', e); }
+  } else {
+    // Show VoidAI models as coming soon (placeholder)
+    models.push(
+      { id: 'voidai/gpt-4o', object: 'model', owned_by: 'OpenAI', provider: 'VoidAI', type: 'text', status: 'coming_soon' },
+      { id: 'voidai/claude-3.5-sonnet', object: 'model', owned_by: 'Anthropic', provider: 'VoidAI', type: 'text', status: 'coming_soon' },
+    );
+  }
 
   // Airforce — DISABLED: All models have pricing, none are actually free
-  // Note: API lists models with "Free" tag but they all have explicit pricing
-  // Examples: claude-opus-4.7 costs $1.20-$6.00, flux-2-pro costs $10.00/1K images
-  // This is a known issue with Airforce's API - their "Free" tag is misleading
-  // TODO: Monitor Airforce for truly free models in the future
-  // try {
-  //   const r = await forwardAirforce('/models', 'GET');
-  //   ... removed for safety ...
-  // } catch (e) { console.error('Airforce models error:', e); }
+  // try { ... } catch (e) { }
 
   // Cerebras — free tier models (text only, 1M tokens/day)
-  models.push(
+  models.push(...withStatus([
     { id: 'cerebras/llama-3.3-70b', object: 'model', owned_by: 'Meta', provider: 'Cerebras', type: 'text' },
     { id: 'cerebras/llama-4-scout', object: 'model', owned_by: 'Meta', provider: 'Cerebras', type: 'text' },
-    { id: 'cerebras/deepseek-r1', object: 'model', owned_by: 'DeepSeek', provider: 'Cerebras', type: 'text' }
-  );
+    { id: 'cerebras/deepseek-r1', object: 'model', owned_by: 'DeepSeek', provider: 'Cerebras', type: 'text' },
+  ], 'cerebras'));
 
   // Groq — free tier models with rate limits
-  models.push(...GROQ_FREE_MODELS);
+  models.push(...withStatus(GROQ_FREE_MODELS, 'groq'));
 
   // TokenReply — free OpenAI-compatible models
-  models.push(...TOKENREPLY_FREE_MODELS);
+  models.push(...withStatus(TOKENREPLY_FREE_MODELS, 'tokenreply'));
 
   // NagaAI — 13 free models across chat, audio, image, and transcription
-  models.push(...NAGAAI_FREE_MODELS);
+  models.push(...withStatus(NAGAAI_FREE_MODELS, 'nagaai'));
 
   // AI Horde — decentralized volunteer network with 160+ image + 26+ text models
-  models.push(...AIHORDE_FREE_MODELS);
+  models.push(...withStatus(AIHORDE_FREE_MODELS, 'aihorde'));
 
   // Built-in virtual models (hardcoded multi-provider routing)
   Object.entries(VIRTUAL_MODELS_MAP).forEach(([baseName, providers]) => {

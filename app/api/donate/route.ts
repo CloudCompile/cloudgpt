@@ -4,14 +4,28 @@ import { encryptKey } from '@/lib/crypto';
 import { redis } from '@/lib/redis';
 import { addContributorKeyRef, assignDiscordRole } from '@/lib/contributor';
 import { invalidateKeyCache } from '@/lib/providers/keypool';
-import { testKey, updateKeyHealth } from '@/lib/key-validation';
+import { testKey, updateKeyHealth, getProviderKeyCount } from '@/lib/key-validation';
+import { invalidateActiveProviderCache } from '@/lib/providers';
 import type { ProviderKeyEntry } from '@/lib/providers/keypool';
+
+const KEYS_REQUIRED_TO_ACTIVATE = 3;
 
 export const runtime = 'nodejs';
 
+// All providers that accept community key donations.
+// Coming-soon providers become active once they reach 3 verified keys.
 const PROVIDERS = [
-  'Pollinations', 'VoidAI',
-  'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI',
+  // Active providers
+  'Pollinations', 'VoidAI', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI',
+  // Coming-soon: Tier 1
+  'Gemini', 'OpenRouter', 'Mistral', 'GitHub', 'Cohere', 'HuggingFace',
+  'SiliconFlow', 'Sambanova', 'NVIDIA', 'Fireworks', 'Together', 'Featherless',
+  'Hyperbolic', 'Novita', 'Scaleway', 'Perplexity', 'Anthropic', 'xAI',
+  'StabilityAI', 'ElevenLabs', 'Replicate',
+  // Coming-soon: Tier 2 (international & specialized)
+  'DeepSeek', 'Moonshot', 'Zhipu', 'AI21', 'DeepInfra', 'Lepton',
+  'TextSynth', 'Fal', 'Upstage', 'Writer', 'Voyage', 'Jina',
+  'OctoAI', 'Krutrim', 'FishAudio', 'Ideogram', 'LeonardoAI', 'BFL',
 ] as const;
 
 function keyPreview(rawKey: string): string {
@@ -107,6 +121,7 @@ export async function POST(request: NextRequest) {
 
   // Invalidate key cache so new key is available immediately
   await invalidateKeyCache().catch(e => console.error('Failed to invalidate key cache:', e));
+  invalidateActiveProviderCache();
 
   // Assign Discord role if user has Discord connected via Clerk
   let discordRoleAssigned = false;
@@ -121,5 +136,17 @@ export async function POST(request: NextRequest) {
     console.error('Discord role assignment failed:', e);
   }
 
-  return NextResponse.json({ success: true, id, preview: entry.preview, discordRoleAssigned });
+  // Return key count so client can show activation progress
+  const providerKeyCount = await getProviderKeyCount(provider).catch(() => 1);
+  const providerNowActive = providerKeyCount >= KEYS_REQUIRED_TO_ACTIVATE;
+
+  return NextResponse.json({
+    success: true,
+    id,
+    preview: entry.preview,
+    discordRoleAssigned,
+    providerKeyCount,
+    providerNowActive,
+    keysRequired: KEYS_REQUIRED_TO_ACTIVATE,
+  });
 }
