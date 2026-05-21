@@ -20,7 +20,7 @@ OpenRelay is a **community-powered AI gateway** where users donate their free AP
 ### Basic Chat Request
 
 ```bash
-curl https://api.openrelay.dev/v1/chat/completions \
+curl https://api.cjhauser.me/v1/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -58,7 +58,7 @@ Request a specific provider:
 ### Image Generation
 
 ```bash
-curl https://api.openrelay.dev/v1/images/generations \
+curl https://api.cjhauser.me/v1/images/generations \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -103,7 +103,7 @@ for (const msg of messages) {
 Enable streaming for large responses to reduce memory:
 
 ```bash
-curl https://api.openrelay.dev/v1/chat/completions \
+curl https://api.cjhauser.me/v1/chat/completions \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -141,7 +141,7 @@ async function query(prompt) {
 Check system health at `/api/admin/metrics` (admin only):
 
 ```bash
-curl https://api.openrelay.dev/api/admin/metrics \
+curl https://api.cjhauser.me/api/admin/metrics \
   -H "Authorization: Bearer ADMIN_KEY"
 ```
 

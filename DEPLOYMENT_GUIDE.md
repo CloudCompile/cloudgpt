@@ -28,7 +28,7 @@ git pull origin main
 **Verification**:
 ```bash
 # Check health
-curl https://api.openrelay.dev/api/admin/metrics \
+curl https://api.cjhauser.me/api/admin/metrics \
   -H "Authorization: Bearer YOUR_ADMIN_KEY"
 
 # Should return system metrics within 5 seconds
@@ -36,11 +36,9 @@ curl https://api.openrelay.dev/api/admin/metrics \
 
 ### 2. Enable Background Health Checks
 
-Set up a cron job to check key health every 5 minutes:
+Health checks are **automatically configured** in `vercel.json`:
 
-**Option A: Using Vercel Crons** (recommended)
-```bash
-# Add to vercel.json
+```json
 {
   "crons": [
     {
@@ -51,27 +49,25 @@ Set up a cron job to check key health every 5 minutes:
 }
 ```
 
-**Option B: Using External Cron Service**
-```bash
-# Using EasyCron or similar:
-POST https://api.openrelay.dev/api/admin/health-check \
-  Headers: Authorization: Bearer YOUR_ADMIN_KEY \
-  Schedule: Every 5 minutes
-```
+**That's it!** Vercel handles:
+- ✅ Running the cron every 5 minutes
+- ✅ Authentication (admin bearer token from environment)
+- ✅ Retries on failure
+- ✅ Monitoring and logs
 
-**Option C: Using GitHub Actions**
-```yaml
-name: Health Check
-on:
-  schedule:
-    - cron: '*/5 * * * *'
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          curl -X POST https://api.openrelay.dev/api/admin/health-check \
-            -H "Authorization: Bearer ${{ secrets.ADMIN_KEY }}"
+No external services needed. The cron will automatically:
+1. Check provider keys health
+2. Update Redis with status
+3. Remove broken keys from rotation
+4. Populate metrics dashboard
+
+**Verify it's running:**
+```bash
+# Check Vercel logs for cron execution
+# Or call the metrics endpoint:
+curl https://api.cjhauser.me/api/admin/metrics \
+  -H "Authorization: Bearer YOUR_ADMIN_KEY" \
+  | jq '.current'
 ```
 
 ### 3. Monitor Initial Metrics
@@ -84,7 +80,7 @@ Check real-time metrics:
 ```bash
 # Every minute for first 30 minutes
 while true; do
-  curl https://api.openrelay.dev/api/admin/metrics \
+  curl https://api.cjhauser.me/api/admin/metrics \
     -H "Authorization: Bearer YOUR_ADMIN_KEY" | jq '.health'
   sleep 60
 done
@@ -101,7 +97,7 @@ Test that new keys are immediately available:
 
 ```bash
 # 1. Get current key count
-curl https://api.openrelay.dev/api/admin/metrics \
+curl https://api.cjhauser.me/api/admin/metrics \
   -H "Authorization: Bearer YOUR_ADMIN_KEY" \
   | jq '.keyCounts.Groq'
 
@@ -111,7 +107,7 @@ curl https://api.openrelay.dev/api/admin/metrics \
 # 3. Wait 2 seconds
 
 # 4. Verify new key is available
-curl https://api.openrelay.dev/api/admin/metrics \
+curl https://api.cjhauser.me/api/admin/metrics \
   -H "Authorization: Bearer YOUR_ADMIN_KEY" \
   | jq '.keyCounts.Groq'
 # Should have incremented
@@ -125,7 +121,7 @@ Test with realistic load to verify optimizations:
 # Simple load test (100 concurrent requests)
 ab -n 100 -c 100 \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  https://api.openrelay.dev/v1/models
+  https://api.cjhauser.me/v1/models
 
 # Monitor Redis bandwidth during test
 # Should see significant reduction vs. pre-optimization
@@ -139,17 +135,17 @@ ab -n 100 -c 100 \
 
 1. **Cache Hit Rate** (aim for 85%+)
    ```bash
-   curl https://api.openrelay.dev/api/admin/metrics | jq '.health.cacheHitRate'
+   curl https://api.cjhauser.me/api/admin/metrics | jq '.health.cacheHitRate'
    ```
 
 2. **Failure Rate** (keep below 5%)
    ```bash
-   curl https://api.openrelay.dev/api/admin/metrics | jq '.health.failureRate'
+   curl https://api.cjhauser.me/api/admin/metrics | jq '.health.failureRate'
    ```
 
 3. **Average Response Time** (should be <500ms)
    ```bash
-   curl https://api.openrelay.dev/api/admin/metrics | jq '.health.avgResponseTime'
+   curl https://api.cjhauser.me/api/admin/metrics | jq '.health.avgResponseTime'
    ```
 
 4. **Redis Commands/sec**
@@ -219,31 +215,31 @@ echo "=== Deployment Verification ==="
 
 # 1. Check cache hit rate
 echo "Cache Hit Rate:"
-curl -s https://api.openrelay.dev/api/admin/metrics \
+curl -s https://api.cjhauser.me/api/admin/metrics \
   -H "Authorization: Bearer $ADMIN_KEY" \
   | jq '.health.cacheHitRate'
 
 # 2. Check failure rate
 echo "Failure Rate:"
-curl -s https://api.openrelay.dev/api/admin/metrics \
+curl -s https://api.cjhauser.me/api/admin/metrics \
   -H "Authorization: Bearer $ADMIN_KEY" \
   | jq '.health.failureRate'
 
 # 3. Check total requests
 echo "Total Requests:"
-curl -s https://api.openrelay.dev/api/admin/metrics \
+curl -s https://api.cjhauser.me/api/admin/metrics \
   -H "Authorization: Bearer $ADMIN_KEY" \
   | jq '.current.totalRequests'
 
 # 4. Check available keys per provider
 echo "Available Keys:"
-curl -s https://api.openrelay.dev/api/admin/metrics \
+curl -s https://api.cjhauser.me/api/admin/metrics \
   -H "Authorization: Bearer $ADMIN_KEY" \
   | jq '.keyCounts'
 
 # 5. Test basic functionality
 echo "API Test:"
-curl -s https://api.openrelay.dev/v1/models \
+curl -s https://api.cjhauser.me/v1/models \
   -H "Authorization: Bearer $USER_API_KEY" \
   | jq '.object' | head -c 50
 echo ""
@@ -289,7 +285,7 @@ Expected improvements after optimization:
 **Verification**:
 ```bash
 # Check recent health check calls
-curl https://api.openrelay.dev/api/admin/metrics \
+curl https://api.cjhauser.me/api/admin/metrics \
   | jq '.current.lastHealthCheck'
 ```
 
@@ -303,7 +299,7 @@ curl https://api.openrelay.dev/api/admin/metrics \
 **Diagnosis**:
 ```bash
 # Get error details
-curl https://api.openrelay.dev/api/admin/metrics | jq '.health'
+curl https://api.cjhauser.me/api/admin/metrics | jq '.health'
 
 # Check recent errors
 # Look for errors in:
