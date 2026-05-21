@@ -10,8 +10,8 @@ import type { ProviderKeyEntry } from '@/lib/providers/keypool';
 export const runtime = 'nodejs';
 
 const PROVIDERS = [
-  'Pollinations', 'VoidAI', 'Airforce',
-  'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI', 'Happupy',
+  'Pollinations', 'VoidAI',
+  'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI',
 ] as const;
 
 function keyPreview(rawKey: string): string {

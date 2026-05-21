@@ -16,11 +16,6 @@ export const PROVIDER_TEST_CONFIGS: Record<string, {
     timeout: 3000,
     validStatusCodes: [200],
   },
-  Airforce: {
-    testUrl: 'https://api.airforce/v1/models',
-    timeout: 3000,
-    validStatusCodes: [200],
-  },
   Cerebras: {
     testUrl: 'https://api.cerebras.ai/v1/models',
     timeout: 3000,
@@ -43,11 +38,6 @@ export const PROVIDER_TEST_CONFIGS: Record<string, {
   },
   NagaAI: {
     testUrl: 'https://api.naga.ac/v1/models',
-    timeout: 3000,
-    validStatusCodes: [200],
-  },
-  Happupy: {
-    testUrl: 'https://beta.hapuppy.com/v1/models',
     timeout: 3000,
     validStatusCodes: [200],
   },
