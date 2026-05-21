@@ -193,6 +193,69 @@ When making changes:
 - Features: Removed seeded models, type inference, 7 providers
 - Verified: ✅ CI green, no unresolved review comments
 
+## Community Provider Optimizations (Current Branch)
+
+### High-Traffic Optimizations for Vercel Free Tier
+
+1. **Aggressive Key Caching** (`lib/providers/keypool.ts`)
+   - In-memory cache with 60-second TTL for provider key lists
+   - Reduces Redis `GET` calls by ~95% under normal load
+   - Redis version tracking allows cache invalidation on key changes
+   - Fallback to local counter rotation if Redis unavailable
+
+2. **Cache Invalidation** (`invalidateKeyCache()`)
+   - Called when keys are added/removed via `/donate`, `/api/admin/keys`, `/api/contributor/keys`
+   - Increments Redis `keypool:version` to signal all instances
+   - All instances check version on first request and invalidate stale cache
+
+3. **Improved Key Validation** (`lib/key-validation.ts`)
+   - Separated validation logic from endpoint handlers
+   - Health tracking: `successCount`, `failureCount`, `lastChecked`
+   - Determines if key should be removed after repeated failures
+   - Configurable timeouts per provider (8s default)
+
+4. **Background Health Checks** (`/api/admin/health-check`)
+   - Samples provider keys periodically (not all, to avoid overload)
+   - Updates health status without blocking main traffic
+   - Only checks keys that haven't been checked recently
+   - Can be triggered via cron job (e.g., every 5 minutes)
+
+5. **Request Deduplication** (`lib/request-deduplicator.ts`)
+   - Detects concurrent identical requests
+   - Returns same response to all waiting requests
+   - Critical for Vercel free tier where duplicate requests waste compute
+   - Key includes endpoint, method, body hash, and user ID
+
+6. **Rate Limiting** (`lib/rate-limit.ts`)
+   - Simple sliding window rate limiter using Redis
+   - Per-user/identifier tracking
+   - Fails open (allows request) if Redis unavailable
+   - Configurable requests/window-size per endpoint
+
+### Verification
+
+When deploying to production:
+1. Monitor Redis bandwidth (should stay low with caching)
+2. Verify cache invalidation works (add a key, check it's used immediately)
+3. Test fallback behavior (kill Redis, verify requests still work)
+4. Monitor concurrent duplicate request deduplication
+5. Verify health checks don't cause rate limits
+
+### Configuration for Vercel
+
+**Environment Variables** (in addition to existing):
+```
+# No new required vars, but monitor these:
+CACHE_TTL=60000           # 60 seconds (adjustable)
+HEALTH_CHECK_THRESHOLD=5  # Failures before marking key broken
+```
+
+**Recommended Cron Setup**:
+```
+# POST /api/admin/health-check every 5 minutes
+0 */5 * * * * curl https://your-api.com/api/admin/health-check
+```
+
 ## Notes for Future Work
 
 - **Type safety**: Many `(body as any)` casts throughout — consider schema validation (zod, io-ts)
@@ -200,3 +263,4 @@ When making changes:
 - **dangerouslySetInnerHTML**: In docs/page.tsx (hardcoded, safe, but pattern is risky)
 - **Error handling in admin endpoints**: Consider centralizing error responses
 - **Analytics**: Fire-and-forget pattern is good, but consider monitoring for persistent failures
+- **Vercel KV**: System now uses Redis + KV - consider migrating completely to Vercel's integrated Redis

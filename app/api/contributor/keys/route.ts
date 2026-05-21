@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { redis } from '@/lib/redis';
 import { getContributorKeyRefs, removeContributorKeyRef } from '@/lib/contributor';
+import { invalidateKeyCache } from '@/lib/providers/keypool';
 import type { ProviderKeyEntry } from '@/lib/providers/keypool';
 
 export const runtime = 'nodejs';
@@ -57,6 +58,9 @@ export async function DELETE(request: NextRequest) {
   await redis.set(`admin:provider:keys:${providerKey}`, JSON.stringify(list.filter(e => e.id !== id)));
   await redis.del(`admin:key:status:${providerKey}:${id}`);
   await removeContributorKeyRef(userId, id);
+
+  // Invalidate key cache so removed key is immediately unavailable
+  await invalidateKeyCache().catch(e => console.error('Failed to invalidate key cache:', e));
 
   return NextResponse.json({ success: true });
 }

@@ -988,26 +988,15 @@ export async function routeModels() {
     }
   } catch (e) { console.error('VoidAI models error:', e); }
 
-  // Airforce — free plan: multiplier == null or multiplier <= 1
-  try {
-    const r = await forwardAirforce('/models', 'GET');
-    if (r.ok) {
-      const data = await r.json();
-      if (data.data && Array.isArray(data.data)) {
-        models.push(
-          ...data.data
-            .filter((m: any) => m.multiplier == null || m.multiplier <= 1)
-            .map((m: any) => ({
-              id: `airforce/${m.id}`,
-              object: 'model',
-              owned_by: m.owned_by || 'Airforce',
-              provider: 'Airforce',
-              type: inferAirforceType(m),
-            }))
-        );
-      }
-    }
-  } catch (e) { console.error('Airforce models error:', e); }
+  // Airforce — DISABLED: All models have pricing, none are actually free
+  // Note: API lists models with "Free" tag but they all have explicit pricing
+  // Examples: claude-opus-4.7 costs $1.20-$6.00, flux-2-pro costs $10.00/1K images
+  // This is a known issue with Airforce's API - their "Free" tag is misleading
+  // TODO: Monitor Airforce for truly free models in the future
+  // try {
+  //   const r = await forwardAirforce('/models', 'GET');
+  //   ... removed for safety ...
+  // } catch (e) { console.error('Airforce models error:', e); }
 
   // Cerebras — free tier models (text only, 1M tokens/day)
   models.push(

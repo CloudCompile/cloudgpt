@@ -3,45 +3,20 @@ import { auth, clerkClient } from '@clerk/nextjs/server';
 import { encryptKey } from '@/lib/crypto';
 import { redis } from '@/lib/redis';
 import { addContributorKeyRef, assignDiscordRole } from '@/lib/contributor';
+import { invalidateKeyCache } from '@/lib/providers/keypool';
+import { testKey, updateKeyHealth } from '@/lib/key-validation';
 import type { ProviderKeyEntry } from '@/lib/providers/keypool';
 
 export const runtime = 'nodejs';
 
 const PROVIDERS = [
-  'Pollinations', 'VoidAI', 'Airforce',
-  'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI', 'Happupy',
+  'Pollinations', 'VoidAI',
+  'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI',
 ] as const;
-
-const PROVIDER_TEST_URLS: Record<string, string> = {
-  Pollinations: 'https://gen.pollinations.ai/v1/models',
-  VoidAI:      'https://api.voidai.app/v1/models',
-  Airforce:    'https://api.airforce/v1/models',
-  Cerebras:    'https://api.cerebras.ai/v1/models',
-  Groq:        'https://api.groq.com/openai/v1/models',
-  AIHorde:     'https://aihorde.net/api/v2/status/heartbeat',
-  TokenReply:  'https://api.tokenreply.com/v1beta/models',
-  NagaAI:      'https://api.naga.ac/v1/models',
-  Happupy:     'https://beta.hapuppy.com/v1/models',
-};
 
 function keyPreview(rawKey: string): string {
   if (rawKey.length <= 12) return rawKey;
   return `${rawKey.slice(0, 8)}...${rawKey.slice(-4)}`;
-}
-
-async function testKey(provider: string, rawKey: string): Promise<boolean> {
-  const testUrl = PROVIDER_TEST_URLS[provider];
-  if (!testUrl) return false;
-  try {
-    const res = await fetch(testUrl, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${rawKey}` },
-      signal: AbortSignal.timeout(8000),
-    });
-    return res.ok || res.status === 429; // rate-limited = valid key
-  } catch {
-    return false;
-  }
 }
 
 export async function POST(request: NextRequest) {
@@ -50,6 +25,28 @@ export async function POST(request: NextRequest) {
 
   const encKey = process.env.ENCRYPTION_KEY;
   if (!encKey) return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+
+  // Rate limit: max 5 keys per hour per user
+  const rateLimitKey = `donate:ratelimit:${userId}`;
+  const count = await redis.incr(rateLimitKey);
+  if (count === 1) await redis.expire(rateLimitKey, 3600); // 1 hour
+  if (count > 5) {
+    return NextResponse.json(
+      { error: 'Rate limited: max 5 keys per hour' },
+      { status: 429 }
+    );
+  }
+
+  // Per-user key limit: max 100 keys total
+  const userKeysPattern = `contributor:keys:${userId}`;
+  const existingKeysJson = await redis.get(userKeysPattern);
+  const existingKeys = existingKeysJson ? JSON.parse(existingKeysJson) : [];
+  if (existingKeys.length >= 100) {
+    return NextResponse.json(
+      { error: 'Key limit reached: maximum 100 keys per user' },
+      { status: 400 }
+    );
+  }
 
   let body: { provider?: string; key?: string };
   try {
@@ -69,8 +66,20 @@ export async function POST(request: NextRequest) {
 
   const trimmedKey = rawKey.trim();
 
-  const valid = await testKey(provider, trimmedKey);
-  if (!valid) {
+  // Deduplication: check if this exact key already exists
+  const providerKey = provider.toLowerCase();
+  const listJson = await redis.get(`admin:provider:keys:${providerKey}`);
+  const existingList: ProviderKeyEntry[] = listJson ? JSON.parse(listJson) : [];
+  const encryptedToCheck = encryptKey(trimmedKey, encKey);
+  if (existingList.some(entry => entry.encryptedKey === encryptedToCheck)) {
+    return NextResponse.json(
+      { error: 'This key has already been donated' },
+      { status: 400 }
+    );
+  }
+
+  const status = await testKey(provider, trimmedKey);
+  if (status === 'error') {
     return NextResponse.json(
       { error: 'Key validation failed — the provider rejected it or it appears invalid' },
       { status: 400 }
@@ -80,19 +89,24 @@ export async function POST(request: NextRequest) {
   const id = `donor-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const entry: ProviderKeyEntry = {
     id,
-    encryptedKey: encryptKey(trimmedKey, encKey),
+    encryptedKey: encryptedToCheck, // Use already-encrypted key
     preview: keyPreview(trimmedKey),
     createdAt: Date.now(),
     donorId: userId,
   };
 
-  const providerKey = provider.toLowerCase();
-  const listJson = await redis.get(`admin:provider:keys:${providerKey}`);
-  const list: ProviderKeyEntry[] = listJson ? JSON.parse(listJson) : [];
-  list.push(entry);
-  await redis.set(`admin:provider:keys:${providerKey}`, JSON.stringify(list));
+  existingList.push(entry);
+  await redis.set(`admin:provider:keys:${providerKey}`, JSON.stringify(existingList));
 
   await addContributorKeyRef(userId, provider, id);
+
+  // Record initial health status
+  await updateKeyHealth(provider, id, status).catch(e =>
+    console.error('Failed to record key health:', e)
+  );
+
+  // Invalidate key cache so new key is available immediately
+  await invalidateKeyCache().catch(e => console.error('Failed to invalidate key cache:', e));
 
   // Assign Discord role if user has Discord connected via Clerk
   let discordRoleAssigned = false;

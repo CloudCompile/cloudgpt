@@ -12,7 +12,8 @@ export async function GET() {
       data: models,
       _info: {
         usage: 'Use the "id" field from any model. For bare model names without a provider prefix (e.g., "gpt-4o-free"), the system will automatically try providers in order. For provider-specific models, prefix with the provider name (e.g., "pollinations/claude-fast", "groq/llama-3.3-70b-versatile").',
-        providers: 'pollinations, voidai, airforce, cerebras, groq, aihorde, tokenreply, nagaai, happupy',
+        providers: 'pollinations, voidai, cerebras, groq, aihorde, tokenreply, nagaai',
+        note: 'airforce disabled - all models have pricing despite "Free" tag. happupy not implemented.',
       }
     };
     const modelCount = models.length;
@@ -21,7 +22,7 @@ export async function GET() {
       {
         headers: {
           'X-Available-Models': modelCount.toString(),
-          'X-Available-Providers': '9',
+          'X-Available-Providers': '7',
           // Cache at CDN edge for 5 min; clients may serve stale for 1 min while revalidating
           'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
         }

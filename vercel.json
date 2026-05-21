@@ -5,6 +5,13 @@
     "app/api/v1/videos/generations/route.ts": { "maxDuration": 60 },
     "app/api/v1/audio/speech/route.ts": { "maxDuration": 30 },
     "app/api/v1/responses/route.ts": { "maxDuration": 30 },
+    "app/api/admin/health-check/route.ts": { "maxDuration": 30 },
     "app/api/**": { "maxDuration": 15 }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/admin/health-check",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }
