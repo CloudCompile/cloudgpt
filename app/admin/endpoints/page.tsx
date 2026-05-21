@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { auth } from '@clerk/nextjs';
 
 interface Endpoint {
   id: string;
