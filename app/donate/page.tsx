@@ -14,6 +14,7 @@ interface ProviderInfo {
   keyCount: number;
   keysRequired: number;
   keysNeeded: number;
+  tiers?: { tier: string; pollenPerHour: number }[];
 }
 
 function glyphKey(name: string): string {
@@ -31,9 +32,10 @@ export default function DonatePage() {
   const [search, setSearch] = useState('');
   const [provider, setProvider] = useState('');
   const [key, setKey] = useState('');
+  const [tier, setTier] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState<{ discordRoleAssigned: boolean; providerNowActive?: boolean } | null>(null);
+  const [success, setSuccess] = useState<{ discordRoleAssigned: boolean; providerNowActive?: boolean; pollenPerHour?: number } | null>(null);
 
   useEffect(() => {
     fetch('/api/providers')
@@ -67,16 +69,21 @@ export default function DonatePage() {
       const res = await fetch('/api/donate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, key }),
+        body: JSON.stringify({ provider, key, ...(tier && { tier }) }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Something went wrong');
         return;
       }
-      setSuccess({ discordRoleAssigned: data.discordRoleAssigned, providerNowActive: data.providerNowActive });
+      setSuccess({
+        discordRoleAssigned: data.discordRoleAssigned,
+        providerNowActive: data.providerNowActive,
+        pollenPerHour: data.pollenPerHour,
+      });
       setKey('');
       setProvider('');
+      setTier('');
     } catch {
       setError('Network error. Please try again.');
     } finally {
@@ -322,6 +329,17 @@ export default function DonatePage() {
                         Provider is now active with 3+ keys!
                       </div>
                     )}
+                    {success.pollenPerHour !== null && success.pollenPerHour !== undefined && (
+                      <div style={{
+                        marginBottom: '14px', padding: '10px 14px',
+                        background: 'rgba(124,58,237,0.08)',
+                        border: '1px solid rgba(124,58,237,0.2)',
+                        borderRadius: 'var(--radius)',
+                        fontSize: '0.84rem', color: 'var(--accent-light)',
+                      }}>
+                        Total capacity: {success.pollenPerHour.toFixed(2)} pollen/hour
+                      </div>
+                    )}
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: '1.7', marginBottom: '24px' }}>
                       {success.discordRoleAssigned
                         ? 'Your Discord Contributor role has been assigned. Thanks for keeping OpenRelay free.'
@@ -395,6 +413,30 @@ export default function DonatePage() {
                           style={{ width: '100%', fontFamily: 'var(--font-mono), monospace', letterSpacing: '0.05em' }}
                         />
                       </div>
+
+                      {selectedProvider?.tiers && (
+                        <div style={{ marginBottom: '22px' }}>
+                          <label style={{ display: 'block', fontWeight: '600', marginBottom: '7px', fontSize: '0.85rem' }}>
+                            Tier
+                          </label>
+                          <select
+                            value={tier}
+                            onChange={e => setTier(e.target.value)}
+                            required
+                            style={{ color: tier ? 'var(--fg)' : 'var(--text-secondary)' }}
+                          >
+                            <option value="">Select tier…</option>
+                            {selectedProvider.tiers.map(t => (
+                              <option key={t.tier} value={t.tier}>
+                                {t.tier} ({t.pollenPerHour} pollen/hour)
+                              </option>
+                            ))}
+                          </select>
+                          <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '8px' }}>
+                            Select your Pollinations subscription tier
+                          </p>
+                        </div>
+                      )}
 
                       <button
                         type="submit"

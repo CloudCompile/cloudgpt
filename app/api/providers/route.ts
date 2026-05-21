@@ -68,9 +68,17 @@ const SIGNUP_URLS: Record<string, string> = {
   maritaca: 'https://plataforma.maritaca.ai',
 };
 
+// Pollinations tier system (pollen per hour)
+const POLLINATIONS_TIERS = [
+  { tier: 'Seed', pollenPerHour: 0.15 },
+  { tier: 'Flower', pollenPerHour: 0.4 },
+  { tier: 'Spore', pollenPerHour: 1.0 },
+  { tier: 'Premium', pollenPerHour: 3.0 },
+];
+
 // All providers that have native routing implementations (still need donated keys when no env keys set)
 const BASE_PROVIDERS = [
-  { id: 'pollinations', name: 'Pollinations', description: 'Multi-modal AI gateway — chat, images, audio, video, transcription, embeddings', freeLimit: 'Unlimited' },
+  { id: 'pollinations', name: 'Pollinations', description: 'Multi-modal AI gateway — chat, images, audio, video, transcription, embeddings', freeLimit: 'Tiered: 0.15–3 pollen/hour', tiers: POLLINATIONS_TIERS },
   { id: 'voidai',       name: 'VoidAI',       description: 'OpenAI-compatible inference proxy with a variety of free models', freeLimit: 'Free tier' },
   { id: 'cerebras',     name: 'Cerebras',     description: 'World-fastest inference hardware — Llama 3 at 2000+ tokens/sec', freeLimit: '1M tokens/day' },
   { id: 'groq',         name: 'Groq',         description: 'Lightning-fast LPU inference for open-source models', freeLimit: 'Rate limited' },
@@ -103,17 +111,24 @@ export async function GET() {
       }))
     );
 
-    const providers = withCounts.map(p => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      freeLimit: p.freeLimit,
-      signupUrl: p.signupUrl ?? null,
-      status: p.count >= KEYS_REQUIRED ? 'active' : 'coming_soon',
-      keyCount: p.count,
-      keysRequired: KEYS_REQUIRED,
-      keysNeeded: Math.max(0, KEYS_REQUIRED - p.count),
-    }));
+    const providers = withCounts.map(p => {
+      const base = {
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        freeLimit: p.freeLimit,
+        signupUrl: p.signupUrl ?? null,
+        status: p.count >= KEYS_REQUIRED ? 'active' : 'coming_soon',
+        keyCount: p.count,
+        keysRequired: KEYS_REQUIRED,
+        keysNeeded: Math.max(0, KEYS_REQUIRED - p.count),
+      };
+      // Include tier info for tiered providers
+      if ('tiers' in p && p.tiers) {
+        return { ...base, tiers: p.tiers };
+      }
+      return base;
+    });
 
     const activeCount = providers.filter(p => p.status === 'active').length;
 
