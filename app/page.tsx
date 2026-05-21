@@ -22,7 +22,7 @@ const features = [
 ];
 
 const providers = [
-  { name: 'Pollinations', desc: '40+ models',  color: '#a855f7', modelCount: 40 },
+  { name: 'Pollinations', desc: '40+ models, tiered pollen rates',  color: '#a855f7', modelCount: 40 },
   { name: 'VoidAI',      desc: '15+ models',   color: '#06b6d4', modelCount: 15 },
   { name: 'Airforce',    desc: '53+ models',   color: '#f59e0b', modelCount: 53 },
   { name: 'Cerebras',    desc: '3 models',     color: '#8b5cf6', modelCount: 3 },

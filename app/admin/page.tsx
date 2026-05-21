@@ -182,7 +182,11 @@ export default function AdminPage() {
                       }} />
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>
-                      {hasKeys ? `~${count * 60} req/min capacity` : 'No keys — add some'}
+                      {hasKeys ? (
+                        provider === 'Pollinations'
+                          ? `~${(count * 0.4).toFixed(2)} pollen/hr avg`
+                          : `~${count * 60} req/min`
+                      ) : 'No keys — add some'}
                     </div>
                   </a>
                 );
