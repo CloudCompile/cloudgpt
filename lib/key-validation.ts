@@ -1,4 +1,5 @@
 import { redis } from './redis';
+import type { ProviderKeyEntry } from './providers/keypool';
 
 export const PROVIDER_TEST_CONFIGS: Record<string, {
   testUrl: string;
@@ -7,48 +8,48 @@ export const PROVIDER_TEST_CONFIGS: Record<string, {
 }> = {
   Pollinations: {
     testUrl: 'https://gen.pollinations.ai/v1/models',
-    timeout: 8000,
-    validStatusCodes: [200, 401, 403, 429],
+    timeout: 3000,
+    validStatusCodes: [200],
   },
   VoidAI: {
     testUrl: 'https://api.voidai.app/v1/models',
-    timeout: 8000,
-    validStatusCodes: [200, 401, 403, 429],
+    timeout: 3000,
+    validStatusCodes: [200],
   },
   Airforce: {
     testUrl: 'https://api.airforce/v1/models',
-    timeout: 8000,
-    validStatusCodes: [200, 401, 403, 429],
+    timeout: 3000,
+    validStatusCodes: [200],
   },
   Cerebras: {
     testUrl: 'https://api.cerebras.ai/v1/models',
-    timeout: 8000,
-    validStatusCodes: [200, 401, 403, 429],
+    timeout: 3000,
+    validStatusCodes: [200],
   },
   Groq: {
     testUrl: 'https://api.groq.com/openai/v1/models',
-    timeout: 8000,
-    validStatusCodes: [200, 401, 403, 429],
+    timeout: 3000,
+    validStatusCodes: [200],
   },
   AIHorde: {
     testUrl: 'https://aihorde.net/api/v2/status/heartbeat',
-    timeout: 8000,
-    validStatusCodes: [200, 401, 403, 429],
+    timeout: 3000,
+    validStatusCodes: [200],
   },
   TokenReply: {
     testUrl: 'https://api.tokenreply.com/v1beta/models',
-    timeout: 8000,
-    validStatusCodes: [200, 401, 403, 429],
+    timeout: 3000,
+    validStatusCodes: [200],
   },
   NagaAI: {
     testUrl: 'https://api.naga.ac/v1/models',
-    timeout: 8000,
-    validStatusCodes: [200, 401, 403, 429],
+    timeout: 3000,
+    validStatusCodes: [200],
   },
   Happupy: {
     testUrl: 'https://beta.hapuppy.com/v1/models',
-    timeout: 8000,
-    validStatusCodes: [200, 401, 403, 429],
+    timeout: 3000,
+    validStatusCodes: [200],
   },
 };
 
@@ -64,11 +65,12 @@ export interface KeyHealthCheckResult {
 /**
  * Test if a provider key is valid by making a request to the provider's API.
  * Returns the status without throwing.
+ * STRICT: Only returns 'working' if 200 OK with valid response.
  */
 export async function testKey(
   provider: string,
   rawKey: string,
-  timeout: number = 8000
+  timeout: number = 3000
 ): Promise<KeyStatus> {
   const config = PROVIDER_TEST_CONFIGS[provider];
   if (!config) return 'error';
@@ -82,14 +84,21 @@ export async function testKey(
 
     if (res.status === 429) return 'rate_limited';
     if (res.status === 401 || res.status === 403) return 'error';
-    if (res.ok) return 'working';
-    // 5xx = provider down, key might be fine
-    return 'working';
-  } catch (e) {
-    if (e instanceof Error && e.name === 'AbortError') {
-      // Timeout could mean the provider is slow, not that the key is invalid
-      return 'working';
+
+    // STRICT: Only accept 200 OK with actual response body
+    if (res.status === 200) {
+      try {
+        const body = await res.text();
+        // Verify response has content (not empty)
+        if (body && body.length > 10) return 'working';
+      } catch {
+        return 'error';
+      }
     }
+
+    // Anything else = error (5xx, timeout, etc.)
+    return 'error';
+  } catch (e) {
     return 'error';
   }
 }
@@ -189,25 +198,51 @@ async function checkProviderKeys(provider: string): Promise<void> {
     if (!listJson) return;
 
     const entries = JSON.parse(listJson);
-    // Check only a sample of keys to avoid overload
-    const samplesToCheck = Math.min(3, Math.max(1, Math.floor(entries.length / 5)));
-    const indices = Array.from(
-      { length: samplesToCheck },
-      () => Math.floor(Math.random() * entries.length)
-    );
+    const encKey = process.env.ENCRYPTION_KEY;
+    if (!encKey) return;
 
-    for (const idx of indices) {
-      const entry = entries[idx];
-      if (!entry?.id) continue;
+    // Check ALL keys, but respect recent checks to avoid overload
+    // Aggressively test unchecked keys to catch spam early
+    for (const entry of entries) {
+      if (!entry?.id || !entry?.encryptedKey) continue;
 
       const health = await getKeyHealth(provider, entry.id);
-      // Only check if we haven't checked recently
-      if (health && Date.now() - health.lastChecked < 300000) continue;
 
-      // Schedule health update (don't await)
-      updateKeyHealth(provider, entry.id, 'working').catch(() => {});
+      // Check unchecked keys immediately, others less frequently
+      const timeSinceCheck = health ? Date.now() - health.lastChecked : Infinity;
+      const shouldCheck = timeSinceCheck > 3600000; // 1 hour between checks
+      const shouldCheckSpam = !health; // New keys get checked immediately
+
+      if (!shouldCheck && !shouldCheckSpam) continue;
+
+      // Actually test the key
+      try {
+        const { decryptKey } = await import('./crypto');
+        const decrypted = decryptKey(entry.encryptedKey, encKey);
+        const status = await testKey(provider, decrypted, 3000);
+        await updateKeyHealth(provider, entry.id, status).catch(() => {});
+
+        // Remove keys with too many failures
+        if (status === 'error' && health && health.failureCount >= 3) {
+          await removeProviderKey(provider, entry.id);
+        }
+      } catch (e) {
+        console.error(`Failed to check key ${entry.id} for ${provider}:`, e);
+      }
     }
   } catch (e) {
     console.error(`Failed to check provider keys for ${provider}:`, e);
+  }
+}
+
+async function removeProviderKey(provider: string, keyId: string): Promise<void> {
+  try {
+    const listJson = await redis.get(`admin:provider:keys:${provider.toLowerCase()}`);
+    if (!listJson) return;
+    const list: ProviderKeyEntry[] = JSON.parse(listJson);
+    const filtered = list.filter(e => e.id !== keyId);
+    await redis.set(`admin:provider:keys:${provider.toLowerCase()}`, JSON.stringify(filtered));
+  } catch (e) {
+    console.error(`Failed to remove key ${keyId} for ${provider}:`, e);
   }
 }

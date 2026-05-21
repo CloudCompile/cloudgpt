@@ -26,6 +26,28 @@ export async function POST(request: NextRequest) {
   const encKey = process.env.ENCRYPTION_KEY;
   if (!encKey) return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
 
+  // Rate limit: max 5 keys per hour per user
+  const rateLimitKey = `donate:ratelimit:${userId}`;
+  const count = await redis.incr(rateLimitKey);
+  if (count === 1) await redis.expire(rateLimitKey, 3600); // 1 hour
+  if (count > 5) {
+    return NextResponse.json(
+      { error: 'Rate limited: max 5 keys per hour' },
+      { status: 429 }
+    );
+  }
+
+  // Per-user key limit: max 100 keys total
+  const userKeysPattern = `contributor:keys:${userId}`;
+  const existingKeysJson = await redis.get(userKeysPattern);
+  const existingKeys = existingKeysJson ? JSON.parse(existingKeysJson) : [];
+  if (existingKeys.length >= 100) {
+    return NextResponse.json(
+      { error: 'Key limit reached: maximum 100 keys per user' },
+      { status: 400 }
+    );
+  }
+
   let body: { provider?: string; key?: string };
   try {
     body = await request.json();
@@ -44,6 +66,18 @@ export async function POST(request: NextRequest) {
 
   const trimmedKey = rawKey.trim();
 
+  // Deduplication: check if this exact key already exists
+  const providerKey = provider.toLowerCase();
+  const listJson = await redis.get(`admin:provider:keys:${providerKey}`);
+  const existingList: ProviderKeyEntry[] = listJson ? JSON.parse(listJson) : [];
+  const encryptedToCheck = encryptKey(trimmedKey, encKey);
+  if (existingList.some(entry => entry.encryptedKey === encryptedToCheck)) {
+    return NextResponse.json(
+      { error: 'This key has already been donated' },
+      { status: 400 }
+    );
+  }
+
   const status = await testKey(provider, trimmedKey);
   if (status === 'error') {
     return NextResponse.json(
@@ -55,17 +89,14 @@ export async function POST(request: NextRequest) {
   const id = `donor-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const entry: ProviderKeyEntry = {
     id,
-    encryptedKey: encryptKey(trimmedKey, encKey),
+    encryptedKey: encryptedToCheck, // Use already-encrypted key
     preview: keyPreview(trimmedKey),
     createdAt: Date.now(),
     donorId: userId,
   };
 
-  const providerKey = provider.toLowerCase();
-  const listJson = await redis.get(`admin:provider:keys:${providerKey}`);
-  const list: ProviderKeyEntry[] = listJson ? JSON.parse(listJson) : [];
-  list.push(entry);
-  await redis.set(`admin:provider:keys:${providerKey}`, JSON.stringify(list));
+  existingList.push(entry);
+  await redis.set(`admin:provider:keys:${providerKey}`, JSON.stringify(existingList));
 
   await addContributorKeyRef(userId, provider, id);
 
