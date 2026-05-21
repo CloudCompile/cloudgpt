@@ -8,6 +8,8 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/nextjs';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import Wordmark from '@/components/brand/Wordmark';
 import './globals.css';
 
@@ -78,6 +80,8 @@ export default function RootLayout({
         <body>
           <Header />
           {children}
+          <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     );
@@ -92,6 +96,8 @@ export default function RootLayout({
         <body>
           <Header />
           {children}
+          <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>

@@ -15,6 +15,7 @@ export interface ComingSoonProvider {
   description: string;
   freeLimit: string;
   keysRequired: number; // always 3 for now
+  signupUrl?: string;
 }
 
 export const COMING_SOON_PROVIDERS: ComingSoonProvider[] = [

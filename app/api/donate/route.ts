@@ -4,7 +4,7 @@ import { encryptKey } from '@/lib/crypto';
 import { redis } from '@/lib/redis';
 import { addContributorKeyRef, assignDiscordRole } from '@/lib/contributor';
 import { invalidateKeyCache } from '@/lib/providers/keypool';
-import { testKey, updateKeyHealth, getProviderKeyCount } from '@/lib/key-validation';
+import { testKey, updateKeyHealth, getProviderKeyCount, PROVIDER_TEST_CONFIGS } from '@/lib/key-validation';
 import { invalidateActiveProviderCache } from '@/lib/providers';
 import type { ProviderKeyEntry } from '@/lib/providers/keypool';
 
@@ -12,21 +12,8 @@ const KEYS_REQUIRED_TO_ACTIVATE = 3;
 
 export const runtime = 'nodejs';
 
-// All providers that accept community key donations.
-// Coming-soon providers become active once they reach 3 verified keys.
-const PROVIDERS = [
-  // Active providers
-  'Pollinations', 'VoidAI', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI',
-  // Coming-soon: Tier 1
-  'Gemini', 'OpenRouter', 'Mistral', 'GitHub', 'Cohere', 'HuggingFace',
-  'SiliconFlow', 'Sambanova', 'NVIDIA', 'Fireworks', 'Together', 'Featherless',
-  'Hyperbolic', 'Novita', 'Scaleway', 'Perplexity', 'Anthropic', 'xAI',
-  'StabilityAI', 'ElevenLabs', 'Replicate',
-  // Coming-soon: Tier 2 (international & specialized)
-  'DeepSeek', 'Moonshot', 'Zhipu', 'AI21', 'DeepInfra', 'Lepton',
-  'TextSynth', 'Fal', 'Upstage', 'Writer', 'Voyage', 'Jina',
-  'OctoAI', 'Krutrim', 'FishAudio', 'Ideogram', 'LeonardoAI', 'BFL',
-] as const;
+// Derived from PROVIDER_TEST_CONFIGS — if a provider has a test config, keys can be validated and donated
+const PROVIDERS = new Set(Object.keys(PROVIDER_TEST_CONFIGS));
 
 function keyPreview(rawKey: string): string {
   if (rawKey.length <= 12) return rawKey;
@@ -71,7 +58,7 @@ export async function POST(request: NextRequest) {
 
   const { provider, key: rawKey } = body;
 
-  if (!provider || !PROVIDERS.includes(provider as any)) {
+  if (!provider || !PROVIDERS.has(provider)) {
     return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
   }
   if (!rawKey || typeof rawKey !== 'string' || rawKey.trim().length < 8) {

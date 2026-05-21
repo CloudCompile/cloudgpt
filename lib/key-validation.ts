@@ -47,6 +47,16 @@ export const PROVIDER_TEST_CONFIGS: Record<string, {
     timeout: 3000,
     validStatusCodes: [200],
   },
+  Airforce: {
+    testUrl: 'https://api.airforce/models',
+    timeout: 3000,
+    validStatusCodes: [200],
+  },
+  Happupy: {
+    testUrl: 'https://beta.hapuppy.com/v1/models',
+    timeout: 4000,
+    validStatusCodes: [200],
+  },
 
   // Coming-soon providers
   Gemini: {
