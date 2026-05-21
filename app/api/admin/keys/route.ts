@@ -3,46 +3,17 @@ import { auth } from '@clerk/nextjs/server';
 import { checkAdmin } from '@/lib/admin';
 import { encryptKey, decryptKey } from '@/lib/crypto';
 import { redis } from '@/lib/redis';
+import { invalidateKeyCache } from '@/lib/providers/keypool';
+import { testKey, updateKeyHealth } from '@/lib/key-validation';
 import type { ProviderKeyEntry } from '@/lib/providers/keypool';
 
 export const runtime = 'nodejs';
 
 const PROVIDERS = ['Pollinations', 'VoidAI', 'Airforce', 'Cerebras', 'Groq', 'AIHorde', 'TokenReply', 'NagaAI', 'Happupy'] as const;
 
-const PROVIDER_TEST_URLS: Record<string, string> = {
-  Pollinations: 'https://gen.pollinations.ai/v1/models',
-  VoidAI:      'https://api.voidai.app/v1/models',
-  Airforce:    'https://api.airforce/v1/models',
-  Cerebras:    'https://api.cerebras.ai/v1/models',
-  Groq:        'https://api.groq.com/openai/v1/models',
-  AIHorde:     'https://aihorde.net/api/v2/status/heartbeat',
-  TokenReply:  'https://api.tokenreply.com/v1beta/models',
-  NagaAI:      'https://api.naga.ac/v1/models',
-  Happupy:     'https://beta.hapuppy.com/v1/models',
-};
-
 function keyPreview(rawKey: string): string {
   if (rawKey.length <= 12) return rawKey;
   return `${rawKey.slice(0, 8)}...${rawKey.slice(-4)}`;
-}
-
-async function testKey(provider: string, rawKey: string): Promise<'working' | 'rate_limited' | 'error'> {
-  const testUrl = PROVIDER_TEST_URLS[provider];
-  if (!testUrl) return 'error';
-  try {
-    const res = await fetch(testUrl, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${rawKey}` },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (res.status === 429) return 'rate_limited';
-    if (res.status === 401 || res.status === 403) return 'error';
-    if (res.ok) return 'working';
-    // 5xx — provider down, key may be fine
-    return 'working';
-  } catch {
-    return 'error';
-  }
 }
 
 async function requireAdmin(): Promise<{ userId: string } | NextResponse> {
@@ -134,7 +105,6 @@ export async function POST(request: NextRequest) {
 
   const trimmedKey = rawKey.trim();
 
-  // Test the key before storing
   const status = await testKey(provider, trimmedKey);
   if (status === 'error') {
     return NextResponse.json(
@@ -158,11 +128,13 @@ export async function POST(request: NextRequest) {
   list.push(entry);
   await redis.set(`admin:provider:keys:${providerKey}`, JSON.stringify(list));
 
-  // Store initial status
-  await redis.set(
-    `admin:key:status:${providerKey}:${id}`,
-    JSON.stringify({ status, lastChecked: Date.now() })
+  // Record initial health status
+  await updateKeyHealth(provider, id, status).catch(e =>
+    console.error('Failed to record key health:', e)
   );
+
+  // Invalidate key cache so new key is available immediately
+  await invalidateKeyCache().catch(e => console.error('Failed to invalidate key cache:', e));
 
   return NextResponse.json({ success: true, id, preview: entry.preview, status });
 }
@@ -195,6 +167,9 @@ export async function DELETE(request: NextRequest) {
 
   await redis.set(`admin:provider:keys:${providerKey}`, JSON.stringify(filtered));
   await redis.del(`admin:key:status:${providerKey}:${id}`);
+
+  // Invalidate key cache so removed key is immediately unavailable
+  await invalidateKeyCache().catch(e => console.error('Failed to invalidate key cache:', e));
 
   return NextResponse.json({ success: true });
 }
