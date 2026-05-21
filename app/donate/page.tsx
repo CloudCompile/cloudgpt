@@ -1,86 +1,66 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { IconArrowRight } from '@/components/brand/icons';
 import { PROVIDER_GLYPHS } from '@/components/brand/ProviderGlyphs';
 
-const DONATABLE_PROVIDERS = [
-  {
-    name: 'Groq',
-    freeNote: 'Free tier — fast Llama, Gemma, and Whisper models',
-    signupUrl: 'https://console.groq.com',
-    limit: null,
-  },
-  {
-    name: 'Cerebras',
-    freeNote: '1M tokens / day free on Llama 3.3, Llama 4, DeepSeek R1',
-    signupUrl: 'https://cloud.cerebras.ai',
-    limit: '1M tokens/day',
-  },
-  {
-    name: 'Happupy',
-    freeNote: '100k tokens / day free — easy sign-up, no card required',
-    signupUrl: 'https://beta.hapuppy.com',
-    limit: '100k tokens/day',
-  },
-  {
-    name: 'AIHorde',
-    freeNote: 'Community volunteer network — free by nature',
-    signupUrl: 'https://aihorde.net/register',
-    limit: null,
-  },
-  {
-    name: 'Pollinations',
-    freeNote: 'Open and free creative generation network',
-    signupUrl: 'https://pollinations.ai',
-    limit: null,
-  },
-  {
-    name: 'VoidAI',
-    freeNote: 'Free tier access to major model families',
-    signupUrl: 'https://voidai.app',
-    limit: null,
-  },
-  {
-    name: 'Airforce',
-    freeNote: 'Free endpoints across 50+ models',
-    signupUrl: 'https://api.airforce',
-    limit: null,
-  },
-  {
-    name: 'TokenReply',
-    freeNote: 'Free access to GPT-4, Claude, and Gemini',
-    signupUrl: 'https://tokenreply.com',
-    limit: null,
-  },
-  {
-    name: 'NagaAI',
-    freeNote: 'Free OpenAI-compatible endpoint',
-    signupUrl: 'https://naga.ac',
-    limit: null,
-  },
-];
-
-const ALL_PROVIDER_NAMES = DONATABLE_PROVIDERS.map(p => p.name);
+interface ProviderInfo {
+  id: string;
+  name: string;
+  description: string;
+  freeLimit: string;
+  signupUrl: string | null;
+  status: 'active' | 'coming_soon';
+  keyCount: number;
+  keysRequired: number;
+  keysNeeded: number;
+}
 
 function glyphKey(name: string): string {
-  if (name === 'AIHorde') return 'AI Horde';
-  return name;
+  const map: Record<string, string> = {
+    'AI Horde': 'AI Horde',
+    'AIHorde': 'AI Horde',
+    'Airforce': 'Airforce',
+  };
+  return map[name] ?? name;
 }
 
 export default function DonatePage() {
+  const [providers, setProviders] = useState<ProviderInfo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [provider, setProvider] = useState('');
   const [key, setKey] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState<{ discordRoleAssigned: boolean } | null>(null);
+  const [success, setSuccess] = useState<{ discordRoleAssigned: boolean; providerNowActive?: boolean } | null>(null);
 
-  const selectedProvider = DONATABLE_PROVIDERS.find(p => p.name === provider);
+  useEffect(() => {
+    fetch('/api/providers')
+      .then(r => r.json())
+      .then(d => {
+        setProviders(d.providers ?? []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return providers;
+    const q = search.toLowerCase();
+    return providers.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.freeLimit.toLowerCase().includes(q)
+    );
+  }, [providers, search]);
+
+  const selectedProvider = providers.find(p => p.name === provider);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!provider || !key.trim()) return;
-    setLoading(true);
+    setSubmitting(true);
     setError('');
 
     try {
@@ -94,13 +74,13 @@ export default function DonatePage() {
         setError(data.error || 'Something went wrong');
         return;
       }
-      setSuccess({ discordRoleAssigned: data.discordRoleAssigned });
+      setSuccess({ discordRoleAssigned: data.discordRoleAssigned, providerNowActive: data.providerNowActive });
       setKey('');
       setProvider('');
     } catch {
       setError('Network error. Please try again.');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
 
@@ -156,7 +136,7 @@ export default function DonatePage() {
 
       {/* Main content */}
       <section style={{ paddingTop: '72px', paddingBottom: '100px' }}>
-        <div className="container" style={{ maxWidth: '1100px' }}>
+        <div className="container" style={{ maxWidth: '1200px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '48px', alignItems: 'start' }}>
 
             {/* Provider list */}
@@ -165,102 +145,151 @@ export default function DonatePage() {
               <h2 style={{ fontSize: '1.6rem', fontWeight: '800', marginBottom: '10px' }}>
                 Which key should I donate?
               </h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.7', marginBottom: '28px' }}>
-                All of these providers offer free accounts with no credit card required. Sign up, grab your API key, and donate it below. Click a provider to pre-select it in the form.
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.7', marginBottom: '20px' }}>
+                All of these providers offer free accounts — no credit card required. Sign up, grab your API key, and donate it below.
+                Each provider needs <strong style={{ color: 'var(--fg)' }}>3 verified keys</strong> to activate.
               </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {DONATABLE_PROVIDERS.map((p) => {
-                  const entry = PROVIDER_GLYPHS[glyphKey(p.name)];
-                  const color = entry?.color ?? '#7c3aed';
-                  const isSelected = provider === p.name;
-                  return (
-                    <div
-                      key={p.name}
-                      role="button"
-                      tabIndex={0}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '14px',
-                        padding: '14px 16px',
-                        borderRadius: 'var(--radius-lg)',
-                        border: `1px solid ${isSelected ? color : 'var(--border)'}`,
-                        background: isSelected ? `${color}08` : 'var(--bg-secondary)',
-                        cursor: 'pointer',
-                        transition: 'border-color 0.15s, background 0.15s',
-                      }}
-                      onClick={() => setProvider(isSelected ? '' : p.name)}
-                      onKeyDown={e => e.key === 'Enter' && setProvider(isSelected ? '' : p.name)}
-                    >
-                      {entry ? (
-                        <div style={{
-                          width: 36, height: 36, flexShrink: 0,
-                          borderRadius: 'var(--radius-sm)',
-                          background: `${color}15`,
-                          border: `1px solid ${color}30`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color,
-                        }}>
-                          <entry.Glyph size={18} />
-                        </div>
-                      ) : (
-                        <div style={{
-                          width: 36, height: 36, flexShrink: 0,
-                          borderRadius: 'var(--radius-sm)',
-                          background: `${color}15`,
-                          border: `1px solid ${color}30`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          color, fontWeight: 700, fontSize: '0.8rem',
-                        }}>
-                          {p.name.slice(0, 2)}
-                        </div>
-                      )}
+              {/* Stats bar */}
+              {!loading && (
+                <div style={{
+                  display: 'flex', gap: '16px', marginBottom: '20px', flexWrap: 'wrap',
+                }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    <strong style={{ color: 'var(--success)' }}>{providers.filter(p => p.status === 'active').length}</strong> active
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    <strong style={{ color: 'var(--accent-light)' }}>{providers.filter(p => p.status === 'coming_soon').length}</strong> need keys
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    <strong style={{ color: 'var(--fg)' }}>{providers.length}</strong> total providers
+                  </span>
+                </div>
+              )}
 
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: '600', fontSize: '0.88rem', marginBottom: '2px', color: isSelected ? color : 'var(--fg)' }}>
-                          {p.name}
-                        </div>
-                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                          {p.freeNote}
-                        </div>
-                      </div>
+              {/* Search */}
+              <input
+                type="text"
+                placeholder="Search providers..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ width: '100%', marginBottom: '14px' }}
+              />
 
-                      <div style={{ display: 'flex', gap: '6px', flexShrink: 0, alignItems: 'center' }}>
-                        {p.limit && (
-                          <span style={{
-                            fontSize: '0.68rem', fontWeight: '600',
-                            padding: '2px 7px', borderRadius: '4px',
-                            background: 'rgba(245,158,11,0.1)',
-                            border: '1px solid rgba(245,158,11,0.2)',
-                            color: '#fcd34d',
-                            whiteSpace: 'nowrap',
-                          }}>
-                            {p.limit}
-                          </span>
-                        )}
-                        <a
-                          href={p.signupUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={e => e.stopPropagation()}
-                          style={{
-                            fontSize: '0.72rem', fontWeight: '600',
-                            color: 'var(--accent-light)',
-                            padding: '4px 9px', borderRadius: 'var(--radius-sm)',
-                            border: '1px solid rgba(124,58,237,0.25)',
-                            background: 'rgba(124,58,237,0.07)',
-                            display: 'inline-flex', alignItems: 'center', gap: '3px',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          Get key <IconArrowRight size={10} />
-                        </a>
-                      </div>
+              {/* Provider list */}
+              {loading ? (
+                <div style={{ color: 'var(--text-secondary)', padding: '40px 0', textAlign: 'center', fontSize: '0.9rem' }}>
+                  Loading providers...
+                </div>
+              ) : (
+                <>
+                  {filtered.length === 0 && (
+                    <div style={{ color: 'var(--text-tertiary)', padding: '24px', textAlign: 'center', fontSize: '0.88rem' }}>
+                      No providers match &ldquo;{search}&rdquo;
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '70vh', overflowY: 'auto', paddingRight: '4px' }}>
+                    {filtered.map((p) => {
+                      const entry = PROVIDER_GLYPHS[glyphKey(p.name)];
+                      const color = entry?.color ?? '#7c3aed';
+                      const isSelected = provider === p.name;
+                      const isActive = p.status === 'active';
+                      return (
+                        <div
+                          key={p.id}
+                          role="button"
+                          tabIndex={0}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '12px 14px',
+                            borderRadius: 'var(--radius)',
+                            border: `1px solid ${isSelected ? color : 'var(--border)'}`,
+                            background: isSelected ? `${color}10` : 'var(--bg-secondary)',
+                            cursor: 'pointer',
+                            transition: 'border-color 0.15s, background 0.15s',
+                          }}
+                          onClick={() => setProvider(isSelected ? '' : p.name)}
+                          onKeyDown={e => e.key === 'Enter' && setProvider(isSelected ? '' : p.name)}
+                        >
+                          {/* Glyph or initials */}
+                          {entry ? (
+                            <div style={{
+                              width: 32, height: 32, flexShrink: 0,
+                              borderRadius: 'var(--radius-sm)',
+                              background: `${color}15`,
+                              border: `1px solid ${color}30`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color,
+                            }}>
+                              <entry.Glyph size={16} />
+                            </div>
+                          ) : (
+                            <div style={{
+                              width: 32, height: 32, flexShrink: 0,
+                              borderRadius: 'var(--radius-sm)',
+                              background: `${color}15`,
+                              border: `1px solid ${color}30`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color, fontWeight: 700, fontSize: '0.72rem',
+                            }}>
+                              {p.name.slice(0, 2).toUpperCase()}
+                            </div>
+                          )}
+
+                          {/* Info */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '1px' }}>
+                              <span style={{ fontWeight: '600', fontSize: '0.84rem', color: isSelected ? color : 'var(--fg)' }}>
+                                {p.name}
+                              </span>
+                              {isActive && (
+                                <span style={{
+                                  fontSize: '0.65rem', fontWeight: '700', padding: '1px 5px',
+                                  borderRadius: '3px', background: 'rgba(34,197,94,0.12)',
+                                  border: '1px solid rgba(34,197,94,0.25)', color: '#86efac',
+                                }}>LIVE</span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: '1.3' }}>
+                              {p.description}
+                            </div>
+                          </div>
+
+                          {/* Right side */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end', flexShrink: 0 }}>
+                            {/* Key progress */}
+                            <div style={{ fontSize: '0.65rem', color: isActive ? '#86efac' : 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
+                              {isActive ? '✓ active' : `${p.keyCount}/${p.keysRequired} keys`}
+                            </div>
+                            {/* Signup link */}
+                            {p.signupUrl && (
+                              <a
+                                href={p.signupUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                style={{
+                                  fontSize: '0.68rem', fontWeight: '600',
+                                  color: 'var(--accent-light)',
+                                  padding: '3px 7px', borderRadius: 'var(--radius-sm)',
+                                  border: '1px solid rgba(124,58,237,0.25)',
+                                  background: 'rgba(124,58,237,0.07)',
+                                  display: 'inline-flex', alignItems: 'center', gap: '3px',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                Get key <IconArrowRight size={9} />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Form */}
@@ -282,6 +311,17 @@ export default function DonatePage() {
                     <h2 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '10px', color: '#86efac' }}>
                       Key Donated!
                     </h2>
+                    {success.providerNowActive && (
+                      <div style={{
+                        marginBottom: '14px', padding: '10px 14px',
+                        background: 'rgba(34,197,94,0.08)',
+                        border: '1px solid rgba(34,197,94,0.2)',
+                        borderRadius: 'var(--radius)',
+                        fontSize: '0.84rem', color: '#86efac',
+                      }}>
+                        Provider is now active with 3+ keys!
+                      </div>
+                    )}
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: '1.7', marginBottom: '24px' }}>
                       {success.discordRoleAssigned
                         ? 'Your Discord Contributor role has been assigned. Thanks for keeping OpenRelay free.'
@@ -321,16 +361,22 @@ export default function DonatePage() {
                           style={{ color: provider ? 'var(--fg)' : 'var(--text-secondary)' }}
                         >
                           <option value="">Select a provider…</option>
-                          {ALL_PROVIDER_NAMES.map(p => <option key={p} value={p}>{p}</option>)}
+                          {providers.map(p => (
+                            <option key={p.id} value={p.name}>{p.name}</option>
+                          ))}
                         </select>
 
                         {selectedProvider && (
                           <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: '1.5' }}>
-                            {selectedProvider.freeNote}
-                            {' · '}
-                            <a href={selectedProvider.signupUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-light)' }}>
-                              Get a free key →
-                            </a>
+                            {selectedProvider.description}
+                            {selectedProvider.signupUrl && (
+                              <>
+                                {' · '}
+                                <a href={selectedProvider.signupUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-light)' }}>
+                                  Get a free key →
+                                </a>
+                              </>
+                            )}
                           </p>
                         )}
                       </div>
@@ -352,7 +398,7 @@ export default function DonatePage() {
 
                       <button
                         type="submit"
-                        disabled={loading || !provider || !key.trim()}
+                        disabled={submitting || !provider || !key.trim()}
                         className="button"
                         style={{
                           width: '100%',
@@ -363,10 +409,10 @@ export default function DonatePage() {
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '8px',
-                          opacity: loading || !provider || !key.trim() ? 0.55 : 1,
+                          opacity: submitting || !provider || !key.trim() ? 0.55 : 1,
                         }}
                       >
-                        {loading ? 'Validating…' : (<><span>Donate Key</span><IconArrowRight size={15} /></>)}
+                        {submitting ? 'Validating…' : (<><span>Donate Key</span><IconArrowRight size={15} /></>)}
                       </button>
                     </form>
 
