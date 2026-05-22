@@ -1,7 +1,7 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
 import { redis } from '../redis';
 import { logError } from '../analytics';
-import { getProviderKeyCount } from '../key-validation';
+import { getDonatedKeyCount } from '../key-validation';
 import { forwardPollinations, forwardPollinationsVideo, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
@@ -47,13 +47,8 @@ async function getActiveProviders(): Promise<Set<string>> {
   const active = new Set<string>();
   await Promise.all(
     Object.entries(ALL_PROVIDER_PREFIXES).map(async ([prefix, redisKey]) => {
-      try {
-        const count = await getProviderKeyCount(redisKey);
-        if (count >= KEYS_REQUIRED) {
-          active.add(prefix);
-        }
-      } catch {
-        // On Redis error, fail open — don't block traffic
+      const count = await getDonatedKeyCount(redisKey);
+      if (count >= KEYS_REQUIRED) {
         active.add(prefix);
       }
     })
@@ -113,6 +108,14 @@ export async function routeChat(
     throw Object.assign(
       new Error(`${comingSoon.provider} is coming soon! Donate 3 verified keys at /donate to unlock it. Check /v1/models for available models.`),
       { status: 503, code: 'provider_coming_soon', provider: comingSoon.provider }
+    );
+  }
+
+  // Block any openrouter/ prefixed model — OpenRouter is a coming-soon provider
+  if (model.startsWith('openrouter/')) {
+    throw Object.assign(
+      new Error('OpenRouter is coming soon! Donate 3 verified keys at /donate to unlock it. Check /v1/models for available models.'),
+      { status: 503, code: 'provider_coming_soon', provider: 'OpenRouter' }
     );
   }
 
@@ -546,24 +549,29 @@ const POLLINATIONS_FREE_MODELS = [
 
 const GROQ_FREE_MODELS = [
   // Chat Completions
-  { id: 'groq/llama-3.1-8b-instant',           object: 'model', owned_by: 'Meta',             provider: 'Groq', type: 'text' },
-  { id: 'groq/llama-3.3-70b-versatile',        object: 'model', owned_by: 'Meta',             provider: 'Groq', type: 'text' },
-  { id: 'groq/llama-4-scout-17b-16e-instruct', object: 'model', owned_by: 'Meta',             provider: 'Groq', type: 'text' },
-  { id: 'groq/qwen/qwen3-32b',                 object: 'model', owned_by: 'Alibaba',          provider: 'Groq', type: 'text' },
-  { id: 'groq/openai/gpt-oss-120b',            object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'text' },
-  { id: 'groq/openai/gpt-oss-20b',             object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'text' },
-  { id: 'groq/openai/gpt-oss-safeguard-20b',   object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'text' },
-  { id: 'groq/meta-llama/llama-prompt-guard-2-22m', object: 'model', owned_by: 'Meta',      provider: 'Groq', type: 'text' },
-  { id: 'groq/meta-llama/llama-prompt-guard-2-86m', object: 'model', owned_by: 'Meta',      provider: 'Groq', type: 'text' },
-  { id: 'groq/allam-2-7b',                     object: 'model', owned_by: 'Arabic Llama',     provider: 'Groq', type: 'text' },
-  { id: 'groq/compound',                       object: 'model', owned_by: 'Compound',         provider: 'Groq', type: 'text' },
-  { id: 'groq/compound-mini',                  object: 'model', owned_by: 'Compound',         provider: 'Groq', type: 'text' },
+  { id: 'groq/llama-3.1-8b-instant',                    object: 'model', owned_by: 'Meta',          provider: 'Groq', type: 'text' },
+  { id: 'groq/llama-3.3-70b-versatile',                 object: 'model', owned_by: 'Meta',          provider: 'Groq', type: 'text' },
+  { id: 'groq/llama-4-scout-17b-16e-instruct',          object: 'model', owned_by: 'Meta',          provider: 'Groq', type: 'text' },
+  { id: 'groq/llama-4-maverick-17b-128e-instruct',      object: 'model', owned_by: 'Meta',          provider: 'Groq', type: 'text' },
+  { id: 'groq/moonshotai/moonlight-16a-preview',        object: 'model', owned_by: 'Moonshot',      provider: 'Groq', type: 'text' },
+  { id: 'groq/qwen/qwen3-32b',                          object: 'model', owned_by: 'Alibaba',       provider: 'Groq', type: 'text' },
+  { id: 'groq/openai/gpt-oss-120b',                     object: 'model', owned_by: 'OpenAI',        provider: 'Groq', type: 'text' },
+  { id: 'groq/openai/gpt-oss-20b',                      object: 'model', owned_by: 'OpenAI',        provider: 'Groq', type: 'text' },
+  { id: 'groq/openai/gpt-oss-safeguard-20b',            object: 'model', owned_by: 'OpenAI',        provider: 'Groq', type: 'text' },
+  { id: 'groq/meta-llama/llama-prompt-guard-2-22m',     object: 'model', owned_by: 'Meta',          provider: 'Groq', type: 'text' },
+  { id: 'groq/meta-llama/llama-prompt-guard-2-86m',     object: 'model', owned_by: 'Meta',          provider: 'Groq', type: 'text' },
+  { id: 'groq/allam-2-7b',                              object: 'model', owned_by: 'Arabic Llama',  provider: 'Groq', type: 'text' },
+  { id: 'groq/compound',                                object: 'model', owned_by: 'Compound',      provider: 'Groq', type: 'text' },
+  { id: 'groq/compound-mini',                           object: 'model', owned_by: 'Compound',      provider: 'Groq', type: 'text' },
+  { id: 'groq/deepseek-r1-distill-llama-70b',           object: 'model', owned_by: 'DeepSeek',      provider: 'Groq', type: 'text' },
+  { id: 'groq/gemma2-9b-it',                            object: 'model', owned_by: 'Google',        provider: 'Groq', type: 'text' },
   // Speech-to-Text (Transcription)
-  { id: 'groq/whisper-large-v3',               object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'transcription' },
-  { id: 'groq/whisper-large-v3-turbo',         object: 'model', owned_by: 'OpenAI',           provider: 'Groq', type: 'transcription' },
+  { id: 'groq/whisper-large-v3',                        object: 'model', owned_by: 'OpenAI',        provider: 'Groq', type: 'transcription' },
+  { id: 'groq/whisper-large-v3-turbo',                  object: 'model', owned_by: 'OpenAI',        provider: 'Groq', type: 'transcription' },
+  { id: 'groq/distil-whisper-large-v3-en',              object: 'model', owned_by: 'OpenAI',        provider: 'Groq', type: 'transcription' },
   // Text-to-Speech
-  { id: 'groq/canopylabs/orpheus-v1-english',  object: 'model', owned_by: 'Canopy',           provider: 'Groq', type: 'audio' },
-  { id: 'groq/canopylabs/orpheus-arabic-saudi', object: 'model', owned_by: 'Canopy',          provider: 'Groq', type: 'audio' },
+  { id: 'groq/canopylabs/orpheus-v1-english',           object: 'model', owned_by: 'Canopy',        provider: 'Groq', type: 'audio' },
+  { id: 'groq/canopylabs/orpheus-arabic-saudi',         object: 'model', owned_by: 'Canopy',        provider: 'Groq', type: 'audio' },
 ];
 
 const TOKENREPLY_FREE_MODELS = [
@@ -1232,7 +1240,9 @@ export async function routeModels() {
   models.push(...withStatus([
     { id: 'cerebras/llama-3.3-70b', object: 'model', owned_by: 'Meta', provider: 'Cerebras', type: 'text' },
     { id: 'cerebras/llama-4-scout', object: 'model', owned_by: 'Meta', provider: 'Cerebras', type: 'text' },
+    { id: 'cerebras/llama-4-maverick', object: 'model', owned_by: 'Meta', provider: 'Cerebras', type: 'text' },
     { id: 'cerebras/deepseek-r1', object: 'model', owned_by: 'DeepSeek', provider: 'Cerebras', type: 'text' },
+    { id: 'cerebras/qwen-3-32b', object: 'model', owned_by: 'Alibaba', provider: 'Cerebras', type: 'text' },
   ], 'cerebras'));
 
   // Groq — free tier models with rate limits
@@ -1246,6 +1256,32 @@ export async function routeModels() {
 
   // AI Horde — decentralized volunteer network with 160+ image + 26+ text models
   models.push(...withStatus(AIHORDE_FREE_MODELS, 'aihorde'));
+
+  // Happupy — OpenAI-compatible gateway, 100k tokens/day free
+  if (active.has('happupy')) {
+    try {
+      const r = await forwardHappupy('/v1/models', 'GET');
+      if (r.ok) {
+        const data = await r.json();
+        if (data.data && Array.isArray(data.data)) {
+          models.push(
+            ...data.data.map((m: any) => ({
+              id: `happupy/${m.id}`,
+              object: 'model',
+              owned_by: m.owned_by || 'Happupy',
+              provider: 'Happupy',
+              type: inferType(m.id),
+            }))
+          );
+        }
+      }
+    } catch (e) { console.error('Happupy models error:', e); }
+  } else {
+    models.push(
+      { id: 'happupy/gpt-4o', object: 'model', owned_by: 'OpenAI', provider: 'Happupy', type: 'text', status: 'coming_soon' },
+      { id: 'happupy/gpt-4o-mini', object: 'model', owned_by: 'OpenAI', provider: 'Happupy', type: 'text', status: 'coming_soon' },
+    );
+  }
 
   // Built-in virtual models (hardcoded multi-provider routing)
   Object.entries(VIRTUAL_MODELS_MAP).forEach(([baseName, providers]) => {

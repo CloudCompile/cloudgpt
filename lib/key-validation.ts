@@ -358,6 +358,19 @@ export async function getProviderKeyCount(provider: string): Promise<number> {
   return count;
 }
 
+// Count only community-donated Redis keys toward the activation threshold.
+// Env var keys are operator keys and do not count as community donations.
+export async function getDonatedKeyCount(provider: string): Promise<number> {
+  try {
+    const listJson = await redis.get(`admin:provider:keys:${provider.toLowerCase()}`);
+    if (!listJson) return 0;
+    const entries = JSON.parse(listJson);
+    return Array.isArray(entries) ? entries.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
 /**
  * Get cached health status for a key.
  */
