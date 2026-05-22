@@ -97,7 +97,7 @@ export default function DonatePage() {
       <section style={{
         paddingTop: '80px',
         paddingBottom: '72px',
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(79, 70, 229, 0.07) 50%, rgba(59, 130, 246, 0.04) 100%)',
+        background: 'linear-gradient(135deg, rgba(184,104,64,0.09) 0%, rgba(184,104,64,0.05) 50%, rgba(184,104,64,0.03) 100%)',
         borderBottom: '1px solid var(--border)',
       }}>
         <div className="container" style={{ maxWidth: '860px', textAlign: 'center' }}>
@@ -108,7 +108,7 @@ export default function DonatePage() {
             marginBottom: '20px',
             lineHeight: '1.1',
             letterSpacing: '-0.02em',
-            background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #3b82f6 100%)',
+            background: 'var(--accent-gradient)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -198,7 +198,7 @@ export default function DonatePage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '70vh', overflowY: 'auto', paddingRight: '4px' }}>
                     {filtered.map((p) => {
                       const entry = PROVIDER_GLYPHS[glyphKey(p.name)];
-                      const color = entry?.color ?? '#7c3aed';
+                      const color = entry?.color ?? 'var(--accent)';
                       const isSelected = provider === p.name;
                       const isActive = p.status === 'active';
                       return (
@@ -255,7 +255,7 @@ export default function DonatePage() {
                                 <span style={{
                                   fontSize: '0.65rem', fontWeight: '700', padding: '1px 5px',
                                   borderRadius: '3px', background: 'rgba(34,197,94,0.12)',
-                                  border: '1px solid rgba(34,197,94,0.25)', color: '#86efac',
+                                  border: '1px solid rgba(34,197,94,0.25)', color: '#3a7a52',
                                 }}>LIVE</span>
                               )}
                             </div>
@@ -267,7 +267,7 @@ export default function DonatePage() {
                           {/* Right side */}
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end', flexShrink: 0 }}>
                             {/* Key progress */}
-                            <div style={{ fontSize: '0.65rem', color: isActive ? '#86efac' : 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontSize: '0.65rem', color: isActive ? '#3a7a52' : 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
                               {isActive ? '✓ active' : `${p.keyCount}/${p.keysRequired} keys`}
                             </div>
                             {/* Signup link */}
@@ -282,7 +282,7 @@ export default function DonatePage() {
                                   color: 'var(--accent-light)',
                                   padding: '3px 7px', borderRadius: 'var(--radius-sm)',
                                   border: '1px solid rgba(124,58,237,0.25)',
-                                  background: 'rgba(124,58,237,0.07)',
+                                  background: 'rgba(184,104,64,0.06)',
                                   display: 'inline-flex', alignItems: 'center', gap: '3px',
                                   whiteSpace: 'nowrap',
                                 }}
@@ -307,15 +307,15 @@ export default function DonatePage() {
                     <div style={{
                       width: 60, height: 60, borderRadius: '50%',
                       background: 'rgba(34,197,94,0.1)',
-                      border: '1px solid rgba(34,197,94,0.3)',
+                      border: '1px solid rgba(90,158,111,0.25)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       margin: '0 auto 20px',
                       fontSize: '1.6rem',
-                      color: '#86efac',
+                      color: '#3a7a52',
                     }}>
                       ✓
                     </div>
-                    <h2 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '10px', color: '#86efac' }}>
+                    <h2 style={{ fontSize: '1.3rem', fontWeight: '800', marginBottom: '10px', color: '#3a7a52' }}>
                       Key Donated!
                     </h2>
                     {success.providerNowActive && (
@@ -324,7 +324,7 @@ export default function DonatePage() {
                         background: 'rgba(34,197,94,0.08)',
                         border: '1px solid rgba(34,197,94,0.2)',
                         borderRadius: 'var(--radius)',
-                        fontSize: '0.84rem', color: '#86efac',
+                        fontSize: '0.84rem', color: '#3a7a52',
                       }}>
                         Provider is now active with 3+ keys!
                       </div>
@@ -332,8 +332,8 @@ export default function DonatePage() {
                     {success.pollenPerHour !== null && success.pollenPerHour !== undefined && (
                       <div style={{
                         marginBottom: '14px', padding: '10px 14px',
-                        background: 'rgba(124,58,237,0.08)',
-                        border: '1px solid rgba(124,58,237,0.2)',
+                        background: 'rgba(184,104,64,0.07)',
+                        border: '1px solid rgba(184,104,64,0.15)',
                         borderRadius: 'var(--radius)',
                         fontSize: '0.84rem', color: 'var(--accent-light)',
                       }}>

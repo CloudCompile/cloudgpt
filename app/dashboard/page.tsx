@@ -155,7 +155,7 @@ export default function Dashboard() {
       {/* Donate Banner */}
       <div style={{
         marginBottom: '40px', padding: '18px 22px', borderRadius: 'var(--radius-lg)',
-        background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.28)',
+        background: 'rgba(184,104,64,0.06)', border: '1px solid rgba(124,58,237,0.28)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap',
       }}>
         <div>
@@ -308,7 +308,7 @@ export default function Dashboard() {
                     <button
                       onClick={() => setExpandedPlugin(expandedPlugin === key.id ? null : key.id)}
                       style={{
-                        background: expandedPlugin === key.id ? 'rgba(124,58,237,0.2)' : 'rgba(124,58,237,0.08)',
+                        background: expandedPlugin === key.id ? 'rgba(184,104,64,0.15)' : 'rgba(184,104,64,0.07)',
                         border: `1px solid rgba(124,58,237,${expandedPlugin === key.id ? '0.5' : '0.25'})`,
                         color: 'var(--accent-light)', padding: '6px 14px', borderRadius: 'var(--radius-sm)',
                         cursor: 'pointer', fontSize: '0.82rem', fontWeight: '500',
@@ -345,7 +345,7 @@ export default function Dashboard() {
         <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
           Use this base URL with any OpenAI-compatible client.
         </p>
-        <div style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.22)', borderRadius: 'var(--radius-lg)', padding: '20px 24px' }}>
+        <div style={{ background: 'rgba(184,104,64,0.06)', border: '1px solid rgba(124,58,237,0.22)', borderRadius: 'var(--radius-lg)', padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <div>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Base URL</p>
@@ -353,7 +353,7 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => copyToClipboard(`${BASE_URL}/v1`, 'baseurl')}
-              style={{ background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.3)', color: 'var(--accent-light)', padding: '8px 16px', borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.88rem', fontWeight: '600', whiteSpace: 'nowrap' }}
+              style={{ background: 'rgba(184,104,64,0.09)', border: '1px solid rgba(184,104,64,0.25)', color: 'var(--accent-light)', padding: '8px 16px', borderRadius: 'var(--radius)', cursor: 'pointer', fontSize: '0.88rem', fontWeight: '600', whiteSpace: 'nowrap' }}
             >
               {copying === 'baseurl' ? '✓ Copied' : 'Copy URL'}
             </button>
@@ -695,7 +695,7 @@ function PluginPanel({ keyId }: { keyId: string }) {
             <button
               onClick={addLorebookEntry}
               disabled={!newEntryKw.trim() || !newEntryContent.trim()}
-              style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.3)', color: 'var(--accent-light)', padding: '6px 14px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '500', opacity: (!newEntryKw.trim() || !newEntryContent.trim()) ? 0.5 : 1 }}
+              style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(184,104,64,0.25)', color: 'var(--accent-light)', padding: '6px 14px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: '0.82rem', fontWeight: '500', opacity: (!newEntryKw.trim() || !newEntryContent.trim()) ? 0.5 : 1 }}
             >
               Add Entry
             </button>

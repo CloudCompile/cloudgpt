@@ -31,7 +31,7 @@ function timeAgo(ts: number): string {
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  working:      { bg: 'rgba(34,197,94,0.12)',  color: '#86efac', label: '✓ Working' },
+  working:      { bg: 'rgba(34,197,94,0.12)',  color: '#3a7a52', label: '✓ Working' },
   rate_limited: { bg: 'rgba(245,158,11,0.12)', color: '#fcd34d', label: '⚠ Rate limited' },
   error:        { bg: 'rgba(239,68,68,0.12)',  color: '#fca5a5', label: '✕ Error' },
   unknown:      { bg: 'rgba(90,79,128,0.2)',   color: 'var(--text-secondary)', label: '— Unknown' },
@@ -120,7 +120,7 @@ export default function ContributorPage() {
       {/* Hero */}
       <section style={{
         paddingTop: '60px', paddingBottom: '60px',
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(79, 70, 229, 0.06) 100%)',
+        background: 'linear-gradient(135deg, rgba(184,104,64,0.09) 0%, rgba(79, 70, 229, 0.06) 100%)',
         borderBottom: '1px solid var(--border)',
       }}>
         <div className="container" style={{ maxWidth: '1000px' }}>
@@ -227,8 +227,8 @@ export default function ContributorPage() {
               {stats.recentErrors.length === 0 ? (
                 <div style={{
                   padding: '18px 22px', borderRadius: 'var(--radius)',
-                  border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.06)',
-                  color: '#86efac', fontSize: '0.95rem',
+                  border: '1px solid rgba(90,158,111,0.25)', background: 'rgba(34,197,94,0.06)',
+                  color: '#3a7a52', fontSize: '0.95rem',
                 }}>
                   ✓ No recent errors
                 </div>
@@ -262,11 +262,11 @@ export default function ContributorPage() {
               <h2 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '20px' }}>Discord Role</h2>
               <div style={{
                 padding: '24px 28px', borderRadius: 'var(--radius-lg)',
-                border: `1px solid ${stats.discordRoleAssigned ? 'rgba(34,197,94,0.3)' : 'rgba(124,58,237,0.3)'}`,
+                border: `1px solid ${stats.discordRoleAssigned ? 'rgba(90,158,111,0.25)' : 'rgba(184,104,64,0.25)'}`,
                 background: stats.discordRoleAssigned ? 'rgba(34,197,94,0.06)' : 'rgba(124,58,237,0.06)',
               }}>
                 {stats.discordRoleAssigned ? (
-                  <p style={{ color: '#86efac', fontWeight: '600', fontSize: '0.95rem', margin: 0 }}>
+                  <p style={{ color: '#3a7a52', fontWeight: '600', fontSize: '0.95rem', margin: 0 }}>
                     ✓ You have the Contributor role on our Discord server
                   </p>
                 ) : stats.discordConnected ? (

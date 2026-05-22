@@ -47,18 +47,20 @@ function Header() {
         <a href="/" style={{ textDecoration: 'none' }} aria-label="OpenRelay home">
           <Wordmark variant="full" size="sm" />
         </a>
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <a href="/docs" className="nav-link">Docs</a>
           <a href="/providers" className="nav-link">Providers</a>
           <a href="/models" className="nav-link">Models</a>
           <SignedOut>
-            <SignInButton />
-            <SignUpButton />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px' }}>
+              <SignInButton />
+              <SignUpButton />
+            </div>
           </SignedOut>
           <SignedIn>
             <a href="/donate" className="nav-link">Contribute</a>
             <a href="/dashboard" className="nav-link">Dashboard</a>
-            <UserButton />
+            <div style={{ marginLeft: '4px' }}><UserButton /></div>
           </SignedIn>
         </nav>
       </div>

@@ -21,7 +21,7 @@ const CAP_COLORS: Record<string, string> = {
   Chat: '#6366f1',
   Images: '#a855f7',
   Video: '#f43f5e',
-  Audio: '#22c55e',
+  Audio: 'var(--success)',
   Transcription: '#f59e0b',
   Speech: '#06b6d4',
   Music: '#ec4899',
@@ -29,7 +29,7 @@ const CAP_COLORS: Record<string, string> = {
 
 function ProviderCard({ provider }: { provider: Provider }) {
   const entry = PROVIDER_GLYPHS[provider.name];
-  const color = entry?.color ?? '#7c3aed';
+  const color = entry?.color ?? 'var(--accent)';
   const isActive = provider.status === 'active';
 
   return (
@@ -68,9 +68,9 @@ function ProviderCard({ provider }: { provider: Provider }) {
           flexShrink: 0,
           fontSize: '0.7rem', fontWeight: '700',
           padding: '4px 9px', borderRadius: 'var(--radius-sm)',
-          background: isActive ? 'rgba(34,197,94,0.15)' : 'rgba(124,58,237,0.15)',
-          color: isActive ? '#86efac' : 'var(--accent-light)',
-          border: `1px solid ${isActive ? 'rgba(34,197,94,0.3)' : 'rgba(124,58,237,0.3)'}`,
+          background: isActive ? 'rgba(90,158,111,0.1)' : 'rgba(184,104,64,0.1)',
+          color: isActive ? '#3a7a52' : 'var(--accent-light)',
+          border: `1px solid ${isActive ? 'rgba(90,158,111,0.25)' : 'rgba(184,104,64,0.25)'}`,
           whiteSpace: 'nowrap',
         }}>
           {isActive ? '✓ LIVE' : `${provider.keyCount}/${provider.keysRequired}`}
@@ -95,8 +95,8 @@ function ProviderCard({ provider }: { provider: Provider }) {
             color: 'var(--accent-light)',
             padding: '8px 12px',
             borderRadius: 'var(--radius-sm)',
-            border: '1px solid rgba(124,58,237,0.25)',
-            background: 'rgba(124,58,237,0.07)',
+            border: '1px solid rgba(184,104,64,0.22)',
+            background: 'rgba(184,104,64,0.06)',
             transition: 'all 0.2s',
             width: 'fit-content',
           }}
@@ -152,7 +152,7 @@ export default function ProvidersPage() {
       <section style={{
         paddingTop: '100px',
         paddingBottom: '80px',
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.12) 0%, rgba(79, 70, 229, 0.07) 50%, rgba(59, 130, 246, 0.04) 100%)',
+        background: 'linear-gradient(135deg, rgba(184,104,64,0.09) 0%, rgba(184,104,64,0.05) 50%, rgba(184,104,64,0.03) 100%)',
         borderBottom: '1px solid var(--border)',
       }}>
         <div className="container" style={{ maxWidth: '900px', textAlign: 'center' }}>
@@ -162,7 +162,7 @@ export default function ProvidersPage() {
             fontWeight: '900',
             marginBottom: '20px',
             letterSpacing: '-0.02em',
-            background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #3b82f6 100%)',
+            background: 'var(--accent-gradient)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -198,8 +198,8 @@ export default function ProvidersPage() {
                 padding: '8px 16px',
                 borderRadius: 'var(--radius)',
                 border: statusFilter === 'active' ? 'none' : '1px solid var(--border)',
-                background: statusFilter === 'active' ? 'rgba(34,197,94,0.2)' : 'transparent',
-                color: statusFilter === 'active' ? '#86efac' : 'var(--text-secondary)',
+                background: statusFilter === 'active' ? 'rgba(90,158,111,0.15)' : 'transparent',
+                color: statusFilter === 'active' ? '#3a7a52' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 fontWeight: '600',
                 fontSize: '0.85rem',
@@ -214,7 +214,7 @@ export default function ProvidersPage() {
                 padding: '8px 16px',
                 borderRadius: 'var(--radius)',
                 border: statusFilter === 'coming_soon' ? 'none' : '1px solid var(--border)',
-                background: statusFilter === 'coming_soon' ? 'rgba(124,58,237,0.15)' : 'transparent',
+                background: statusFilter === 'coming_soon' ? 'rgba(184,104,64,0.1)' : 'transparent',
                 color: statusFilter === 'coming_soon' ? 'var(--accent-light)' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 fontWeight: '600',
@@ -272,7 +272,7 @@ export default function ProvidersPage() {
       <section style={{
         paddingTop: '80px',
         paddingBottom: '80px',
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(79, 70, 229, 0.04) 50%)',
+        background: 'linear-gradient(135deg, rgba(184,104,64,0.07) 0%, rgba(184,104,64,0.04) 100%)',
         borderTop: '1px solid var(--border)',
         textAlign: 'center',
       }}>
