@@ -17,7 +17,7 @@ const PROVIDER_COLORS: Record<string, string> = {
   Cerebras: '#8b5cf6',
   Groq: '#00d084',
   AIHorde: '#ec4899',
-  TokenReply: '#7c3aed',
+  TokenReply: 'var(--accent)',
   NagaAI: '#10b981',
   Happupy: '#f472b6',
 };
@@ -26,7 +26,7 @@ const TYPE_META: Record<string, { color: string; label: string; icon: string }> 
   text:          { color: '#6366f1', label: 'Text', icon: '💬' },
   image:         { color: '#a855f7', label: 'Image', icon: '🖼️' },
   video:         { color: '#f43f5e', label: 'Video', icon: '🎬' },
-  audio:         { color: '#22c55e', label: 'Audio', icon: '🔊' },
+  audio:         { color: 'var(--success)', label: 'Audio', icon: '🔊' },
   transcription: { color: '#f59e0b', label: 'Transcription', icon: '📝' },
   embedding:     { color: '#06b6d4', label: 'Embedding', icon: '🔗' },
 };
@@ -76,7 +76,7 @@ export default function ModelsPage() {
     <main>
       {/* Hero Section */}
       <section style={{
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(79, 70, 229, 0.1) 50%, rgba(59, 130, 246, 0.05) 100%)',
+        background: 'linear-gradient(135deg, rgba(184,104,64,0.09) 0%, rgba(184,104,64,0.04) 100%)',
         borderBottom: '1px solid var(--border)',
         paddingTop: '80px',
         paddingBottom: '60px',
@@ -103,9 +103,9 @@ export default function ModelsPage() {
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '20px' }}>
             <StatCard label="Providers" value={providers.length.toString()} color="var(--accent)" />
-            <StatCard label="Text Models" value={typeCount('text').toString()} color="#6366f1" />
-            <StatCard label="Image Models" value={typeCount('image').toString()} color="#a855f7" />
-            <StatCard label="Model Types" value={types.length.toString()} color="#22c55e" />
+            <StatCard label="Text Models" value={typeCount('text').toString()} color="var(--accent)" />
+            <StatCard label="Image Models" value={typeCount('image').toString()} color="var(--accent-light)" />
+            <StatCard label="Model Types" value={types.length.toString()} color="var(--sage)" />
           </div>
         </div>
       </section>
@@ -290,19 +290,19 @@ export default function ModelsPage() {
                           style={{
                             padding: '6px 12px',
                             borderRadius: '8px',
-                            border: '1px solid rgba(59,130,246,0.3)',
-                            background: 'rgba(59,130,246,0.1)',
-                            color: '#93c5fd',
+                            border: '1px solid rgba(184,104,64,0.22)',
+                            background: 'rgba(184,104,64,0.08)',
+                            color: 'var(--accent)',
                             cursor: 'pointer',
                             fontSize: '0.8rem',
                             fontWeight: '600',
                             transition: 'all 0.2s ease',
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(59,130,246,0.2)';
+                            e.currentTarget.style.background = 'rgba(184,104,64,0.16)';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(59,130,246,0.1)';
+                            e.currentTarget.style.background = 'rgba(184,104,64,0.08)';
                           }}
                         >
                           {copied === model.id ? '✓ Copied' : 'Copy'}

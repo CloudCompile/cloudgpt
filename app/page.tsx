@@ -4,8 +4,7 @@ import { SignedIn, SignedOut, SignUpButton } from '@clerk/nextjs';
 import Wordmark from '@/components/brand/Wordmark';
 import {
   IconBolt, IconFallback, IconLock, IconPalette, IconSparkle, IconPlug,
-  IconBadge,
-  IconBook, IconProviders, IconDocs, IconStar, IconBug, IconGitHub,
+  IconBadge, IconBook, IconProviders, IconDocs, IconStar, IconBug, IconGitHub,
   IconArrowRight,
 } from '@/components/brand/icons';
 import { PROVIDER_GLYPHS } from '@/components/brand/ProviderGlyphs';
@@ -13,104 +12,151 @@ import { PROVIDER_GLYPHS } from '@/components/brand/ProviderGlyphs';
 const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 const features = [
-  { Icon: IconBolt,     accent: 'violet' as const, title: 'Lightning Fast',   desc: 'Ultra-low latency routing with intelligent provider selection' },
-  { Icon: IconFallback, accent: 'indigo' as const, title: 'Auto Fallback',    desc: 'Seamless provider switching on errors or rate limits' },
-  { Icon: IconLock,     accent: 'blue'   as const, title: 'Secure & Private', desc: 'Enterprise-grade encryption for all API keys and data' },
-  { Icon: IconPalette,  accent: 'violet' as const, title: 'All Model Types',  desc: 'Text, images, video, audio, embeddings, and more' },
-  { Icon: IconSparkle,  accent: 'indigo' as const, title: 'Completely Free',  desc: 'No credit card needed. Community-powered and always free' },
-  { Icon: IconPlug,     accent: 'blue'   as const, title: 'Drop-in Ready',    desc: 'OpenAI compatible API — switch providers with one line' },
+  { Icon: IconBolt,     title: 'Lightning Fast',   desc: 'Ultra-low latency routing with intelligent provider selection and automatic fallback.' },
+  { Icon: IconFallback, title: 'Auto Fallback',    desc: 'Seamless provider switching on errors or rate limits — your app never sees a failure.' },
+  { Icon: IconLock,     title: 'Secure & Private', desc: 'Enterprise-grade encryption for all API keys and request data.' },
+  { Icon: IconPalette,  title: 'All Model Types',  desc: 'Text, images, video, audio, embeddings and more — one unified API.' },
+  { Icon: IconSparkle,  title: 'Completely Free',  desc: 'No credit card, no pricing tiers, no limits. Community-powered and always free.' },
+  { Icon: IconPlug,     title: 'Drop-in Ready',    desc: 'OpenAI-compatible API — switch providers by changing one line of code.' },
 ];
 
 const providers = [
-  { name: 'Pollinations', desc: '40+ models, tiered pollen rates',  color: '#a855f7', modelCount: 40 },
-  { name: 'VoidAI',      desc: '15+ models',   color: '#06b6d4', modelCount: 15 },
-  { name: 'Airforce',    desc: '53+ models',   color: '#f59e0b', modelCount: 53 },
-  { name: 'Cerebras',    desc: '3 models',     color: '#8b5cf6', modelCount: 3 },
-  { name: 'Groq',        desc: '16+ models',   color: '#00d084', modelCount: 16 },
-  { name: 'AI Horde',    desc: '186+ models',  color: '#ec4899', modelCount: 186 },
-  { name: 'TokenReply',  desc: '14+ models',   color: '#7c3aed', modelCount: 14 },
-  { name: 'NagaAI',      desc: '13 models',    color: '#10b981', modelCount: 13 },
-  { name: 'Happupy',     desc: '5+ models',    color: '#f472b6', modelCount: 5 },
+  { name: 'Pollinations', desc: '40+ models, tiered rates',  modelCount: 40 },
+  { name: 'VoidAI',       desc: '15+ models',                modelCount: 15 },
+  { name: 'Airforce',     desc: '53+ models',                modelCount: 53 },
+  { name: 'Cerebras',     desc: '3 ultra-fast models',       modelCount: 3  },
+  { name: 'Groq',         desc: '16+ models',                modelCount: 16 },
+  { name: 'AI Horde',     desc: '186+ models',               modelCount: 186 },
+  { name: 'TokenReply',   desc: '14+ models',                modelCount: 14 },
+  { name: 'NagaAI',       desc: '13 models',                 modelCount: 13 },
+  { name: 'Happupy',      desc: '5+ models',                 modelCount: 5  },
 ];
 
 const totalModelCount = providers.reduce((sum, p) => sum + p.modelCount, 0);
 
-const navLinkStyle = { color: 'var(--text-secondary)', textDecoration: 'none', transition: 'color 0.2s', display: 'inline-flex', alignItems: 'center' };
+const pill = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '6px',
+  padding: '4px 14px',
+  borderRadius: '999px',
+  fontSize: '0.78rem',
+  fontWeight: 700,
+  letterSpacing: '1.5px',
+  textTransform: 'uppercase' as const,
+  background: 'rgba(184,104,64,0.1)',
+  color: 'var(--accent-dark)',
+  border: '1px solid var(--accent-muted)',
+  marginBottom: '18px',
+};
+
+const navLinkStyle = {
+  color: 'var(--text-secondary)',
+  textDecoration: 'none',
+  transition: 'color 0.2s',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '7px',
+  fontSize: '0.9rem',
+};
 function onHover(e: React.MouseEvent<HTMLAnchorElement>) { e.currentTarget.style.color = 'var(--accent)'; }
 function onLeave(e: React.MouseEvent<HTMLAnchorElement>) { e.currentTarget.style.color = 'var(--text-secondary)'; }
 
 export default function Home() {
   return (
     <main>
-      {/* Hero Section */}
+      {/* ── Hero ── */}
       <section style={{
-        paddingTop: '100px',
-        paddingBottom: '100px',
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(79, 70, 229, 0.1) 50%, rgba(59, 130, 246, 0.05) 100%)',
+        paddingTop: '96px',
+        paddingBottom: '96px',
+        background: 'var(--bg)',
         borderBottom: '1px solid var(--border)',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
-        <div className="container" style={{ maxWidth: '900px', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+        {/* Subtle warm radial glow */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212,137,106,0.13) 0%, transparent 70%)',
+        }} />
+        <div className="container" style={{ maxWidth: '820px', textAlign: 'center', position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '36px' }}>
             <Wordmark variant="tagline" size="lg" />
           </div>
+
           <p style={{
-            fontSize: '1.25rem',
+            fontSize: '1.2rem',
             color: 'var(--text-secondary)',
-            marginBottom: '48px',
-            fontWeight: '500',
-            maxWidth: '700px',
-            margin: '0 auto 48px'
+            marginBottom: '44px',
+            fontWeight: 450,
+            maxWidth: '640px',
+            margin: '0 auto 44px',
+            lineHeight: 1.7,
           }}>
-            Access {totalModelCount}+ AI models across {providers.length + 100}+ providers — all powered by community-donated API keys. One key. Always free.
+            Access <strong style={{ color: 'var(--fg)', fontWeight: 650 }}>{totalModelCount}+ AI models</strong> across{' '}
+            <strong style={{ color: 'var(--fg)', fontWeight: 650 }}>{providers.length + 100}+ providers</strong> — all powered
+            by community-donated API keys. One key. Always free.
           </p>
 
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             {isClerkConfigured ? (
               <>
                 <SignedOut>
                   <SignUpButton>
-                    <button className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                      Get Started Free <IconArrowRight size={16} />
+                    <button className="button" style={{ padding: '13px 36px', fontSize: '1rem', fontWeight: '650', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      Get Started Free <IconArrowRight size={15} />
                     </button>
                   </SignUpButton>
                 </SignedOut>
                 <SignedIn>
-                  <a href="/dashboard" className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    Go to Dashboard <IconArrowRight size={16} />
+                  <a href="/dashboard" className="button" style={{ padding: '13px 36px', fontSize: '1rem', fontWeight: '650', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    Go to Dashboard <IconArrowRight size={15} />
                   </a>
                 </SignedIn>
               </>
             ) : (
-              <a href="/dashboard" className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                Get Started Free <IconArrowRight size={16} />
+              <a href="/dashboard" className="button" style={{ padding: '13px 36px', fontSize: '1rem', fontWeight: '650', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                Get Started Free <IconArrowRight size={15} />
               </a>
             )}
-            <a href="/docs" className="button secondary" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              <IconBook size={16} /> Read Documentation
+            <a href="/docs" className="button secondary" style={{ padding: '13px 32px', fontSize: '1rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <IconBook size={15} /> Documentation
             </a>
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display: 'flex', gap: '32px', justifyContent: 'center', marginTop: '56px', flexWrap: 'wrap' }}>
+            {[
+              { val: `${totalModelCount}+`, label: 'AI Models' },
+              { val: `${providers.length + 100}+`, label: 'Providers' },
+              { val: 'Free', label: 'Forever' },
+            ].map((s) => (
+              <div key={s.label} style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--fg)', lineHeight: 1 }}>{s.val}</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginTop: '4px' }}>{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Providers Section */}
-      <section style={{ paddingTop: '100px', paddingBottom: '100px', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+      {/* ── Providers ── */}
+      <section style={{ padding: '88px 0', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
         <div className="container" style={{ maxWidth: '1200px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-            <p style={{ fontSize: '0.85rem', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px' }}>
-              Powered By
-            </p>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '20px' }}>
-              {totalModelCount}+ Models Across {providers.length + 100}+ Providers
+          <div style={{ textAlign: 'center', marginBottom: '52px' }}>
+            <div style={pill}>Powered By</div>
+            <h2 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.4rem)', fontWeight: 800, marginBottom: '16px', color: 'var(--fg)' }}>
+              {totalModelCount}+ Models, One Simple API
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', maxWidth: '700px', margin: '0 auto' }}>
-              Community-powered routing across the best free AI providers. Donate a free API key to help unlock even more providers for everyone.
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '600px', margin: '0 auto', lineHeight: 1.7 }}>
+              Community-powered routing across the best free AI providers.
             </p>
           </div>
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '20px',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: '16px',
             marginBottom: '40px',
           }}>
             {providers.map((provider) => {
@@ -119,53 +165,51 @@ export default function Home() {
                 <div
                   key={provider.name}
                   style={{
-                    padding: '28px',
+                    padding: '24px 20px',
                     borderRadius: 'var(--radius-lg)',
-                    border: `1px solid ${provider.color}30`,
-                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    background: 'var(--bg-card)',
                     textAlign: 'center',
-                    transition: 'all 0.3s ease',
-                    position: 'relative',
-                    overflow: 'hidden',
+                    boxShadow: 'var(--shadow-sm)',
+                    transition: 'all 0.25s ease',
+                    cursor: 'default',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = provider.color;
-                    e.currentTarget.style.transform = 'translateY(-6px)';
-                    e.currentTarget.style.background = `${provider.color}08`;
+                    e.currentTarget.style.borderColor = 'var(--accent-muted)';
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = `${provider.color}30`;
+                    e.currentTarget.style.borderColor = 'var(--border)';
                     e.currentTarget.style.transform = 'none';
-                    e.currentTarget.style.background = 'var(--bg)';
+                    e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
                   }}
                 >
                   {entry ? (
                     <div style={{
-                      width: 52, height: 52, margin: '0 auto 14px',
+                      width: 46, height: 46, margin: '0 auto 12px',
                       borderRadius: 'var(--radius)',
-                      background: `${entry.color}18`,
-                      border: `1px solid ${entry.color}55`,
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: entry.color,
+                      color: 'var(--accent)',
                     }}>
-                      <entry.Glyph size={28} />
+                      <entry.Glyph size={24} />
                     </div>
                   ) : (
                     <div style={{
-                      width: 52, height: 52, margin: '0 auto 14px',
+                      width: 46, height: 46, margin: '0 auto 12px',
                       borderRadius: 'var(--radius)',
-                      background: `${provider.color}18`,
-                      border: `1px solid ${provider.color}55`,
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: provider.color, fontSize: '1.5rem',
-                    }}>
-                      ⚡
-                    </div>
+                      fontSize: '1.4rem',
+                    }}>⚡</div>
                   )}
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '8px', color: provider.color }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '6px', color: 'var(--fg)' }}>
                     {provider.name}
                   </h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: 0 }}>
                     {provider.desc}
                   </p>
                 </div>
@@ -173,96 +217,121 @@ export default function Home() {
             })}
           </div>
 
-          <div style={{ marginTop: '60px', textAlign: 'center' }}>
-            <a href="/providers" style={{ color: 'var(--accent)', fontSize: '1rem', fontWeight: '600', textDecoration: 'none', padding: '8px 16px', borderRadius: '8px', transition: 'all 0.2s ease', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(124, 58, 237, 0.1)'; }}
+          <div style={{ textAlign: 'center' }}>
+            <a href="/providers" style={{ color: 'var(--accent)', fontSize: '0.95rem', fontWeight: 600, textDecoration: 'none', padding: '8px 16px', borderRadius: 'var(--radius-sm)', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(184,104,64,0.08)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
-              Explore All Providers <IconArrowRight size={16} />
+              Explore all providers <IconArrowRight size={14} />
             </a>
           </div>
         </div>
       </section>
 
-      {/* Donate CTA */}
-      <section style={{ paddingTop: '80px', paddingBottom: '80px', borderBottom: '1px solid var(--border)', background: 'var(--bg)' }}>
-        <div className="container" style={{ maxWidth: '900px', textAlign: 'center' }}>
-          <p style={{ fontSize: '0.8rem', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px' }}>
-            Contributor Program
-          </p>
-          <h2 style={{ fontSize: 'clamp(1.6rem, 4vw, 2.4rem)', fontWeight: '900', marginBottom: '16px', lineHeight: '1.15' }}>
-            OpenRelay is free because contributors donate API keys
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '640px', margin: '0 auto 32px', lineHeight: '1.7' }}>
-            100+ providers are waiting to be unlocked — each needs just 3 verified free API keys to activate. If you have a free key from Groq, Cerebras, Google AI Studio, Mistral, or any of our 100+ supported providers, donating takes 30 seconds.
-          </p>
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '32px' }}>
-            <a href="/donate" className="button" style={{ padding: '13px 36px', fontSize: '1rem', fontWeight: '700', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              🔑 Donate a Key
-            </a>
-            <a href="/providers" className="button secondary" style={{ padding: '13px 28px', fontSize: '1rem' }}>
-              Browse 100+ Providers
-            </a>
-          </div>
-          <div style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            {[
-              { label: 'Unlock providers', desc: '3 keys activates a new provider for all' },
-              { label: 'Monitor your keys', desc: 'See status and uptime in real time' },
-              { label: 'Discord role', desc: 'Automatic Contributor badge' },
-            ].map((b, i) => (
-              <div key={i} style={{ textAlign: 'left', maxWidth: '200px' }}>
-                <p style={{ fontWeight: '600', fontSize: '0.88rem', color: 'var(--accent-light)', marginBottom: '4px' }}>✓ {b.label}</p>
-                <p style={{ color: 'var(--text-tertiary)', fontSize: '0.82rem', margin: 0 }}>{b.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── Donate CTA ── */}
+      <section style={{ padding: '80px 0', borderBottom: '1px solid var(--border)', background: 'var(--bg)' }}>
+        <div className="container" style={{ maxWidth: '860px' }}>
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-xl)',
+            padding: '56px 48px',
+            textAlign: 'center',
+            boxShadow: 'var(--shadow)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            {/* Warm accent corner */}
+            <div style={{
+              position: 'absolute', top: 0, right: 0,
+              width: '200px', height: '200px',
+              background: 'radial-gradient(circle at top right, rgba(212,137,106,0.12) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }} />
 
-      {/* Features Section */}
-      <section style={{ paddingTop: '100px', paddingBottom: '100px', borderBottom: '1px solid var(--border)' }}>
-        <div className="container" style={{ maxWidth: '1200px' }}>
-          <div style={{ textAlign: 'center', marginBottom: '70px' }}>
-            <p style={{ fontSize: '0.85rem', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px' }}>
-              Features
+            <div style={pill}>Contributor Program</div>
+            <h2 style={{ fontSize: 'clamp(1.5rem, 4vw, 2.2rem)', fontWeight: 800, marginBottom: '16px', color: 'var(--fg)', lineHeight: 1.2 }}>
+              OpenRelay is free because contributors donate API keys
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.02rem', maxWidth: '580px', margin: '0 auto 32px', lineHeight: 1.75 }}>
+              100+ providers are waiting to be unlocked — each needs just 3 verified free API keys to activate.
+              Donating takes 30 seconds and earns you a Discord Contributor badge.
             </p>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: '900', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '36px' }}>
+              <a href="/donate" className="button" style={{ padding: '12px 32px', fontSize: '0.95rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '7px' }}>
+                🔑 Donate a Key
+              </a>
+              <a href="/providers" className="button secondary" style={{ padding: '12px 28px', fontSize: '0.95rem' }}>
+                Browse Providers
+              </a>
+            </div>
+            <div style={{ display: 'flex', gap: '28px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {[
+                { label: 'Unlock providers', desc: '3 keys activates a new provider for all users' },
+                { label: 'Monitor your keys', desc: 'See health and uptime in real time' },
+                { label: 'Discord role', desc: 'Automatic Contributor badge on our server' },
+              ].map((b, i) => (
+                <div key={i} style={{ textAlign: 'left', maxWidth: '180px' }}>
+                  <p style={{ fontWeight: 650, fontSize: '0.86rem', color: 'var(--accent-dark)', marginBottom: '4px' }}>✓ {b.label}</p>
+                  <p style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem', margin: 0, lineHeight: 1.5 }}>{b.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Features ── */}
+      <section style={{ padding: '88px 0', borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+        <div className="container" style={{ maxWidth: '1200px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+            <div style={pill}>Features</div>
+            <h2 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.4rem)', fontWeight: 800, marginBottom: '14px', color: 'var(--fg)' }}>
               Built for Developers
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '650px', margin: '0 auto' }}>
-              Everything you need to build powerful AI applications, all in one simple API.
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.02rem', maxWidth: '580px', margin: '0 auto', lineHeight: 1.7 }}>
+              Everything you need to build powerful AI applications, from one clean API.
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
             {features.map((feature, idx) => (
               <div
                 key={idx}
                 style={{
-                  padding: '32px',
+                  padding: '28px',
                   borderRadius: 'var(--radius-lg)',
                   border: '1px solid var(--border)',
-                  background: 'var(--bg-secondary)',
-                  transition: 'all 0.3s ease',
+                  background: 'var(--bg-card)',
+                  boxShadow: 'var(--shadow-sm)',
+                  transition: 'all 0.25s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--accent)';
-                  e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = '0 20px 40px rgba(124, 58, 237, 0.1)';
+                  e.currentTarget.style.borderColor = 'var(--accent-muted)';
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = 'var(--border)';
                   e.currentTarget.style.transform = 'none';
-                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
                 }}
               >
-                <div style={{ marginBottom: '20px' }}>
-                  <IconBadge icon={feature.Icon} accent={feature.accent} size={56} />
+                <div style={{
+                  width: 44, height: 44,
+                  borderRadius: 'var(--radius)',
+                  background: 'rgba(184,104,64,0.1)',
+                  border: '1px solid var(--accent-muted)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginBottom: '18px',
+                  color: 'var(--accent)',
+                }}>
+                  <feature.Icon size={22} />
                 </div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '12px', color: 'var(--fg)' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '10px', color: 'var(--fg)' }}>
                   {feature.title}
                 </h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6', margin: 0 }}>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: 1.65, margin: 0 }}>
                   {feature.desc}
                 </p>
               </div>
@@ -271,136 +340,133 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* ── Final CTA ── */}
       <section style={{
-        paddingTop: '120px',
-        paddingBottom: '120px',
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(79, 70, 229, 0.12) 50%, rgba(59, 130, 246, 0.08) 100%)',
+        padding: '104px 0',
+        background: 'var(--bg)',
         textAlign: 'center',
-        borderTop: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
-        <div className="container" style={{ maxWidth: '900px' }}>
-          <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3.2rem)', fontWeight: '900', marginBottom: '24px', lineHeight: '1.1' }}>
-            Start Building with AI Today
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse 60% 50% at 50% 100%, rgba(184,104,64,0.08) 0%, transparent 70%)',
+        }} />
+        <div className="container" style={{ maxWidth: '760px', position: 'relative' }}>
+          <h2 style={{ fontSize: 'clamp(1.8rem, 5vw, 3rem)', fontWeight: 800, marginBottom: '20px', lineHeight: 1.15, color: 'var(--fg)' }}>
+            Start building with AI today
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.15rem', marginBottom: '48px', lineHeight: '1.6', maxWidth: '700px', margin: '0 auto 48px' }}>
-            Get instant access to {totalModelCount}+ AI models from {providers.length} providers. No credit card, no setup fees, no limits.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', marginBottom: '44px', lineHeight: 1.7, maxWidth: '600px', margin: '0 auto 44px' }}>
+            Instant access to {totalModelCount}+ AI models. No credit card, no setup fees, no surprises.
           </p>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
             {isClerkConfigured ? (
               <>
                 <SignedIn>
-                  <a href="/dashboard" className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    Go to Dashboard <IconArrowRight size={16} />
+                  <a href="/dashboard" className="button" style={{ padding: '13px 36px', fontSize: '1rem', fontWeight: 650, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    Go to Dashboard <IconArrowRight size={15} />
                   </a>
                 </SignedIn>
                 <SignedOut>
                   <SignUpButton>
-                    <button className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                      Sign Up Free <IconArrowRight size={16} />
+                    <button className="button" style={{ padding: '13px 36px', fontSize: '1rem', fontWeight: 650, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      Sign Up Free <IconArrowRight size={15} />
                     </button>
                   </SignUpButton>
                 </SignedOut>
               </>
             ) : (
-              <a href="/dashboard" className="button" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                Sign Up Free <IconArrowRight size={16} />
+              <a href="/dashboard" className="button" style={{ padding: '13px 36px', fontSize: '1rem', fontWeight: 650, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                Sign Up Free <IconArrowRight size={15} />
               </a>
             )}
-            <a href="/docs" className="button secondary" style={{ padding: '14px 40px', fontSize: '1rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-              <IconBook size={16} /> API Docs
+            <a href="/docs" className="button secondary" style={{ padding: '13px 32px', fontSize: '1rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <IconBook size={15} /> API Docs
             </a>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{ borderTop: '1px solid var(--border)', paddingTop: '60px', paddingBottom: '60px', background: 'var(--bg-secondary)' }}>
+      {/* ── Footer ── */}
+      <footer style={{ borderTop: '1px solid var(--border)', paddingTop: '56px', paddingBottom: '56px', background: 'var(--bg-secondary)' }}>
         <div className="container" style={{ maxWidth: '1200px' }}>
-          {/* Provider Badges */}
-          <div style={{ marginBottom: '60px', paddingBottom: '60px', borderBottom: '1px solid var(--border)' }}>
-            <p style={{ fontSize: '0.8rem', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '24px' }}>
+          {/* Provider row */}
+          <div style={{ marginBottom: '48px', paddingBottom: '48px', borderBottom: '1px solid var(--border)' }}>
+            <p style={{ fontSize: '0.74rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
               Powered by leading AI providers
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {providers.map((provider) => {
                 const entry = PROVIDER_GLYPHS[provider.name];
                 return (
                   <a key={provider.name} href="/providers" style={{
-                    display: 'flex', alignItems: 'center', gap: '10px',
-                    padding: '12px 16px', borderRadius: 'var(--radius)',
-                    border: '1px solid var(--border)', backgroundColor: 'var(--bg)',
-                    textDecoration: 'none', transition: 'all 0.2s ease', color: provider.color,
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '9px 16px', borderRadius: 'var(--radius)',
+                    border: '1px solid var(--border)', background: 'var(--bg-card)',
+                    textDecoration: 'none', transition: 'all 0.2s ease',
+                    boxShadow: 'var(--shadow-sm)',
                   }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = provider.color; e.currentTarget.style.background = `${provider.color}0a`; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg)'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent-muted)'; e.currentTarget.style.background = 'var(--bg-secondary)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-card)'; }}
                   >
-                    {entry && <entry.Glyph size={18} />}
-                    <span style={{ color: 'var(--text-secondary)', fontWeight: '600', fontSize: '0.9rem' }}>{provider.name}</span>
+                    {entry && <entry.Glyph size={16} />}
+                    <span style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.86rem' }}>{provider.name}</span>
                   </a>
                 );
               })}
             </div>
           </div>
 
-          {/* Footer Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '60px', marginBottom: '50px' }}>
+          {/* Footer columns */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '48px', marginBottom: '40px' }}>
             <div>
-              <div style={{ marginBottom: '16px' }}>
+              <div style={{ marginBottom: '14px' }}>
                 <Wordmark variant="full" size="sm" />
               </div>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.8' }}>
-                Free AI API gateway for developers everywhere. Access {totalModelCount}+ cutting-edge models from {providers.length} top providers with one API key.
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.75 }}>
+                Free AI API gateway for developers. Access {totalModelCount}+ cutting-edge models from {providers.length} providers with one key.
               </p>
             </div>
             <div>
-              <h4 style={{ fontWeight: '700', marginBottom: '18px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
+              <h4 style={{ fontWeight: 700, marginBottom: '16px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.78rem', letterSpacing: '1px' }}>
                 Product
               </h4>
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ marginBottom: '14px' }}>
-                  <a href="/models" style={navLinkStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
-                    <IconBook size={14} style={{ marginRight: 8, flexShrink: 0 }} /> Explore Models
-                  </a>
-                </li>
-                <li style={{ marginBottom: '14px' }}>
-                  <a href="/providers" style={navLinkStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
-                    <IconProviders size={14} style={{ marginRight: 8, flexShrink: 0 }} /> Providers
-                  </a>
-                </li>
-                <li style={{ marginBottom: '14px' }}>
-                  <a href="/docs" style={navLinkStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
-                    <IconDocs size={14} style={{ marginRight: 8, flexShrink: 0 }} /> Documentation
-                  </a>
-                </li>
+                {[
+                  { href: '/models', icon: IconBook, label: 'Explore Models' },
+                  { href: '/providers', icon: IconProviders, label: 'Providers' },
+                  { href: '/docs', icon: IconDocs, label: 'Documentation' },
+                ].map(({ href, icon: Icon, label }) => (
+                  <li key={href} style={{ marginBottom: '12px' }}>
+                    <a href={href} style={navLinkStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
+                      <Icon size={13} /> {label}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
             <div>
-              <h4 style={{ fontWeight: '700', marginBottom: '18px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '1px' }}>
+              <h4 style={{ fontWeight: 700, marginBottom: '16px', color: 'var(--fg)', textTransform: 'uppercase', fontSize: '0.78rem', letterSpacing: '1px' }}>
                 Community
               </h4>
               <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ marginBottom: '14px' }}>
-                  <a href="https://github.com/CloudCompile/cloudgpt" target="_blank" rel="noopener noreferrer" style={navLinkStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
-                    <IconStar size={14} style={{ marginRight: 8, flexShrink: 0 }} /> Star on GitHub
-                  </a>
-                </li>
-                <li style={{ marginBottom: '14px' }}>
-                  <a href="https://github.com/CloudCompile/cloudgpt/issues" target="_blank" rel="noopener noreferrer" style={navLinkStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
-                    <IconBug size={14} style={{ marginRight: 8, flexShrink: 0 }} /> Report Issues
-                  </a>
-                </li>
-                <li style={{ marginBottom: '14px' }}>
-                  <a href="https://github.com/CloudCompile/cloudgpt" target="_blank" rel="noopener noreferrer" style={navLinkStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
-                    <IconGitHub size={14} style={{ marginRight: 8, flexShrink: 0 }} /> GitHub
-                  </a>
-                </li>
+                {[
+                  { href: 'https://github.com/CloudCompile/cloudgpt', icon: IconStar, label: 'Star on GitHub', external: true },
+                  { href: 'https://github.com/CloudCompile/cloudgpt/issues', icon: IconBug, label: 'Report Issues', external: true },
+                  { href: 'https://github.com/CloudCompile/cloudgpt', icon: IconGitHub, label: 'GitHub', external: true },
+                ].map(({ href, icon: Icon, label, external }) => (
+                  <li key={href} style={{ marginBottom: '12px' }}>
+                    <a href={href} style={navLinkStyle} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined} onMouseEnter={onHover} onMouseLeave={onLeave}>
+                      <Icon size={13} /> {label}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
 
-          {/* Copyright */}
-          <div style={{ paddingTop: '24px', borderTop: '1px solid var(--border)', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.9rem' }}>
+          <div style={{ paddingTop: '20px', borderTop: '1px solid var(--border)', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.86rem' }}>
             <p>© 2026 OpenRelay. All rights reserved.</p>
           </div>
         </div>
