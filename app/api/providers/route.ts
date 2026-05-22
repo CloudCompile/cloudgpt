@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { COMING_SOON_PROVIDERS } from '@/lib/providers/coming-soon-providers';
-import { getProviderKeyCount } from '@/lib/key-validation';
+import { getDonatedKeyCount } from '@/lib/key-validation';
 
 export const runtime = 'nodejs';
 
 const KEYS_REQUIRED = 3;
+const CACHE_TTL_MS = 60_000; // 60 seconds in-memory cache
+
+let _cachedResponse: ReturnType<typeof NextResponse.json> | null = null;
+let _cacheTime = 0;
+let _cacheFetching: Promise<ReturnType<typeof NextResponse.json>> | null = null;
 
 // Signup URLs for all providers (used on donate page)
 const SIGNUP_URLS: Record<string, string> = {
@@ -89,65 +94,81 @@ const BASE_PROVIDERS = [
   { id: 'happupy',      name: 'Happupy',      description: '100k tokens/day free — easy sign-up, no card required', freeLimit: '100k tokens/day' },
 ];
 
+async function buildProvidersResponse() {
+  const allRaw = [
+    ...BASE_PROVIDERS.map(p => ({ ...p, isBase: true, signupUrl: SIGNUP_URLS[p.id] })),
+    ...COMING_SOON_PROVIDERS.map(p => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      freeLimit: p.freeLimit,
+      isBase: false,
+      signupUrl: p.signupUrl ?? SIGNUP_URLS[p.id],
+      models: p.models,
+    })),
+  ];
+
+  const withCounts = await Promise.all(
+    allRaw.map(async (p) => ({
+      ...p,
+      count: await getDonatedKeyCount(p.id).catch(() => 0),
+    }))
+  );
+
+  const providers = withCounts.map(p => {
+    const base = {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      freeLimit: p.freeLimit,
+      signupUrl: p.signupUrl ?? null,
+      status: p.count >= KEYS_REQUIRED ? 'active' : 'coming_soon',
+      keyCount: p.count,
+      keysRequired: KEYS_REQUIRED,
+      keysNeeded: Math.max(0, KEYS_REQUIRED - p.count),
+    };
+    if ('tiers' in p && p.tiers) {
+      return { ...base, tiers: p.tiers };
+    }
+    return base;
+  });
+
+  const activeCount = providers.filter(p => p.status === 'active').length;
+
+  return NextResponse.json({
+    providers,
+    _stats: {
+      total_providers: providers.length,
+      active_providers: activeCount,
+      coming_soon_providers: providers.length - activeCount,
+      keys_required_to_activate: KEYS_REQUIRED,
+      donate_url: '/donate',
+    },
+  }, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
+    },
+  });
+}
+
 export async function GET() {
-  try {
-    const allRaw = [
-      ...BASE_PROVIDERS.map(p => ({ ...p, isBase: true, signupUrl: SIGNUP_URLS[p.id] })),
-      ...COMING_SOON_PROVIDERS.map(p => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        freeLimit: p.freeLimit,
-        isBase: false,
-        signupUrl: p.signupUrl ?? SIGNUP_URLS[p.id],
-        models: p.models,
-      })),
-    ];
-
-    const withCounts = await Promise.all(
-      allRaw.map(async (p) => ({
-        ...p,
-        count: await getProviderKeyCount(p.id).catch(() => 0),
-      }))
-    );
-
-    const providers = withCounts.map(p => {
-      const base = {
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        freeLimit: p.freeLimit,
-        signupUrl: p.signupUrl ?? null,
-        status: p.count >= KEYS_REQUIRED ? 'active' : 'coming_soon',
-        keyCount: p.count,
-        keysRequired: KEYS_REQUIRED,
-        keysNeeded: Math.max(0, KEYS_REQUIRED - p.count),
-      };
-      // Include tier info for tiered providers
-      if ('tiers' in p && p.tiers) {
-        return { ...base, tiers: p.tiers };
-      }
-      return base;
-    });
-
-    const activeCount = providers.filter(p => p.status === 'active').length;
-
-    return NextResponse.json({
-      providers,
-      _stats: {
-        total_providers: providers.length,
-        active_providers: activeCount,
-        coming_soon_providers: providers.length - activeCount,
-        keys_required_to_activate: KEYS_REQUIRED,
-        donate_url: '/donate',
-      },
-    }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=15',
-      },
-    });
-  } catch (error) {
-    console.error('Providers API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  const now = Date.now();
+  if (_cachedResponse && now - _cacheTime < CACHE_TTL_MS) {
+    return _cachedResponse;
   }
+  if (_cacheFetching) return _cacheFetching;
+
+  _cacheFetching = buildProvidersResponse()
+    .then(res => {
+      _cachedResponse = res;
+      _cacheTime = Date.now();
+      return res;
+    })
+    .catch(err => {
+      console.error('Providers API error:', err);
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    })
+    .finally(() => { _cacheFetching = null; });
+
+  return _cacheFetching;
 }

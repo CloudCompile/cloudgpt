@@ -31,7 +31,7 @@ export async function GET() {
           'X-Coming-Soon-Models': comingSoonModels.length.toString(),
           'X-Available-Providers': '7',
           // Cache at CDN edge for 5 min; clients may serve stale for 1 min while revalidating
-          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
+          'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=120',
         }
       }
     );
