@@ -1,7 +1,7 @@
 import { getNextKey, getRateLimitForProvider, getKeysForProvider } from './keypool';
 import { redis } from '../redis';
 import { logError } from '../analytics';
-import { getProviderKeyCount } from '../key-validation';
+import { getDonatedKeyCount } from '../key-validation';
 import { forwardPollinations, forwardPollinationsVideo, forwardSimpleImage, forwardSimpleText, getPollModel } from './pollinations';
 import { forwardVoidAI } from './voidai';
 import { forwardAirforce } from './airforce';
@@ -47,13 +47,8 @@ async function getActiveProviders(): Promise<Set<string>> {
   const active = new Set<string>();
   await Promise.all(
     Object.entries(ALL_PROVIDER_PREFIXES).map(async ([prefix, redisKey]) => {
-      try {
-        const count = await getProviderKeyCount(redisKey);
-        if (count >= KEYS_REQUIRED) {
-          active.add(prefix);
-        }
-      } catch {
-        // On Redis error, fail open — don't block traffic
+      const count = await getDonatedKeyCount(redisKey);
+      if (count >= KEYS_REQUIRED) {
         active.add(prefix);
       }
     })
