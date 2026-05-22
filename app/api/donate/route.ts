@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
   if (!provider || !testConfigKey) {
     return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
   }
-  if (!rawKey || typeof rawKey !== 'string' || rawKey.trim().length < 8) {
-    return NextResponse.json({ error: 'API key must be at least 8 characters' }, { status: 400 });
+  if (!rawKey || typeof rawKey !== 'string' || rawKey.trim().length < 20) {
+    return NextResponse.json({ error: 'API key must be at least 20 characters' }, { status: 400 });
   }
 
   const trimmedKey = rawKey.trim();

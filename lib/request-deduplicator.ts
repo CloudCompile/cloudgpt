@@ -55,25 +55,23 @@ export async function deduplicate<T>(
     return pending;
   }
 
-  // Create a promise for this request
-  const promise = (async () => {
-    try {
-      return await Promise.race([
-        fn(),
-        new Promise<T>((_, reject) =>
-          setTimeout(
-            () => reject(new Error(`Request timeout after ${timeoutMs}ms`)),
-            timeoutMs
-          )
-        ),
-      ]);
-    } finally {
-      // Clean up after request completes
-      _pendingRequests.delete(key);
-    }
-  })();
-
+  // Register the key synchronously before any async work so that any
+  // concurrent caller that arrives before the first await sees the entry.
+  let resolveFn!: (value: T | PromiseLike<T>) => void;
+  let rejectFn!: (reason: unknown) => void;
+  const promise = new Promise<T>((res, rej) => { resolveFn = res; rejectFn = rej; });
   _pendingRequests.set(key, promise);
+
+  const timeoutId = setTimeout(
+    () => rejectFn(new Error(`Request timeout after ${timeoutMs}ms`)),
+    timeoutMs
+  );
+
+  fn().then(resolveFn, rejectFn).finally(() => {
+    clearTimeout(timeoutId);
+    _pendingRequests.delete(key);
+  });
+
   return promise;
 }
 

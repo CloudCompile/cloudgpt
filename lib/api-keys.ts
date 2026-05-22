@@ -103,7 +103,10 @@ export async function checkRateLimit(
   const rateLimitKey = `ratelimit:${key}`;
 
   const currentStr = await redis.get(rateLimitKey);
-  const current = currentStr ? JSON.parse(currentStr) : null;
+  let current: { count: number; resetAt: number } | null = null;
+  if (currentStr) {
+    try { current = JSON.parse(currentStr); } catch { current = null; }
+  }
 
   if (!current || now > current.resetAt) {
     await redis.setEx(

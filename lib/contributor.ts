@@ -1,4 +1,4 @@
-import { redis } from './redis';
+import { redis, atomicUpdate } from './redis';
 
 export interface ContributorKeyRef {
   provider: string;
@@ -15,15 +15,22 @@ export async function getContributorKeyRefs(userId: string): Promise<Contributor
 }
 
 export async function addContributorKeyRef(userId: string, provider: string, keyId: string): Promise<void> {
-  const refs = await getContributorKeyRefs(userId);
-  refs.push({ provider, keyId });
-  await redis.set(`contributor:keys:${userId}`, JSON.stringify(refs));
+  const redisKey = `contributor:keys:${userId}`;
+  const ok = await atomicUpdate(redisKey, (current) => {
+    const refs: ContributorKeyRef[] = current ? JSON.parse(current) : [];
+    refs.push({ provider, keyId });
+    return JSON.stringify(refs);
+  });
+  if (!ok) throw new Error(`Failed to atomically add contributor key ref for ${userId}`);
 }
 
 export async function removeContributorKeyRef(userId: string, keyId: string): Promise<void> {
-  const refs = await getContributorKeyRefs(userId);
-  const filtered = refs.filter(r => r.keyId !== keyId);
-  await redis.set(`contributor:keys:${userId}`, JSON.stringify(filtered));
+  const redisKey = `contributor:keys:${userId}`;
+  await atomicUpdate(redisKey, (current) => {
+    const refs: ContributorKeyRef[] = current ? JSON.parse(current) : [];
+    const filtered = refs.filter(r => r.keyId !== keyId);
+    return JSON.stringify(filtered);
+  });
 }
 
 export async function isContributor(userId: string): Promise<boolean> {

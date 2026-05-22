@@ -57,7 +57,8 @@ async function checkRedisVersion(): Promise<boolean> {
  */
 export async function invalidateKeyCache(): Promise<void> {
   try {
-    _redisVersion = await redis.incr('keypool:version') as any;
+    const newVersion = await redis.incr('keypool:version');
+    _redisVersion = Number(newVersion);
     _keyCache.clear();
     _localCounters.clear();
   } catch (e) {
@@ -88,6 +89,9 @@ export async function getKeysForProvider(providerName: string): Promise<string[]
 
   // 2. Read KV-stored keys (community contributions)
   const encKey = process.env.ENCRYPTION_KEY;
+  if (!encKey) {
+    console.warn(`ENCRYPTION_KEY is not set — community-donated keys for ${providerName} will not be loaded`);
+  }
   if (encKey) {
     try {
       const listJson = await redis.get(
@@ -133,11 +137,9 @@ export async function getNextKey(providerName: string): Promise<string | null> {
     const index = (counter - 1) % keys.length;
     return keys[index];
   } catch (e) {
-    // Fallback to local counter if Redis unavailable
-    console.warn(`Redis incr failed for ${indexKey}, using local counter:`, e);
-    const local = (_localCounters.get(indexKey) ?? 0) + 1;
-    _localCounters.set(indexKey, local);
-    const index = (local - 1) % keys.length;
+    // Fallback: pick a random key so different instances don't all hit index 0.
+    console.warn(`Redis incr failed for ${indexKey}, using random fallback:`, e);
+    const index = Math.floor(Math.random() * keys.length);
     return keys[index];
   }
 }

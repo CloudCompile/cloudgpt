@@ -475,7 +475,7 @@ async function checkProviderKeys(provider: string): Promise<void> {
         const { decryptKey } = await import('./crypto');
         const decrypted = decryptKey(entry.encryptedKey, encKey);
         const status = await testKey(provider, decrypted, 3000);
-        await updateKeyHealth(provider, entry.id, status).catch(() => {});
+        await updateKeyHealth(provider, entry.id, status).catch(e => console.error(`Failed to write health status for key ${entry.id}:`, e));
 
         // Remove keys with too many failures
         if (status === 'error' && health && health.failureCount >= 3) {

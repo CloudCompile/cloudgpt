@@ -17,11 +17,9 @@ export async function forwardAIHorde(
   body?: unknown,
   options?: AIHordeOptions
 ) {
-  let apiKey = await getNextKey('AIHORDE');
-
-  // Use default key if none configured
+  const apiKey = await getNextKey('AIHORDE');
   if (!apiKey) {
-    apiKey = '0000000000';
+    throw new Error('No AIHorde keys configured');
   }
 
   const url = `https://api.aihorde.net/api/v2${endpoint}`;

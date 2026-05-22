@@ -1,3 +1,5 @@
+import { timingSafeEqual as cryptoTimingSafeEqual } from 'crypto';
+
 /**
  * Security utilities for hardening the API against common attacks.
  */
@@ -79,17 +81,18 @@ export function containsSensitiveData(input: string): boolean {
 
 /**
  * Safe string comparison to prevent timing attacks.
- * Uses constant-time comparison.
+ * Uses Node's crypto.timingSafeEqual so comparison time does not leak length.
  */
 export function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-
-  return result === 0;
+  // Pad both sides to the same byte length before comparing so we never
+  // short-circuit on a length mismatch (which would leak length via timing).
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  const len = Math.max(bufA.length, bufB.length);
+  const paddedA = Buffer.concat([bufA, Buffer.alloc(len - bufA.length)]);
+  const paddedB = Buffer.concat([bufB, Buffer.alloc(len - bufB.length)]);
+  // Always run the full constant-time compare; check length equality separately.
+  return cryptoTimingSafeEqual(paddedA, paddedB) && bufA.length === bufB.length;
 }
 
 /**

@@ -31,29 +31,25 @@ export async function checkRateLimit(
   const now = Date.now();
 
   try {
-    // Use Redis with sliding window
-    const current = await redis.get(key);
-    const count = current ? parseInt(current) : 0;
-
-    if (count >= config.maxRequests) {
-      // Check expiration
-      const ttl = await redis.exists(key);
-      if (ttl) {
-        return {
-          allowed: false,
-          remaining: 0,
-          resetAt: now + config.windowMs,
-        };
-      }
+    // Atomic: INCR first, then set expiry only on first request in window.
+    // This avoids the GET+INCR race and the redis.exists-as-TTL bug.
+    const windowSecs = Math.ceil(config.windowMs / 1000);
+    const count = await redis.incr(key);
+    if (count === 1) {
+      await redis.expire(key, windowSecs);
     }
 
-    // Increment and set expiration
-    await redis.incr(key);
-    await redis.expire(key, Math.ceil(config.windowMs / 1000));
+    if (count > config.maxRequests) {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetAt: now + config.windowMs,
+      };
+    }
 
     return {
       allowed: true,
-      remaining: Math.max(0, config.maxRequests - count - 1),
+      remaining: Math.max(0, config.maxRequests - count),
       resetAt: now + config.windowMs,
     };
   } catch (e) {

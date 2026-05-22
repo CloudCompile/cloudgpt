@@ -99,10 +99,18 @@ async function syncMetricsToRedis(): Promise<void> {
     const today = new Date().toISOString().split('T')[0];
     const key = `metrics:${today}`;
 
-    await redis.hSet(key, 'requests', String(_metrics.requests));
-    await redis.hSet(key, 'tokens', String(_metrics.tokens));
-    await redis.hSet(key, 'failures', String(_metrics.failures));
+    // Accumulate into Redis atomically, then reset in-process counters so they
+    // don't grow without bound across a long-lived Vercel function.
+    await redis.hIncrBy(key, 'requests', _metrics.requests);
+    await redis.hIncrBy(key, 'tokens', _metrics.tokens);
+    await redis.hIncrBy(key, 'failures', _metrics.failures);
     await redis.expire(key, 604800); // 7 days
+
+    _metrics.requests = 0;
+    _metrics.tokens = 0;
+    _metrics.failures = 0;
+    _metrics.cacheHits = 0;
+    _metrics.cacheMisses = 0;
   } catch (e) {
     console.error('Failed to sync metrics to Redis:', e);
   }
