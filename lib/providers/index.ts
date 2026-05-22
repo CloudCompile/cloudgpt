@@ -116,6 +116,14 @@ export async function routeChat(
     );
   }
 
+  // Block any openrouter/ prefixed model — OpenRouter is a coming-soon provider
+  if (model.startsWith('openrouter/')) {
+    throw Object.assign(
+      new Error('OpenRouter is coming soon! Donate 3 verified keys at /donate to unlock it. Check /v1/models for available models.'),
+      { status: 503, code: 'provider_coming_soon', provider: 'OpenRouter' }
+    );
+  }
+
   // Check if this is a virtual model with multiple providers
   const virtualProviders = await getVirtualModelProviders(model);
   if (virtualProviders && virtualProviders.length > 0) {
