@@ -27,13 +27,33 @@ const ALL_PROVIDER_IDS = new Set([
   ...COMING_SOON_PROVIDERS.map(p => p.id),
 ]);
 
-// Find the matching PROVIDER_TEST_CONFIGS key for a provider ID (case-insensitive)
+// Find the matching PROVIDER_TEST_CONFIGS key for a provider ID (case-insensitive, handles variations like mistral-ai → Mistral)
 function findTestConfigKey(providerId: string): string | undefined {
   if (PROVIDER_TEST_CONFIGS[providerId]) return providerId;
-  const lower = providerId.toLowerCase().replace(/[-_]/g, '');
-  return Object.keys(PROVIDER_TEST_CONFIGS).find(
-    k => k.toLowerCase().replace(/[-_]/g, '') === lower
+
+  const normalize = (str: string) => str.toLowerCase().replace(/[-_]/g, '');
+  const normalizedInput = normalize(providerId);
+
+  // Try direct normalized match
+  let match = Object.keys(PROVIDER_TEST_CONFIGS).find(
+    k => normalize(k) === normalizedInput
   );
+  if (match) return match;
+
+  // Handle suffix variations: strip '-ai', '-models', '-nim', '-claude' and retry
+  const suffixes = ['-ai', '-models', '-nim', '-claude', '-free', '-turbo'];
+  for (const suffix of suffixes) {
+    if (providerId.endsWith(suffix)) {
+      const withoutSuffix = providerId.slice(0, -suffix.length);
+      const normalizedWithoutSuffix = normalize(withoutSuffix);
+      match = Object.keys(PROVIDER_TEST_CONFIGS).find(
+        k => normalize(k) === normalizedWithoutSuffix
+      );
+      if (match) return match;
+    }
+  }
+
+  return undefined;
 }
 
 function keyPreview(rawKey: string): string {
