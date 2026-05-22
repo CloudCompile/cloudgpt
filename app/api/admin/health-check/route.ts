@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { checkAdmin } from '@/lib/admin';
 import { runBackgroundHealthChecks } from '@/lib/key-validation';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30; // Allow up to 30 seconds for health checks
@@ -15,6 +16,15 @@ export async function POST(request: NextRequest) {
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const isAdmin = await checkAdmin(userId);
   if (!isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  // Allow at most 3 health-check triggers per 5-minute window to prevent DoS.
+  const rl = await checkRateLimit(`health-check:${userId}`, { maxRequests: 3, windowMs: 300_000 });
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: 'Too many health-check requests — retry after the current window expires' },
+      { status: 429 }
+    );
+  }
 
   try {
     // Run health checks in the background (don't await)

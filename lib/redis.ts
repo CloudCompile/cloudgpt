@@ -61,4 +61,35 @@ export const redis = {
   lRange: async (key: string, start: number, stop: number) => (await getRedis()).lRange(key, start, stop),
   lTrim: async (key: string, start: number, stop: number) => (await getRedis()).lTrim(key, start, stop),
   multi: async () => (await getRedis()).multi(),
+  watch: async (...keys: string[]) => (await getRedis()).watch(keys),
+  unwatch: async () => (await getRedis()).unwatch(),
 };
+
+/**
+ * Execute a read-modify-write atomically using WATCH + MULTI/EXEC.
+ * `fn` receives the current raw string value (or null) and returns the new
+ * value to write, or null to abort the transaction without writing.
+ * Retries up to `maxRetries` times on optimistic-lock conflicts.
+ */
+export async function atomicUpdate(
+  key: string,
+  fn: (current: string | null) => string | null,
+  maxRetries = 5
+): Promise<boolean> {
+  const client = await getRedis();
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    await client.watch(key);
+    const current = await client.get(key);
+    const next = fn(current);
+    if (next === null) {
+      await client.unwatch();
+      return true;
+    }
+    const multi = client.multi();
+    multi.set(key, next);
+    const results = await multi.exec();
+    if (results !== null) return true; // EXEC succeeded
+    // results === null means WATCH detected a change; retry
+  }
+  return false; // gave up after maxRetries
+}

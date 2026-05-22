@@ -57,7 +57,8 @@ async function checkRedisVersion(): Promise<boolean> {
  */
 export async function invalidateKeyCache(): Promise<void> {
   try {
-    _redisVersion = await redis.incr('keypool:version') as any;
+    const newVersion = await redis.incr('keypool:version');
+    _redisVersion = Number(newVersion);
     _keyCache.clear();
     _localCounters.clear();
   } catch (e) {

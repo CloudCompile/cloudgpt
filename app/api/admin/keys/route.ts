@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { checkAdmin } from '@/lib/admin';
 import { encryptKey } from '@/lib/crypto';
-import { redis } from '@/lib/redis';
+import { redis, atomicUpdate } from '@/lib/redis';
 import { invalidateKeyCache } from '@/lib/providers/keypool';
 import { testKey, updateKeyHealth, PROVIDER_TEST_CONFIGS } from '@/lib/key-validation';
 import { COMING_SOON_PROVIDERS } from '@/lib/providers/coming-soon-providers';
@@ -171,16 +171,20 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Can only delete KV-sourced keys' }, { status: 400 });
   }
 
-  const listJson = await redis.get(`admin:provider:keys:${provider}`);
-  if (!listJson) return NextResponse.json({ error: 'Key not found' }, { status: 404 });
+  let found = false;
+  const listKey = `admin:provider:keys:${provider}`;
+  const ok = await atomicUpdate(listKey, (current) => {
+    if (!current) return null; // nothing to delete
+    const list: ProviderKeyEntry[] = JSON.parse(current);
+    const filtered = list.filter((e) => e.id !== id);
+    if (filtered.length === list.length) return null; // id not found
+    found = true;
+    return JSON.stringify(filtered);
+  });
 
-  const list: ProviderKeyEntry[] = JSON.parse(listJson);
-  const filtered = list.filter((e) => e.id !== id);
-  if (filtered.length === list.length) {
-    return NextResponse.json({ error: 'Key not found' }, { status: 404 });
-  }
+  if (!ok) return NextResponse.json({ error: 'Conflict — please retry' }, { status: 409 });
+  if (!found) return NextResponse.json({ error: 'Key not found' }, { status: 404 });
 
-  await redis.set(`admin:provider:keys:${provider}`, JSON.stringify(filtered));
   await redis.del(`admin:key:status:${provider}:${id}`);
   await invalidateKeyCache().catch(e => console.error('Failed to invalidate key cache:', e));
 
