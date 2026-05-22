@@ -1,8 +1,4 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-
-const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -15,18 +11,11 @@ const isPublicRoute = createRouteMatcher([
   '/v1/(.*)',
 ]);
 
-const clerkHandler = clerkMiddleware(async (auth, request) => {
+export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect();
   }
 });
-
-export default function middleware(request: NextRequest) {
-  if (!isClerkConfigured) {
-    return NextResponse.next();
-  }
-  return (clerkHandler as (req: NextRequest) => Response | Promise<Response>)(request);
-}
 
 export const config = {
   matcher: [
