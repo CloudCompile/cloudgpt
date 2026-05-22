@@ -70,15 +70,15 @@ const SIGNUP_URLS: Record<string, string> = {
 
 // Pollinations tier system (pollen per hour)
 const POLLINATIONS_TIERS = [
+  { tier: 'Spore', pollenPerHour: 0.01 },
   { tier: 'Seed', pollenPerHour: 0.15 },
   { tier: 'Flower', pollenPerHour: 0.4 },
-  { tier: 'Spore', pollenPerHour: 1.0 },
-  { tier: 'Premium', pollenPerHour: 3.0 },
+  { tier: 'Nectar', pollenPerHour: 0.8 },
 ];
 
 // All providers that have native routing implementations (still need donated keys when no env keys set)
 const BASE_PROVIDERS = [
-  { id: 'pollinations', name: 'Pollinations', description: 'Multi-modal AI gateway — chat, images, audio, video, transcription, embeddings', freeLimit: 'Tiered: 0.15–3 pollen/hour', tiers: POLLINATIONS_TIERS },
+  { id: 'pollinations', name: 'Pollinations', description: 'Multi-modal AI gateway — chat, images, audio, video, transcription, embeddings', freeLimit: 'Tiered: 0.01–0.8 pollen/hour', tiers: POLLINATIONS_TIERS },
   { id: 'voidai',       name: 'VoidAI',       description: 'OpenAI-compatible inference proxy with a variety of free models', freeLimit: 'Free tier' },
   { id: 'cerebras',     name: 'Cerebras',     description: 'World-fastest inference hardware — Llama 3 at 2000+ tokens/sec', freeLimit: '1M tokens/day' },
   { id: 'groq',         name: 'Groq',         description: 'Lightning-fast LPU inference for open-source models', freeLimit: 'Rate limited' },

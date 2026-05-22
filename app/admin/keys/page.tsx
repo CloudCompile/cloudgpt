@@ -323,10 +323,10 @@ export default function KeysPage() {
                     </label>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       {[
+                        { value: 'Spore',   pollen: '0.01/hr' },
                         { value: 'Seed',    pollen: '0.15/hr' },
                         { value: 'Flower',  pollen: '0.4/hr' },
-                        { value: 'Spore',   pollen: '1.0/hr' },
-                        { value: 'Premium', pollen: '3.0/hr' },
+                        { value: 'Nectar',  pollen: '0.8/hr' },
                       ].map(tier => (
                         <button
                           key={tier.value}
@@ -465,7 +465,7 @@ export default function KeysPage() {
                         {' = '}
                         <span style={{ fontWeight: '700' }}>
                           {(() => {
-                            const tierMap: Record<string, number> = { Seed: 0.15, Flower: 0.4, Spore: 1.0, Premium: 3.0 };
+                            const tierMap: Record<string, number> = { Spore: 0.01, Seed: 0.15, Flower: 0.4, Nectar: 0.8 };
                             const total = keys.reduce((sum, k) => sum + (tierMap[k.tier || 'Seed'] || 0.15), 0);
                             return `${total.toFixed(2)} pollen/hour`;
                           })()}

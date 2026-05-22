@@ -142,10 +142,10 @@ export async function POST(request: NextRequest) {
   let pollenPerHour = null;
   if (provider.toLowerCase() === 'pollinations') {
     const tierMap: Record<string, number> = {
+      'Spore': 0.01,
       'Seed': 0.15,
       'Flower': 0.4,
-      'Spore': 1.0,
-      'Premium': 3.0,
+      'Nectar': 0.8,
     };
     const pollenList = existingList.map(entry => tierMap[entry.tier || 'Seed'] || 0.15);
     pollenPerHour = pollenList.reduce((a, b) => a + b, 0);

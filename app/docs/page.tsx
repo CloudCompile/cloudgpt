@@ -515,10 +515,10 @@ curl https://openrelay.cjhauser.me/v1/embeddings \\
         <h4>Pollinations</h4>
         <p>50+ models for text, images, video, audio, transcription, and embeddings. Rate limits are based on a pollen/hour system tied to your subscription tier:</p>
         <ul>
+          <li>🍄 Spore: 0.01 pollen/hour</li>
           <li>🌱 Seed: 0.15 pollen/hour</li>
           <li>🌸 Flower: 0.4 pollen/hour</li>
-          <li>🍄 Spore: 1.0 pollen/hour</li>
-          <li>Premium: 3.0 pollen/hour</li>
+          <li>✨ Nectar: 0.8 pollen/hour</li>
         </ul>
 
         <h4>Others (VoidAI, Airforce, Cerebras, Groq, AI Horde, TokenReply, NagaAI, Happupy)</h4>
