@@ -15,6 +15,15 @@ export const runtime = 'nodejs';
 // Derived from PROVIDER_TEST_CONFIGS — if a provider has a test config, keys can be validated and donated
 const PROVIDERS = new Set(Object.keys(PROVIDER_TEST_CONFIGS));
 
+// Find the matching PROVIDER_TEST_CONFIGS key for a provider ID (case-insensitive)
+function findTestConfigKey(providerId: string): string | undefined {
+  if (PROVIDER_TEST_CONFIGS[providerId]) return providerId;
+  const lower = providerId.toLowerCase().replace(/[-_]/g, '');
+  return Object.keys(PROVIDER_TEST_CONFIGS).find(
+    k => k.toLowerCase().replace(/[-_]/g, '') === lower
+  );
+}
+
 function keyPreview(rawKey: string): string {
   if (rawKey.length <= 12) return rawKey;
   return `${rawKey.slice(0, 8)}...${rawKey.slice(-4)}`;
@@ -58,7 +67,8 @@ export async function POST(request: NextRequest) {
 
   const { provider, key: rawKey, tier } = body;
 
-  if (!provider || !PROVIDERS.has(provider)) {
+  const testConfigKey = provider ? findTestConfigKey(provider) : undefined;
+  if (!provider || !testConfigKey) {
     return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
   }
   if (!rawKey || typeof rawKey !== 'string' || rawKey.trim().length < 8) {
@@ -79,7 +89,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const status = await testKey(provider, trimmedKey);
+  const status = await testKey(testConfigKey, trimmedKey);
   if (status === 'error') {
     return NextResponse.json(
       { error: 'Key validation failed — the provider rejected it or it appears invalid' },
@@ -125,7 +135,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Return key count so client can show activation progress
-  const providerKeyCount = await getProviderKeyCount(provider).catch(() => 1);
+  const providerKeyCount = await getProviderKeyCount(testConfigKey).catch(() => 1);
   const providerNowActive = providerKeyCount >= KEYS_REQUIRED_TO_ACTIVATE;
 
   // For Pollinations, also calculate total pollen/hour capacity
