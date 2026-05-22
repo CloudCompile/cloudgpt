@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
   const { provider, key: rawKey, tier } = body;
 
-  const testConfigKey = findTestConfigKey(provider);
+  const testConfigKey = provider ? findTestConfigKey(provider) : undefined;
   if (!provider || !testConfigKey) {
     return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
   }
