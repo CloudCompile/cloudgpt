@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
   if (!provider || !ALL_PROVIDER_IDS.has(provider)) {
     return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
   }
-  if (!rawKey || typeof rawKey !== 'string' || rawKey.trim().length < 8) {
+  if (!rawKey || typeof rawKey !== 'string' || rawKey.trim().length < 20) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 400 });
   }
 

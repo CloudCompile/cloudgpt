@@ -44,7 +44,8 @@ async function checkAndRotateKeyOnDailyLimit(
   const today = new Date().toISOString().split('T')[0];
   const tokenKey = `cerebras:${keyIndex}:tokens:${today}`;
   const tokensUsed = await redis.get(tokenKey);
-  const used = tokensUsed ? parseInt(tokensUsed) : 0;
+  const parsed = tokensUsed ? Number(tokensUsed) : 0;
+  const used = Number.isSafeInteger(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
 
   if (used >= 1000000) {
     return true; // Daily limit hit, should rotate
@@ -93,25 +94,23 @@ export async function forwardCerebras(
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
 
-  // Track tokens if chat completion was successful
+  // Track tokens if chat completion was successful.
+  // Clone first so the original response body is never consumed and can be
+  // returned to the caller intact regardless of whether parsing succeeds.
   if (response.ok && endpoint === '/chat/completions') {
-    const cloned = response.clone();
+    const forCaller = response.clone();
     try {
       const responseBody = await response.json();
       const usage = responseBody.usage;
       if (usage && usage.prompt_tokens !== undefined && usage.completion_tokens !== undefined) {
-        await trackTokens(index, usage.prompt_tokens, usage.completion_tokens);
+        trackTokens(index, usage.prompt_tokens, usage.completion_tokens).catch(e =>
+          console.error('Failed to track Cerebras tokens:', e)
+        );
       }
-
-      // Return a new Response with the body since we already consumed it
-      return new Response(JSON.stringify(responseBody), {
-        status: response.status,
-        headers: response.headers,
-      });
-    } catch (e) {
-      // If tracking fails, still return success (don't break the request)
-      return cloned;
+    } catch {
+      // Parsing failed — that's fine, tracking is best-effort
     }
+    return forCaller;
   }
 
   return response;
