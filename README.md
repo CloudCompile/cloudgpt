@@ -1,6 +1,6 @@
 # OpenRelay - Free AI API for Everyone
 
-Free AI API gateway. Simple, fast, open.
+Free AI API gateway. Simple, fast, open
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/CloudCompile/cloudgpt&env=NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,KV_REST_API_URL,KV_REST_API_TOKEN,AIHUBMIX_API_KEY&project-name=openrelay&repository-name=openrelay)
 
